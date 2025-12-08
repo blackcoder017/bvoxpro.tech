@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- saved from url=(0044)https://www.bvoxf.com/views/ai/buy.html?id=1 -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-		<link rel="stylesheet" href="./ai-plan_files/style.css">
+		<link rel="stylesheet" href="./assets/css/ai-plan.css">
 		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
 		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<script src="./assets/js/auth-check.js" type="text/javascript" charset="utf-8"></script>
@@ -31,7 +31,7 @@
         <div class="y-hd">
             <div class="yc-header">
                 <a href="ai-arbitrage.html" class="y-fanhui">
-                    <img src="./ai-plan_files/fanhui.png">
+                    <img src="./assets/img/fanhui.png">
                 </a>
                 <div class="y-title" data-translate="??">Arbitrage</div>
             </div>
@@ -42,13 +42,13 @@
                     <div class="y-aib-tit" data-translate="????????">Join AI arbitrage</div>
                     <div class="y-aib-p" data-translate="???200+?????????">Smart trading on 200+ exchanges around the world</div>
                 </div>
-                <img src="./ai-plan_files/aitl1.png">
+                <img src="./assets/img/aitl1.png">
             </div>
             <div class="y-aib-center">
                             <div class="y-aib-ctop">
                                 <div class="y-aib-ctl">
                                     <span class="y-aib-ctl-1">
-                                        <img src="./ai-plan_files/tl1.jpg">
+                                        <img src="./assets/img/tl1.jpg">
                                         <p data-translate="????">Smart Plan A</p>
                                     </span>
                                     <span class="y-aib-ctl-2" data-translate="??">Quantity</span>
@@ -63,14 +63,14 @@
                             <div class="y-aib-ccent">
                                 <div class="y-aib-ppt" data-translate="????">Arbitrage type</div>
                                 <div class="y-aib-type">
-                                    <img src="./ai-plan_files/8.png"><img src="./ai-plan_files/9.png"><img src="./ai-plan_files/12.png"><img src="./ai-plan_files/4.png"><img src="./ai-plan_files/7.png">
+                                    <img src="./assets/img/8.png"><img src="./assets/img/9.png"><img src="./assets/img/12.png"><img src="./assets/img/4.png"><img src="./assets/img/7.png">
                                 </div>
                             </div>
                             <div class="y-aib-bottom">
                                 <div class="y-aib-ppt" data-translate="????">Escrow quantity</div>
                                 <div class="y-aib-bsl">
                                     <div class="y-aib-bsll">
-                                        <img src="./ai-plan_files/usdt.png">
+                                        <img src="./assets/img/usdt.png">
                                         <span data-translate="??">Quantity</span>
                                     </div>
                                     <input type="number" id="y-aib-jine" class="y-aib-bslr" placeholder="Please enter quantity" data-translate="?????">
@@ -78,11 +78,11 @@
                             </div>
                             <div class="y-aib-submit" onclick="aisubmit()" data-translate="????">Now hosting</div>
                             <div class="y-aib-dbts">
-                                <img src="./ai-plan_files/dui.png">
+                                <img src="./assets/img/dui.png">
                                 <span data-translate="????????? USDT ??">Daily income sent to your USDT wallet</span>
                             </div>
                             <div class="y-aib-dbts">
-                                <img src="./ai-plan_files/dui.png">
+                                <img src="./assets/img/dui.png">
                                 <span data-translate="??????24????">Artificial intelligence works 24 hours a day</span>
                             </div>
                         </div>
@@ -125,7 +125,7 @@
                             // Create coin icons for arbitrage types
                             let coinIcons = data.arbitrage_types.map(type => {
                                 const iconNum = cryptoIcons[type] || '1';
-                                return `<img src="./ai-plan_files/${iconNum}.png" title="${type}" style="width:35px; height:35px; margin-right:10px;">`;
+                                return `<img src="./assets/img/${iconNum}.png" title="${type}" style="width:35px; height:35px; margin-right:10px;">`;
                             }).join('');
 
                             // Update HTML with product details
@@ -133,7 +133,7 @@
                                 <div class="y-aib-ctop">
                                     <div class="y-aib-ctl">
                                         <span class="y-aib-ctl-1">
-                                            <img src="./ai-plan_files/${data.image}"/>
+                                            <img src="./assets/img/${data.image}"/>
                                             <p>${data.name}</p>
                                         </span>
                                         <span class="y-aib-ctl-2">Quantity</span>
@@ -155,7 +155,7 @@
                                     <div class="y-aib-ppt">Escrow quantity</div>
                                     <div class="y-aib-bsl">
                                         <div class="y-aib-bsll">
-                                            <img src="./ai-plan_files/usdt.png"/>
+                                            <img src="./assets/img/usdt.png"/>
                                             <span>Quantity</span>
                                         </div>
                                         <input type="number" id="y-aib-jine" class="y-aib-bslr" placeholder="Please enter quantity" min="${data.min_amount}" max="${data.max_amount}"/>
@@ -163,11 +163,11 @@
                                 </div>
                                 <div class="y-aib-submit" onclick="aisubmit()">Invest now</div>
                                 <div class="y-aib-dbts">
-                                    <img src="./ai-plan_files/dui.png"/>
+                                    <img src="./assets/img/dui.png"/>
                                     <span>Daily income sent to your USDT wallet</span>
                                 </div>
                                 <div class="y-aib-dbts">
-                                    <img src="./ai-plan_files/dui.png"/>
+                                    <img src="./assets/img/dui.png"/>
                                     <span>Artificial intelligence works 24 hours a day</span>
                                 </div>
                             `);
@@ -247,7 +247,7 @@
                             // Create coin icons for arbitrage types
                             let coinIcons = data.arbitrage_types.map(type => {
                                 const iconNum = cryptoIcons[type] || '1';
-                                return `<img src="./ai-plan_files/${iconNum}.png" title="${type}" style="width:35px; height:35px; margin-right:10px;">`;
+                                return `<img src="./assets/img/${iconNum}.png" title="${type}" style="width:35px; height:35px; margin-right:10px;">`;
                             }).join('');
 
                             // Update HTML with product details
@@ -255,7 +255,7 @@
                                 <div class="y-aib-ctop">
                                     <div class="y-aib-ctl">
                                         <span class="y-aib-ctl-1">
-                                            <img src="./ai-plan_files/${data.image}"/>
+                                            <img src="./assets/img/${data.image}"/>
                                             <p>${data.name}</p>
                                         </span>
                                         <span class="y-aib-ctl-2">Quantity</span>
@@ -277,7 +277,7 @@
                                     <div class="y-aib-ppt">Escrow quantity</div>
                                     <div class="y-aib-bsl">
                                         <div class="y-aib-bsll">
-                                            <img src="./ai-plan_files/usdt.png"/>
+                                            <img src="./assets/img/usdt.png"/>
                                             <span>Quantity</span>
                                         </div>
                                         <input type="number" id="y-aib-jine" class="y-aib-bslr" placeholder="Please enter quantity" min="${data.min_amount}" max="${data.max_amount}"/>
@@ -285,11 +285,11 @@
                                 </div>
                                 <div class="y-aib-submit" onclick="aisubmit()">Invest now</div>
                                 <div class="y-aib-dbts">
-                                    <img src="./ai-plan_files/dui.png"/>
+                                    <img src="./assets/img/dui.png"/>
                                     <span>Daily income sent to your USDT wallet</span>
                                 </div>
                                 <div class="y-aib-dbts">
-                                    <img src="./ai-plan_files/dui.png"/>
+                                    <img src="./assets/img/dui.png"/>
                                     <span>Artificial intelligence works 24 hours a day</span>
                                 </div>
                             `);

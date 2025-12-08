@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- saved from url=(0046)https://www.bvoxf.com/views/record/mining.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-		<link rel="stylesheet" href="./mining-record_files/style.css">
+		<link rel="stylesheet" href="./assets/css/mining-record.css">
 		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
 		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<script src="./assets/js/auth-check.js" type="text/javascript" charset="utf-8"></script>
@@ -29,9 +29,9 @@
         <div class="y-hd">
             <div class="yc-header">
                 <a href="mining.html" class="y-fanhui">
-                    <img src="./mining-record_files/fanhui.png">
+                    <img src="./assets/img/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="质押记录">Staking Records</div>
+                <div class="y-title" data-translate="è´¨æŠ¼è®°å½•">Staking Records</div>
             </div>
         </div>
         
@@ -54,7 +54,7 @@
 
         <div class="y-re" style="min-height: 918px; margin-bottom:5px;">
             <div class="y-re-in"></div>
-            <div class="y-re-load" onclick="loadMore()" data-translate="加载更多">Load More</div>
+            <div class="y-re-load" onclick="loadMore()" data-translate="åŠ è½½æ›´å¤š">Load More</div>
         </div>
         
 
@@ -75,10 +75,10 @@
             setRecordsMinHeight();
             window.addEventListener('resize', setRecordsMinHeight);
 
-            let page = 1; // 当前页数
+            let page = 1; // å½“å‰é¡µæ•°
             const pageSize = 10; // items per page
             let recordsCache = null;
-            const userId = Cookies.get('userid'); // 获取用户ID
+            const userId = Cookies.get('userid'); // èŽ·å–ç”¨æˆ·ID
 
 
             $(document).ready(function() {

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!-- saved from url=(0057)https://www.bvoxf.com/views/wallet/topup.html?market=usdt -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-		<link rel="stylesheet" href="./topup_files/style.css">
+		<link rel="stylesheet" href="./assets/css/topup.css">
 		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
 		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
@@ -29,11 +29,11 @@
         <div class="y-hd">
             <div class="yc-header">
                 <a href="assets.html" class="y-fanhui">
-                    <img src="./topup_files/fanhui.png">
+                    <img src="./assets/img/fanhui.png">
                 </a>
                 <div class="y-title" data-translate="??">Top-up</div>
                 <a href="topup-record.html" class="yy-tr">
-					<img src="./topup_files/ls.png">
+					<img src="./assets/img/ls.png">
 				</a>
             </div>
         </div>
@@ -48,7 +48,7 @@
             </div>
             <div class="y-tu-bottom">
                 <div id="upload-container">
-                    <label for="file-upload" id="upload-btn"><img src="./topup_files/image.png"></label>
+                    <label for="file-upload" id="upload-btn"><img src="./assets/img/image.png"></label>
                     <input type="file" id="file-upload" accept="image/*" style="display: none;">
                     <div id="preview-container"></div>
                 </div>
@@ -79,12 +79,12 @@
                 sol: '0xcf54262c66b519999a8afcc88f700960fce61609'   // Solana address
             };
             var qrMap = {
-                usdt: './topup_files/usdt_qr.png',
-                btc: './topup_files/btc_qr.png',
-                eth: './topup_files/eth_qr.png',
-                usdc: './topup_files/usdc_qr.png',
-                pyusd: './topup_files/pyusd_qr.png',
-                sol: './topup_files/sol_qr.png'
+                usdt: './assets/img/usdt_qr.png',
+                btc: './assets/img/btc_qr.png',
+                eth: './assets/img/eth_qr.png',
+                usdc: './assets/img/usdc_qr.png',
+                pyusd: './assets/img/pyusd_qr.png',
+                sol: './assets/img/sol_qr.png'
             };
 
             // Helper to safely translate (fallback if gy missing)
@@ -103,7 +103,7 @@
                 try { $('.y-tu-tit').text(key.toUpperCase()); } catch (e) { console.error('Title update failed', e); }
 
                 // Update QR image with cache-busting
-                var qr = qrMap[key] || './topup_files/usdt_qr.png';
+                var qr = qrMap[key] || './assets/img/usdt_qr.png';
                 var cacheBuster = '?v=' + Date.now();
                 console.log('?? Setting QR to:', qr + cacheBuster);
 
@@ -316,3 +316,4 @@
 	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body>
 </html>
+

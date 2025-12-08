@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+Ôªø<!DOCTYPE html>
 <!-- saved from url=(0041)https://www.bvoxf.com/views/kyc/kyc1.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-		<link rel="stylesheet" href="./kyc1_files/style.css">
+		<link rel="stylesheet" href="./assets/css/kyc1.css">
 		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
 		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
@@ -29,7 +29,7 @@
         <div class="y-hd">
             <div class="yc-header">
                 <a href="index.html" class="y-fanhui">
-                    <img src="./kyc1_files/fanhui.png">
+                    <img src="./assets/img/fanhui.png">
                 </a>
                 <div class="y-title" data-translate="????">Identity Authentication</div>
             </div>
@@ -69,13 +69,13 @@
 
                 <div class="y-upload-container">
                     <div class="y-upload-box" id="housing-info-box">
-                        <img src="./kyc1_files/image.png" class="y-camera-icon" alt="Camera Icon">
+                        <img src="./assets/img/image.png" class="y-camera-icon" alt="Camera Icon">
                         <img src="https://www.bvoxf.com/views/kyc/kyc1.html" class="y-preview" alt="Preview" id="y-idzheng">
                         <div class="y-upload-label" data-translate="ID????">ID front picture</div>
                         <input type="file" id="housing-info-upload" accept="image/*">
                     </div>
                     <div class="y-upload-box" id="income-cert-box">
-                        <img src="./kyc1_files/image.png" class="y-camera-icon" alt="Camera Icon">
+                        <img src="./assets/img/image.png" class="y-camera-icon" alt="Camera Icon">
                         <img src="https://www.bvoxf.com/views/kyc/kyc1.html" class="y-preview" alt="Preview" id="y-idfan">
                         <div class="y-upload-label" data-translate="ID????">ID back picture</div>
                         <input type="file" id="income-cert-upload" accept="image/*">
@@ -115,10 +115,10 @@
                                 // 0???,3????,???
                                 $('.y-ytjrz').hide();
                             } else if (response.data == 1) {
-                                // 1???????,??ì?????î
+                                // 1???????,??‚Äú?????‚Äù
                                 $('.y-ytjrz').text(gy('?????')).show();
                             } else if (response.data == 2 || [4, 5, 6].includes(response.data)) {
-                                // 2????,4???????,5????,6????,??ì????î
+                                // 2????,4???????,5????,6????,??‚Äú????‚Äù
                                 $('.y-ytjrz').text(gy('??????')).show();
                             }
                         }
