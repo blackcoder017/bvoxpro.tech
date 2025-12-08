@@ -3982,10 +3982,30 @@ const server = http.createServer((req, res) => {
         pathname = '/index.html';
     }
 
-    // Handle requests for /js/ files - redirect to /Bvox_files/
+    // Handle requests for /assets/js/ files - NEW primary location
+    if (pathname.startsWith('/assets/js/')) {
+        const filename = pathname.split('/').pop();
+        const alternatives = [
+            path.join(__dirname, 'assets', 'js', filename),
+            path.join(__dirname, 'assets/js', filename + '.download'),
+            path.join(__dirname, 'Bvox_files', filename),
+            path.join(__dirname, 'Bvox_files', filename + '.download')
+        ];
+
+        // Try to find the file from alternatives
+        for (const alt of alternatives) {
+            if (fs.existsSync(alt)) {
+                pathname = alt.replace(__dirname, '');
+                break;
+            }
+        }
+    }
+
+    // Handle requests for /js/ files - OLD compatibility, redirect to assets/js
     if (pathname.startsWith('/js/')) {
         const filename = pathname.split('/').pop();
         const alternatives = [
+            path.join(__dirname, 'assets', 'js', filename),
             path.join(__dirname, 'Bvox_files', filename + '.download'),
             path.join(__dirname, 'Bvox_files', filename),
             path.join(__dirname, 'js', filename),

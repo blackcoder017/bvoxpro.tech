@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0057)https://www.bvoxf.com/views/wallet/topup.html?market=usdt -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./topup_files/style.css">
-		<script src="./topup_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./topup_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./topup_files/pako.min.js.download"></script><script src="./topup_files/js.cookie.min.js.download"></script><script src="./topup_files/web3.min.js.download"></script><script src="./topup_files/web3model.min.js.download"></script><script src="./topup_files/web3provider.js.download"></script><script src="./topup_files/fp.min.js.download"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -31,7 +31,7 @@
                 <a href="assets.html" class="y-fanhui">
                     <img src="./topup_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="充值">Top-up</div>
+                <div class="y-title" data-translate="??">Top-up</div>
                 <a href="topup-record.html" class="yy-tr">
 					<img src="./topup_files/ls.png">
 				</a>
@@ -43,7 +43,7 @@
                 <img id="y-bitu" src="" alt="QR Code" style="min-height: 150px; width: 150px; display: block;">
                 <p id="y-bilian">Loading...</p>
                 <div class="y-copydz">
-                    <span data-translate="复制地址">Copy address</span>
+                    <span data-translate="????">Copy address</span>
                 </div>
             </div>
             <div class="y-tu-bottom">
@@ -52,10 +52,10 @@
                     <input type="file" id="file-upload" accept="image/*" style="display: none;">
                     <div id="preview-container"></div>
                 </div>
-                <p data-translate="上传凭证" class="y-scpz">Upload voucher</p>
+                <p data-translate="????" class="y-scpz">Upload voucher</p>
             </div>
             <div class="y-tu-sr">
-                <div class="y-tus-l" data-translate="充值数量">Recharge quantity</div>
+                <div class="y-tus-l" data-translate="????">Recharge quantity</div>
                 <input type="number" id="y-tpje" placeholder="Please enter quantity">
             </div>
 
@@ -97,7 +97,7 @@
                 var paramMarket = params.get('market');
                 var key = (paramMarket || biming || 'usdt').toString().toLowerCase();
                 if (!addrMap[key]) key = 'usdt';
-                console.log('🔄 Updating for currency:', key, '(from param:', paramMarket, 'biming:', biming, ')');
+                console.log('?? Updating for currency:', key, '(from param:', paramMarket, 'biming:', biming, ')');
 
                 // Update title
                 try { $('.y-tu-tit').text(key.toUpperCase()); } catch (e) { console.error('Title update failed', e); }
@@ -105,7 +105,7 @@
                 // Update QR image with cache-busting
                 var qr = qrMap[key] || './topup_files/usdt_qr.png';
                 var cacheBuster = '?v=' + Date.now();
-                console.log('📱 Setting QR to:', qr + cacheBuster);
+                console.log('?? Setting QR to:', qr + cacheBuster);
 
                 // Use vanilla JS to set the image
                 const imgElement = document.getElementById('y-bitu');
@@ -114,7 +114,7 @@
                     imgElement.style.display = 'block';
                     imgElement.style.opacity = '1';
                     imgElement.style.visibility = 'visible';
-                    console.log('✓ Image src set, visible:', imgElement.offsetParent !== null);
+                    console.log('? Image src set, visible:', imgElement.offsetParent !== null);
                 }
 
                 // Also set via jQuery for safety
@@ -122,7 +122,7 @@
 
                 // Update wallet address
                 var addr = addrMap[key] || 'N/A';
-                console.log('📍 Setting address to:', addr);
+                console.log('?? Setting address to:', addr);
                 try { $('#y-bilian').text(addr); } catch (e) { console.error('Address update failed', e); }
             }
 
@@ -137,14 +137,14 @@
                     textarea.select();
                     const success = document.execCommand('copy');
                     if (success) {
-                        console.log('✅ Fallback copy succeeded:', text);
+                        console.log('? Fallback copy succeeded:', text);
                         alert('Address copied to clipboard!');
                     } else {
-                        console.warn('❌ Fallback copy failed');
+                        console.warn('? Fallback copy failed');
                         alert('Copy failed. Please try again.');
                     }
                 } catch (e) {
-                    console.error('❌ Fallback copy exception:', e);
+                    console.error('? Fallback copy exception:', e);
                     alert('Copy failed. Please try again.');
                 } finally {
                     document.body.removeChild(textarea);
@@ -155,7 +155,7 @@
             function topup() {
                 // Prevent duplicate submissions
                 if (isSubmitting) {
-                    console.warn('⚠️ Submission already in progress, ignoring duplicate click');
+                    console.warn('?? Submission already in progress, ignoring duplicate click');
                     return;
                 }
 
@@ -187,7 +187,7 @@
                         amount: amount
                     };
 
-                    console.log('📤 Posting topup:', postData);
+                    console.log('?? Posting topup:', postData);
                     isSubmitting = true; // Set flag before AJAX
 
                     $.ajax({
@@ -196,7 +196,7 @@
                         contentType: 'application/json',
                         data: JSON.stringify(postData),
                         success: function(res) {
-                            console.log('✅ Topup response:', res);
+                            console.log('? Topup response:', res);
                             if (res && res.success) {
                                 alert('Top-up submitted successfully');
                                 // clear inputs
@@ -208,7 +208,7 @@
                             }
                         },
                         error: function(err) {
-                            console.error('❌ Topup error:', err);
+                            console.error('? Topup error:', err);
                             alert('Network error while submitting top-up');
                         },
                         complete: function() {
@@ -223,7 +223,7 @@
             }
 
             $(document).ready(function() {
-                console.log('📝 Page loaded, initializing QR and address...');
+                console.log('?? Page loaded, initializing QR and address...');
                 updateQRAndAddress();
                 
                 // Copy address to clipboard
@@ -238,11 +238,11 @@
                     if (navigator.clipboard && navigator.clipboard.writeText) {
                         navigator.clipboard.writeText(address)
                             .then(() => {
-                                console.log('✅ Address copied:', address);
+                                console.log('? Address copied:', address);
                                 alert('Address copied to clipboard!');
                             })
                             .catch(err => {
-                                console.error('❌ Clipboard copy failed:', err);
+                                console.error('? Clipboard copy failed:', err);
                                 // Fallback to older method
                                 fallbackCopyToClipboard(address);
                             });
@@ -255,24 +255,24 @@
                     updateQRAndAddress();
                 });
                 
-                $('#y-tpje').attr('placeholder', _t('请输入数量'));
+                $('#y-tpje').attr('placeholder', _t('?????'));
                 $('#file-upload').on('change', function() {
                     const file = this.files[0];
                     
-                    // 检查文件类型和大小（示例限制为2MB）
+                    // ?????????(?????2MB)
                     if (!file || !file.type.startsWith('image/') || file.size > 20 * 1024 * 1024) {
                         alert('Please select an image file smaller than 20MB');
                         return;
                     }
                     
-                    // 显示图片预览
+                    // ??????
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         $('#preview-container').html(`<img src="${e.target.result}" alt="Preview">`);
                     };
                     reader.readAsDataURL(file);
                     
-                    // 创建 FormData 并上传
+                    // ?? FormData ???
                     const formData = new FormData();
                     formData.append('file', file);
                     
@@ -283,11 +283,11 @@
                         contentType: false,
                         processData: false,
                         success: function(response) {
-                            console.log('📸 Upload response:', response);
+                            console.log('?? Upload response:', response);
                             if (response && response.code === 1) {
-                                alert(_t('上传成功'));
+                                alert(_t('????'));
                                 tupian = response.data;
-                                console.log('✓ Image URL set to:', tupian);
+                                console.log('? Image URL set to:', tupian);
                                 $('#file-upload').val('');
                                 // show preview already handled by reader
                             } else {
@@ -313,6 +313,6 @@
             });
         </script>
     
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body>
 </html>

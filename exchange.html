@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0048)https://www.bvoxf.com/views/wallet/exchange.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./exchange_files/style.css">
-		<script src="./exchange_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./exchange_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./exchange_files/pako.min.js.download"></script><script src="./exchange_files/js.cookie.min.js.download"></script><script src="./exchange_files/web3.min.js.download"></script><script src="./exchange_files/web3model.min.js.download"></script><script src="./exchange_files/web3provider.js.download"></script><script src="./exchange_files/fp.min.js.download"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -32,7 +32,7 @@
                 <a href="assets.html" class="y-fanhui">
                     <img src="./exchange_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="兑换">Exchange</div>
+                <div class="y-title" data-translate="??">Exchange</div>
                 <a href="exchange-record.html" class="yy-tr">
 					<img src="./exchange_files/ls.png">
 				</a>
@@ -41,9 +41,9 @@
         <div class="y-ex" style="height: 100rem;">
             <div class="y-ex-top">
                 <div class="y-ex-tt">
-                    <span data-translate="从">From</span>
+                    <span data-translate="?">From</span>
                     <span>
-                        <b data-translate="余额">Balance</b>
+                        <b data-translate="??">Balance</b>
                         <b id="y-yue"></b>
                         <b id="y-bim">USDT</b>
                     </span>
@@ -56,7 +56,7 @@
                     </div>
                     <div class="y-ex-tb-r">
                         <input type="number" id="y-extnum" placeholder="Please enter quantity">
-                        <span data-translate="全部" onclick="sfull()">All</span>
+                        <span data-translate="??" onclick="sfull()">All</span>
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
             </div>
             <div class="y-ex-bottom">
                 <div class="y-ex-bt">
-                    <span data-translate="到">To</span>
+                    <span data-translate="?">To</span>
                 </div>
                 <div class="y-ex-bb">
                     <div class="y-ex-bb-l" onclick="zhankaixz()">
@@ -81,11 +81,11 @@
 
             <div class="y-ex-hs">
                 <span><b>1</b><b id="y-xiabim">BTC</b></span>
-                <span>≈</span>
+                <span>�</span>
                 <span><b id="y-ygjz">90848.52</b><b id="y-xiabim2">USDT</b></span>
             </div>
 
-            <div class="y-ex-tj" data-translate="预览结果">Preview exchange results</div>
+            <div class="y-ex-tj" data-translate="????">Preview exchange results</div>
 
             <div class="y-ex-xzb" style="z-index:1006;display: none;">
                 <div class="y-ex-xzbk" id="y-s-usdt" onclick="sxuanze(&#39;usdt&#39;)" style="display: none;">
@@ -148,23 +148,23 @@
                 <div class="y-ex-din">
                     <div class="y-load" style="display: none;">
                         <div class="y-loading"></div>
-                        <span class="y-load-wen" data-translate="兑换中..">Exchange in progress...</span>
+                        <span class="y-load-wen" data-translate="???..">Exchange in progress...</span>
                     </div>
 
                     <div class="y-ex-success" style="display: none;">
                         <div class="y-ex-sutop">
                             <img src="./exchange_files/zhuan.png">
                         </div>
-                        <span data-translate="成功">Successful</span>
+                        <span data-translate="??">Successful</span>
                     </div>
 
-                    <a href="https://www.bvoxf.com/views/record/exchange.html" class="y-ex-next" data-translate="查看兑换记录" style="display: none;">View exchange records</a>
+                    <a href="https://www.bvoxf.com/views/record/exchange.html" class="y-ex-next" data-translate="??????" style="display: none;">View exchange records</a>
 
-                    <div class="y-ex-dtit" data-translate="确认兑换">Confirm exchange</div>
+                    <div class="y-ex-dtit" data-translate="????">Confirm exchange</div>
                     <div class="y-ex-dner">
                         <div class="y-ex-erl">
                             <img id="y-zbdtp" src="./exchange_files/usdt.png">
-                            <span data-translate="兑换">Exchange</span>
+                            <span data-translate="??">Exchange</span>
                             <span>
                                 <b id="y-zbdsl">0.00</b>
                                 <b id="y-zbdbm">USDT</b>
@@ -176,16 +176,16 @@
                         
                         <div class="y-ex-err">
                             <img id="y-ybdtp" src="./exchange_files/btc.png">
-                            <span data-translate="兑换">Exchange</span>
+                            <span data-translate="??">Exchange</span>
                             <span>
-                                <b>≈ </b>
+                                <b>� </b>
                                 <b id="y-ybdsl">0.00</b>
                                 <b id="y-ybdbm">BTC</b>
                             </span>
                         </div>
                     </div>
 
-                    <div class="y-ex-dqr" data-translate="确认兑换">Confirm exchange</div>
+                    <div class="y-ex-dqr" data-translate="????">Confirm exchange</div>
                 </div>
             </div>
             <div class="y-ex-dqrz" style="display: none;"></div>
@@ -205,7 +205,7 @@
             var dqyue;
 
             $(document).ready(function() {
-                $('#y-extnum').attr('placeholder', gy('请输入数量'));
+                $('#y-extnum').attr('placeholder', gy('?????'));
 
                 getyue('usdt');
                 getxianjia('btc');
@@ -216,7 +216,7 @@
 
             function getyue(biming){
                 var userid = Cookies.get('userid');
-                console.log('🔄 Fetching balance for user:', userid, 'coin:', biming);
+                console.log('?? Fetching balance for user:', userid, 'coin:', biming);
                 
                 // Fetch balances from database
                 $.ajax({
@@ -228,11 +228,11 @@
                     }),
                     timeout: 5000,
                     success: function(res) {
-                        console.log('📊 Raw response:', res);
+                        console.log('?? Raw response:', res);
                         
                         // Extract balances from response data object
                         let balances = res.data || res.balances || {};
-                        console.log('💰 Extracted balances:', balances);
+                        console.log('?? Extracted balances:', balances);
                         
                         // Use fallback balances if no data
                         const defaultBalances = {
@@ -246,12 +246,12 @@
                         
                         // Merge with defaults (database values take priority)
                         dqyue = Object.assign({}, defaultBalances, balances);
-                        console.log('✅ Final balances:', dqyue);
+                        console.log('? Final balances:', dqyue);
                         
                         // Set current coin balance display
                         const currentBalance = dqyue[biming.toLowerCase()] || 0;
                         $('#y-yue').text(Number(currentBalance).toFixed(xsw[biming.toLowerCase()]));
-                        console.log('📝 Set balance display to:', Number(currentBalance).toFixed(xsw[biming.toLowerCase()]));
+                        console.log('?? Set balance display to:', Number(currentBalance).toFixed(xsw[biming.toLowerCase()]));
                         
                         // Update all coin balances in dropdown
                         $('#y-s-usdt .y-ex-xz-r').text(Number(dqyue.usdt || 0).toFixed(xsw['usdt']));
@@ -262,7 +262,7 @@
                         $('#y-s-sol .y-ex-xz-r').text(Number(dqyue.sol || 0).toFixed(xsw['sol']));
                     },
                     error: function(err) {
-                        console.warn('⚠️ Failed to fetch balances from database, using defaults:', err);
+                        console.warn('?? Failed to fetch balances from database, using defaults:', err);
                         
                         // Use default balances on error
                         const defaultBalances = {
@@ -366,17 +366,17 @@
             }
 
             function fanzhuan() {
-                // 获取当前的文本
+                // ???????
                 var lingbi1 = $('#shangming').text();
                 var lingbi2 = $('#y-dhbm').text();
 
                 $('#y-extnum').val(null);
 
-                // 交换文本内容
+                // ??????
                 $('#shangming').text(lingbi2);
                 $('#y-dhbm').text(lingbi1);
 
-                // 更新图片路径
+                // ??????
                 $('#shangtu').attr('src', '/img/coin/' + lingbi2.toLowerCase() + '.png');
                 $('#xiatu').attr('src', '/img/coin/' + lingbi1.toLowerCase() + '.png');
 
@@ -421,7 +421,7 @@
                 var dhhouj = $('#y-jgzs').text();
 
                 if(Number(dhjes) > Number($('#y-yue').text())){
-                    alert(gy('余额不足'));
+                    alert(gy('????'));
                     return;
                 }
 
@@ -449,7 +449,7 @@
                     $('.y-ex-dqrz').show();
                     $('.y-ex-duih').show();
 
-                    $('#y-ybdsl').text(gy('计算中..'));
+                    $('#y-ybdsl').text(gy('???..'));
 
                     // Use mock exchange rates for preview
                     const mockRates = {
@@ -475,7 +475,7 @@
                     }, 500);
         
                 }else{
-                    alert(gy('请输入数量'));
+                    alert(gy('?????'));
                 }
                 
             });
@@ -542,8 +542,8 @@
                 location.reload();
             });
         </script>
-    <script defer="" src="./exchange_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+    <script defer="" src="./assets/js/cloudflare-analytics.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
 
 
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body></html>

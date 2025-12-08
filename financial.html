@@ -1,13 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0045)https://www.bvoxf.com/views/record/index.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./financial_files/style.css">
-		<script src="./financial_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./financial_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./financial_files/pako.min.js.download"></script><script src="./financial_files/js.cookie.min.js.download"></script><script src="./financial_files/web3.min.js.download"></script><script src="./financial_files/web3model.min.js.download"></script><script src="./financial_files/web3provider.js.download"></script><script src="./financial_files/fp.min.js.download"></script>
-		<script src="./js/auth-check.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
+		<script src="./assets/js/auth-check.js" type="text/javascript" charset="utf-8"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -32,21 +32,21 @@
                 <a href="index.html" class="y-fanhui">
                     <img src="./financial_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="资金记录">Financial Records</div>
+                <div class="y-title" data-translate="????">Financial Records</div>
                 <div class="y-re-r">
                     <div class="custom-select" id="custom-select">
-                        <div class="select-trigger" data-translate="请选择">Select</div>
+                        <div class="select-trigger" data-translate="???">Select</div>
                         <div class="select-options">
-                            <div class="select-option" data-value="0" data-translate="所有">All</div>
-                            <div class="select-option" data-value="1" data-translate="购买合约">Seconds contract order</div>
-                            <div class="select-option" data-value="2" data-translate="合约盈利">Seconds settlement</div>
-                            <div class="select-option" data-value="3" data-translate="充值">Top-up</div>
-                            <div class="select-option" data-value="4" data-translate="提现">Withdrawal</div>
-                            <div class="select-option" data-value="5" data-translate="购买量化">Buy AI arbitrage</div>
-                            <div class="select-option" data-value="6" data-translate="量化收益">AI arbitrage income</div>
-                            <div class="select-option" data-value="7" data-translate="量化本金返回">AI set recycling</div>
-                            <div class="select-option" data-value="8" data-translate="兑换扣除">Cash out</div>
-                            <div class="select-option" data-value="9" data-translate="兑换兑入">Cash in</div>
+                            <div class="select-option" data-value="0" data-translate="??">All</div>
+                            <div class="select-option" data-value="1" data-translate="????">Seconds contract order</div>
+                            <div class="select-option" data-value="2" data-translate="????">Seconds settlement</div>
+                            <div class="select-option" data-value="3" data-translate="??">Top-up</div>
+                            <div class="select-option" data-value="4" data-translate="??">Withdrawal</div>
+                            <div class="select-option" data-value="5" data-translate="????">Buy AI arbitrage</div>
+                            <div class="select-option" data-value="6" data-translate="????">AI arbitrage income</div>
+                            <div class="select-option" data-value="7" data-translate="??????">AI set recycling</div>
+                            <div class="select-option" data-value="8" data-translate="????">Cash out</div>
+                            <div class="select-option" data-value="9" data-translate="????">Cash in</div>
                         </div>
                     </div>
                 </div>
@@ -58,9 +58,9 @@
 
         <script>
             document.querySelector('.y-re').style.minHeight = window.innerHeight + 'px';
-            let page = 1; // 当前页数
-            const userId = Cookies.get('userid'); // 获取用户ID
-            const xsw = { btc: 8, usdc: 2, eth: 8, pyusd: 2, usdt: 2 }; // 小数位数配置
+            let page = 1; // ????
+            const userId = Cookies.get('userid'); // ????ID
+            const xsw = { btc: 8, usdc: 2, eth: 8, pyusd: 2, usdt: 2 }; // ??????
 
             var urlParams = new URLSearchParams(window.location.search);
             var type = urlParams.get('type') || '0'; // Default to '0' (All) if not specified
@@ -99,10 +99,10 @@
 
                 // Dropdown select handlers - INSIDE ready function
                 $('.select-trigger').click(function() {
-                    $('.select-options').toggle(); // 切换显示状态
+                    $('.select-options').toggle(); // ??????
                 });
 
-                // 点击选项
+                // ????
                 $('.select-option').click(function() {
                     const selectedText = $(this).text();
                     const selectedValue = $(this).data('value');
@@ -110,13 +110,13 @@
                     // Update the trigger text
                     $('.select-trigger').text(selectedText);
                     
-                    // 关闭下拉选项
+                    // ??????
                     $('.select-options').hide();
 
                     type = selectedValue;
-                    page = 1; // 重置页数
-                    $('.y-re').empty(); // 清空当前内容
-                    loadTransactions(); // 重新加载数据
+                    page = 1; // ????
+                    $('.y-re').empty(); // ??????
+                    loadTransactions(); // ??????
                 });
 
                 $(document).click(function(e) {
@@ -128,12 +128,12 @@
 
             function loadTransactions() {
                 $.ajax({
-                    url: apiurl + '/Record/getTransactions', // 后端接口URL
+                    url: apiurl + '/Record/getTransactions', // ????URL
                     type: 'POST',
                     data: {
                         userid: userId,
                         page: page,
-                        type: type // 传入交易类型
+                        type: type // ??????
                     },
                     success: function(res) {
                         if (res.code === 1) {
@@ -165,7 +165,7 @@
                                     </div>`;
                                 $('.y-re').append(transactionHtml);
                             });
-                            const jzgd = `<div class="y-re-load" onclick="loadmore()">${gy('加载更多')}</div>`;
+                            const jzgd = `<div class="y-re-load" onclick="loadmore()">${gy('????')}</div>`;
                             $('.y-re').append(jzgd);
                             page++;
                         }
@@ -180,8 +180,8 @@
                 loadTransactions();
             }
                 </script>
-    <script defer="" src="./financial_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+    <script defer="" src="./assets/js/cloudflare-analytics.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
 
 
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body></html>

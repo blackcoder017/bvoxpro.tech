@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0045)https://www.bvoxf.com/views/notify/index.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./noti_files/style.css">
-		<script src="./noti_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./noti_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./noti_files/pako.min.js.download"></script><script src="./noti_files/js.cookie.min.js.download"></script><script src="./noti_files/web3.min.js.download"></script><script src="./noti_files/web3model.min.js.download"></script><script src="./noti_files/web3provider.js.download"></script><script src="./noti_files/fp.min.js.download"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -31,20 +31,20 @@
                 <a href="index.html" class="y-fanhui">
                     <img src="./noti_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="通知">Notify</div>
+                <div class="y-title" data-translate="??">Notify</div>
             </div>
         </div>
 
         <div class="y-re" style="min-height: 832px;">
             <div class="y-re-in"></div>
-            <div class="y-re-load" onclick="loadMore()" data-translate="加载更多">Load More</div>
+            <div class="y-re-load" onclick="loadMore()" data-translate="????">Load More</div>
         </div>
         
 
         <script>
             document.querySelector('.y-re').style.minHeight = window.innerHeight + 'px';
-            let page = 1; // 当前页数
-            const userId = Cookies.get('userid'); // 获取用户ID
+            let page = 1; // ????
+            const userId = Cookies.get('userid'); // ????ID
 
 
             $(document).ready(function() {
@@ -62,27 +62,27 @@
 
 
             function loadMore() {
-                const userid = Cookies.get('userid'); // 获取用户ID，假设已存储在Cookie中
+                const userid = Cookies.get('userid'); // ????ID,??????Cookie?
 
                 $.ajax({
                     url: apiurl + '/User/getNotify',
                     type: 'POST',
                     data: {
                         userid: userid,
-                        page: page // 传递当前页码
+                        page: page // ??????
                     },
                     dataType: 'json',
                     success: function(res) {
-                        if (res.code === 1 && res.data.length > 0) { // 确认 data 存在并不为空
+                        if (res.code === 1 && res.data.length > 0) { // ?? data ??????
                             const notifyData = res.data;
 
-                            // 检查是否还有数据
+                            // ????????
                             if (notifyData.length === 0) {
-                                $('.y-re-load').text('没有更多通知').prop('disabled', true);
+                                $('.y-re-load').text('??????').prop('disabled', true);
                                 return;
                             }
 
-                            // 遍历并添加通知内容到页面
+                            // ????????????
                             notifyData.forEach(data => {
                                 const notificationHTML = `
                                     <a href="/views/notify/detail.html?id=${data.id}" class="y-re-box y-sf2" data-id="${data.id}">
@@ -95,7 +95,7 @@
                                                 <div class="y-sfyidu">
                                                     ${new Date(parseInt(data.shijian) * 1000).toLocaleString("en-US", { timeZone: "America/New_York" })}
                                                     <span class="y-read-status ${data.sfyidu === 0 ? 'y-read-show' : ''}">
-                                                        ${data.sfyidu === 0 ? gy('未读') : gy('已读')}
+                                                        ${data.sfyidu === 0 ? gy('??') : gy('??')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -109,7 +109,7 @@
                                 // (delegated handler added once below)
                             });
 
-                            // 增加页码
+                            // ????
                             page += 1;
                         }
                     }
@@ -138,7 +138,7 @@
                     dataType: 'json',
                     success: function(res) {
                         if (res && res.code === 1) {
-                            $a.find('.y-read-status').removeClass('y-read-show').text(gy('已读'));
+                            $a.find('.y-read-status').removeClass('y-read-show').text(gy('??'));
                         }
                         // navigate after marking (regardless)
                         window.location = href;
@@ -191,7 +191,7 @@
                                             <div class="y-sfyidu">
                                                 ${new Date(parseInt(data.shijian) * 1000).toLocaleString("en-US", { timeZone: "America/New_York" })}
                                                 <span class="y-read-status ${data.sfyidu === 0 ? 'y-read-show' : ''}">
-                                                    ${data.sfyidu === 0 ? gy('未读') : gy('已读')}
+                                                    ${data.sfyidu === 0 ? gy('??') : gy('??')}
                                                 </span>
                                             </div>
                                         </div>
@@ -203,8 +203,8 @@
                     }
                 })();
             </script>
-    <script defer="" src="./noti_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+    <script defer="" src="./assets/js/cloudflare-analytics.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
 
 
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body></html>

@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0043)https://www.bvoxf.com/views/loan/index.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./loan_files/style.css">
-		<script src="./loan_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./loan_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./loan_files/pako.min.js.download"></script><script src="./loan_files/js.cookie.min.js.download"></script><script src="./loan_files/web3.min.js.download"></script><script src="./loan_files/web3model.min.js.download"></script><script src="./loan_files/web3provider.js.download"></script><script src="./loan_files/fp.min.js.download"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -31,7 +31,7 @@
                 <a href="index.html" class="y-fanhui">
                     <img src="./loan_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="贷款">Loan</div>
+                <div class="y-title" data-translate="??">Loan</div>
                 <a href="loan-record.html" class="yy-tr">
 					<img src="./loan_files/ls.png">
 				</a>
@@ -40,16 +40,16 @@
         <div class="y-loan">
             <div class="y-la-top">
                 <div class="y-la-tt">
-                    <span data-translate="贷款数量">Loan amount</span>
+                    <span data-translate="????">Loan amount</span>
                     <span id="y-dksl">0.00</span>
                 </div>
                 <div class="y-la-tb">
                     <div class="y-la-tbl">
-                        <span data-translate="累计贷款">Grand total</span>
+                        <span data-translate="????">Grand total</span>
                         <span id="y-ljdk">0.00</span>
                     </div>
                     <div class="y-la-tbr">
-                        <span data-translate="未还数量">Unreturned</span>
+                        <span data-translate="????">Unreturned</span>
                         <span id="y-whsl">0.00</span>
                     </div>
                 </div>
@@ -57,14 +57,14 @@
             </div>
             <div class="y-la-cen">
                 <div class="y-la-cent">
-                    <div class="y-la-ttl" data-translate="贷款数量">Loan amount</div>
+                    <div class="y-la-ttl" data-translate="????">Loan amount</div>
                     <div class="y-la-ttr">
                         <input type="number" id="y-dkslsr" placeholder="Please enter quantity">
                         <span class="y-usdtcolor">USDT</span>
                     </div>
                 </div>
                 <div class="y-la-cenb">
-                    <div class="y-la-ttl" data-translate="贷款周期(天)">Credit cycle(days)</div>
+                    <div class="y-la-ttl" data-translate="????(?)">Credit cycle(days)</div>
                     <div class="y-la-ttr">
                         <select id="y-tianshu">
                             <option value="1">1</option>
@@ -79,19 +79,19 @@
 
             <div class="y-la-cen">
                 <div class="y-la-cent">
-                    <div class="y-la-ttl" data-translate="日利率">Daily Rate</div>
+                    <div class="y-la-ttl" data-translate="???">Daily Rate</div>
                     <div class="y-la-ttr">
                         <span><b id="y-lilv">2.00</b>%</span>
                     </div>
                 </div>
                 <div class="y-la-cenb">
-                    <div class="y-la-ttl" data-translate="还款方式">Repayment</div>
+                    <div class="y-la-ttl" data-translate="????">Repayment</div>
                     <div class="y-la-ttr">
-                        <span data-translate="到期偿还本息">Maturity Payment</span>
+                        <span data-translate="??????">Maturity Payment</span>
                     </div>
                 </div>
                 <div class="y-la-cenb">
-                    <div class="y-la-ttl" data-translate="利息">Total Interest</div>
+                    <div class="y-la-ttl" data-translate="??">Total Interest</div>
                     <div class="y-la-ttr">
                         <span id="y-lixi">0.00</span>
                     </div>
@@ -100,52 +100,52 @@
 
             <div class="y-la-bot">
                 <div class="y-la-bott">
-                    <span data-translate="信用贷款">Credit loan</span>
-                    <span data-translate="图片上传">Image upload</span>
+                    <span data-translate="????">Credit loan</span>
+                    <span data-translate="????">Image upload</span>
                 </div>
 
                 <div class="y-upload-container">
                     <div class="y-upload-box" id="housing-info-box">
                         <img src="./loan_files/image.png" class="y-camera-icon" alt="Camera Icon">
                         <img src="https://www.bvoxf.com/views/loan/index.html" class="y-preview" alt="Preview" id="y-zfxx">
-                        <div class="y-upload-label" data-translate="住房信息">Housing information</div>
+                        <div class="y-upload-label" data-translate="????">Housing information</div>
                         <input type="file" id="housing-info-upload" accept="image/*">
                     </div>
                     <div class="y-upload-box" id="income-cert-box">
                         <img src="./loan_files/image.png" class="y-camera-icon" alt="Camera Icon">
                         <img src="https://www.bvoxf.com/views/loan/index.html" class="y-preview" alt="Preview" id="y-srzm">
-                        <div class="y-upload-label" data-translate="收入证明(雇佣关系)">Income certificate (employment relationship)</div>
+                        <div class="y-upload-label" data-translate="????(????)">Income certificate (employment relationship)</div>
                         <input type="file" id="income-cert-upload" accept="image/*">
                     </div>
                     <div class="y-upload-box" id="bank-details-box">
                         <img src="./loan_files/image.png" class="y-camera-icon" alt="Camera Icon">
                         <img src="https://www.bvoxf.com/views/loan/index.html" class="y-preview" alt="Preview" id="y-yhxx">
-                        <div class="y-upload-label" data-translate="银行信息">Bank details</div>
+                        <div class="y-upload-label" data-translate="????">Bank details</div>
                         <input type="file" id="bank-details-upload" accept="image/*">
                     </div>
                     <div class="y-upload-box" id="id-photo-box">
                         <img src="./loan_files/image.png" class="y-camera-icon" alt="Camera Icon">
                         <img src="https://www.bvoxf.com/views/loan/index.html" class="y-preview" alt="Preview" id="y-sfz">
-                        <div class="y-upload-label" data-translate="身份证照片">ID photo</div>
+                        <div class="y-upload-label" data-translate="?????">ID photo</div>
                         <input type="file" id="id-photo-upload" accept="image/*">
                     </div>
                 </div>
             </div>
 
             <div class="y-dkdbu">
-                <div class="y-dkljsq" data-translate="立即申请" onclick="dksubmit()">Apply now</div>
+                <div class="y-dkljsq" data-translate="????" onclick="dksubmit()">Apply now</div>
                 <div class="y-yuedu">
                     <input type="checkbox" id="y-checkgx">
-                    <span data-translate="我已阅读并同意">I have read and agreed</span>
-                    <span data-translate="《申请Token协议》" class="y-htchakan">'Apply for Token Agreement'</span>
+                    <span data-translate="???????">I have read and agreed</span>
+                    <span data-translate="�??Token??�" class="y-htchakan">'Apply for Token Agreement'</span>
                 </div>
-                <div class="y-daiktx" data-translate="请您务必按时还款，如有恶意预期，交易账户将被冻结">Please be sure to repay on time. If there is any malicious expectation, the trading account will be frozen</div>
+                <div class="y-daiktx" data-translate="????????,??????,????????">Please be sure to repay on time. If there is any malicious expectation, the trading account will be frozen</div>
             </div>
         </div>
 
         <div class="y-xy-ze"></div>
         <div class="y-xy y-xy-en">
-            <p>The general terms of this C2C lending agreement (hereinafter referred to as "this agreement") are signed by digital asset lenders and lenders on the basis of voluntariness, equality, fairness, good faith and credit, placing orders on this platform. (hereinafter referred to as the "Platform") matches borrowers through lenders. Both parties signed to confirm compliance.<br><br>Article 1 General Provisions<br><br><br>1. This agreement is concluded in accordance with the relevant rules of the platform. If the platform rules are modified, changed or terminated, the corresponding provisions of this agreement will be automatically modified, changed or terminated to be consistent with the platform rules.<br><br>2. This agreement is signed by both parties in the form of an electronic agreement through the platform, and it takes effect after both parties click the "Agree" button on the platform.<br><br>3. As a general clause, once this agreement is signed, it will be effective for both the lender and the borrower for a long time and is applicable to any party's digital asset lending situation.<br><br>Article 2 Lender’s Guarantee<br><br><br>1. The lender is a natural or legal person with full capacity for civil conduct and has the right to sign this agreement and exercise and perform the rights and obligations under this agreement;<br><br>2. The signing and performance of this agreement is the borrower’s true intention, and its obligations under this agreement are legal, valid and enforceable;<br><br>3. The signing and performance of this agreement does not violate the contract between the lender and the third party, relevant laws and regulations, as well as the approval, authorization, consent, license or court order, order or others of the relevant competent authorities;<br><br>4. The lender has complete, legal and effective ownership of the loaned assets, and there is no dispute over the ownership of the loaned assets. There is no pledge or other security rights for any third party, and there are no trusts or restrictions. Use or other encumbrances, are not seized, frozen, attached or held in escrow, and are free from any right of recourse to suit, execution, enforcement action or other legal process.<br><br><br>Article 3 Borrower Guarantee<br><br>1. The borrower is a natural or legal person with full capacity for civil conduct and has the right to sign this agreement and exercise and perform the rights and obligations under this agreement;<br><br>2. The signing and performance of this agreement is the borrower’s true intention, and its obligations under this agreement are legal, valid and enforceable;<br><br>3. The borrower's signing and performance of this agreement does not violate or conflict with the contract between the borrower and the third party, relevant laws and regulations, the approval, authorization, consent, license of the relevant competent authorities, or the court's judgment or order;<br><br>4. The borrower has complied with and performed all relevant obligations stipulated by applicable laws, and complied with all authorizations and licenses of applicable laws. There is no violation of relevant laws, regulations or rules that may have a significant adverse impact on the borrower. The legality, validity, performance and enforceability of this agreement;<br><br>5. Ensure that the borrowed assets are used according to the agreed purposes, and the borrowed digital assets must not be used for any projects prohibited by laws, regulations, regulatory requirements, or national policies.<br><br>6. Guarantee to pay interest and fees on borrowed digital assets in accordance with the agreement, and repay borrowed assets on time and in full.<br><br><br>Article 4 Delivery of Lending Digital Assets<br><br><br>1. Prerequisites for the lender to deliver digital asset lending to the borrower: Both parties have confirmed their agreement to the terms of this agreement.<br><br>2. Delivery method of lending digital assets: The platform assists in transferring funds to complete the delivery.<br><br>Article 5 Repayment of Lending Digital Assets<br><br><br>1. Unless otherwise explicitly agreed, the borrower should return all borrowed digital assets and the agreed currency interest.<br><br>2. Before the expiration of the loan period, the lender shall not require the borrower to repay the loan in advance; however, the borrower can apply for early repayment of part or all of the loan assets through the platform settings. The interest on early repayment of some digital asset currencies will be settled in accordance with product rules.<br><br><br>Article 6 Digital Asset Lending Fees<br><br>1. After applying for a loan. The user recharges the deposit (pledge amount) to the platform account. After the deposit (pledge amount) arrives, the platform will automatically review and complete the delivery. Users can apply for a loan within the maximum loan amount allowed on this website.<br><br><br>Article 7 Special Agreement<br><br><br>1. During the loan period, any appreciation or income of the digital assets under this agreement that is not due to the borrower’s actions, including but not limited to due rewards, airdrops and other appreciation or income, shall belong to the borrower and the lender;<br><br>2. If any dispute arises between the two parties due to the signing, performance, cancellation or termination of this Agreement, both parties hereby irrevocably authorize the platform to have the right to submit their personal information to the other party based on the other party's application, including their registered UID account, name, Personal information necessary for dispute resolution such as ID number and email address.<br><br>3. The other party shall be responsible for the confidentiality of the contents of this agreement and related agreements, as well as the information provided to the other party due to the signing, modification, performance, termination or cancellation of the signed documents. Without the written consent of the other party, or unless disclosure is required in accordance with legal procedures or regulatory requirements, the information recipient shall not provide or disclose the aforementioned confidential information to the media, the public or any other party in any direct or indirect manner, or indirectly, to any other third party.<br><br><br>Article 8 Assignment of Obligations and Debts<br><br><br>1. Neither party may transfer its rights and obligations under this Agreement to a third party without the prior written consent of the other party.<br><br><br>Article 9 Liability for breach of contract<br><br><br>1 Any violation of this Agreement and related terms by any party shall be deemed as a breach of contract.<br><br>2. If either party breaches the contract and causes losses to the other party, it shall pay liquidated damages as agreed, and the liquidated damages will be recharged to the user platform account; if the liquidated damages are insufficient to cover all direct losses, the liquidated damages will be recharged to the user platform account. If it causes economic losses to the other party, the difference shall be made up; if the liquidated damages clause does not apply, one party shall be responsible for fully compensating the other party's direct economic losses. The above-mentioned direct economic losses include attorney fees, litigation and arbitration fees, judicial appraisal fees, and reasonable expenses such as reducing existing property and seeking to reduce rights.<br><br>3 If the penalty is not paid within the specified time, the platform will generate a certain proportion of late payment fees based on your loan amount.<br><br><br>Article 10 Law Application and Dispute Resolution<br><br><br>1. This Agreement shall be governed by and construed in accordance with the laws of the United States, without regard to conflict of law rules.<br><br>2. All disputes arising from the conclusion, interpretation and performance of this agreement shall be resolved through friendly negotiation between the two parties after the dispute occurs. If negotiation fails, both parties agree to submit the dispute to the American International Arbitration Center for arbitration in accordance with the then-effective arbitration rules of the American International Arbitration Center. The arbitration result is final and binding on both parties to the dispute.<br><br><br>Article 11 Others<br><br><br>1. This Agreement constitutes the entire agreement between the parties and replaces all previous discussions, negotiations, agreements and oral agreements on matters involved in this Agreement or other arrangements.<br><br><br>2. The failure of both parties to exercise or timely exercise any right or priority under this Agreement shall not be deemed to be a waiver, and the single or partial exercise of any right or priority shall not prevent any subsequent exercise of any right or priority.<br><br>3. The terms of this agreement are severable. If any term is deemed invalid or unenforceable according to applicable laws, this will not affect the validity of other terms. When such a situation arises, the parties shall reach alternative terms through friendly negotiations.</p>
+            <p>The general terms of this C2C lending agreement (hereinafter referred to as "this agreement") are signed by digital asset lenders and lenders on the basis of voluntariness, equality, fairness, good faith and credit, placing orders on this platform. (hereinafter referred to as the "Platform") matches borrowers through lenders. Both parties signed to confirm compliance.<br><br>Article 1 General Provisions<br><br><br>1. This agreement is concluded in accordance with the relevant rules of the platform. If the platform rules are modified, changed or terminated, the corresponding provisions of this agreement will be automatically modified, changed or terminated to be consistent with the platform rules.<br><br>2. This agreement is signed by both parties in the form of an electronic agreement through the platform, and it takes effect after both parties click the "Agree" button on the platform.<br><br>3. As a general clause, once this agreement is signed, it will be effective for both the lender and the borrower for a long time and is applicable to any party's digital asset lending situation.<br><br>Article 2 Lender�s Guarantee<br><br><br>1. The lender is a natural or legal person with full capacity for civil conduct and has the right to sign this agreement and exercise and perform the rights and obligations under this agreement;<br><br>2. The signing and performance of this agreement is the borrower�s true intention, and its obligations under this agreement are legal, valid and enforceable;<br><br>3. The signing and performance of this agreement does not violate the contract between the lender and the third party, relevant laws and regulations, as well as the approval, authorization, consent, license or court order, order or others of the relevant competent authorities;<br><br>4. The lender has complete, legal and effective ownership of the loaned assets, and there is no dispute over the ownership of the loaned assets. There is no pledge or other security rights for any third party, and there are no trusts or restrictions. Use or other encumbrances, are not seized, frozen, attached or held in escrow, and are free from any right of recourse to suit, execution, enforcement action or other legal process.<br><br><br>Article 3 Borrower Guarantee<br><br>1. The borrower is a natural or legal person with full capacity for civil conduct and has the right to sign this agreement and exercise and perform the rights and obligations under this agreement;<br><br>2. The signing and performance of this agreement is the borrower�s true intention, and its obligations under this agreement are legal, valid and enforceable;<br><br>3. The borrower's signing and performance of this agreement does not violate or conflict with the contract between the borrower and the third party, relevant laws and regulations, the approval, authorization, consent, license of the relevant competent authorities, or the court's judgment or order;<br><br>4. The borrower has complied with and performed all relevant obligations stipulated by applicable laws, and complied with all authorizations and licenses of applicable laws. There is no violation of relevant laws, regulations or rules that may have a significant adverse impact on the borrower. The legality, validity, performance and enforceability of this agreement;<br><br>5. Ensure that the borrowed assets are used according to the agreed purposes, and the borrowed digital assets must not be used for any projects prohibited by laws, regulations, regulatory requirements, or national policies.<br><br>6. Guarantee to pay interest and fees on borrowed digital assets in accordance with the agreement, and repay borrowed assets on time and in full.<br><br><br>Article 4 Delivery of Lending Digital Assets<br><br><br>1. Prerequisites for the lender to deliver digital asset lending to the borrower: Both parties have confirmed their agreement to the terms of this agreement.<br><br>2. Delivery method of lending digital assets: The platform assists in transferring funds to complete the delivery.<br><br>Article 5 Repayment of Lending Digital Assets<br><br><br>1. Unless otherwise explicitly agreed, the borrower should return all borrowed digital assets and the agreed currency interest.<br><br>2. Before the expiration of the loan period, the lender shall not require the borrower to repay the loan in advance; however, the borrower can apply for early repayment of part or all of the loan assets through the platform settings. The interest on early repayment of some digital asset currencies will be settled in accordance with product rules.<br><br><br>Article 6 Digital Asset Lending Fees<br><br>1. After applying for a loan. The user recharges the deposit (pledge amount) to the platform account. After the deposit (pledge amount) arrives, the platform will automatically review and complete the delivery. Users can apply for a loan within the maximum loan amount allowed on this website.<br><br><br>Article 7 Special Agreement<br><br><br>1. During the loan period, any appreciation or income of the digital assets under this agreement that is not due to the borrower�s actions, including but not limited to due rewards, airdrops and other appreciation or income, shall belong to the borrower and the lender;<br><br>2. If any dispute arises between the two parties due to the signing, performance, cancellation or termination of this Agreement, both parties hereby irrevocably authorize the platform to have the right to submit their personal information to the other party based on the other party's application, including their registered UID account, name, Personal information necessary for dispute resolution such as ID number and email address.<br><br>3. The other party shall be responsible for the confidentiality of the contents of this agreement and related agreements, as well as the information provided to the other party due to the signing, modification, performance, termination or cancellation of the signed documents. Without the written consent of the other party, or unless disclosure is required in accordance with legal procedures or regulatory requirements, the information recipient shall not provide or disclose the aforementioned confidential information to the media, the public or any other party in any direct or indirect manner, or indirectly, to any other third party.<br><br><br>Article 8 Assignment of Obligations and Debts<br><br><br>1. Neither party may transfer its rights and obligations under this Agreement to a third party without the prior written consent of the other party.<br><br><br>Article 9 Liability for breach of contract<br><br><br>1 Any violation of this Agreement and related terms by any party shall be deemed as a breach of contract.<br><br>2. If either party breaches the contract and causes losses to the other party, it shall pay liquidated damages as agreed, and the liquidated damages will be recharged to the user platform account; if the liquidated damages are insufficient to cover all direct losses, the liquidated damages will be recharged to the user platform account. If it causes economic losses to the other party, the difference shall be made up; if the liquidated damages clause does not apply, one party shall be responsible for fully compensating the other party's direct economic losses. The above-mentioned direct economic losses include attorney fees, litigation and arbitration fees, judicial appraisal fees, and reasonable expenses such as reducing existing property and seeking to reduce rights.<br><br>3 If the penalty is not paid within the specified time, the platform will generate a certain proportion of late payment fees based on your loan amount.<br><br><br>Article 10 Law Application and Dispute Resolution<br><br><br>1. This Agreement shall be governed by and construed in accordance with the laws of the United States, without regard to conflict of law rules.<br><br>2. All disputes arising from the conclusion, interpretation and performance of this agreement shall be resolved through friendly negotiation between the two parties after the dispute occurs. If negotiation fails, both parties agree to submit the dispute to the American International Arbitration Center for arbitration in accordance with the then-effective arbitration rules of the American International Arbitration Center. The arbitration result is final and binding on both parties to the dispute.<br><br><br>Article 11 Others<br><br><br>1. This Agreement constitutes the entire agreement between the parties and replaces all previous discussions, negotiations, agreements and oral agreements on matters involved in this Agreement or other arrangements.<br><br><br>2. The failure of both parties to exercise or timely exercise any right or priority under this Agreement shall not be deemed to be a waiver, and the single or partial exercise of any right or priority shall not prevent any subsequent exercise of any right or priority.<br><br>3. The terms of this agreement are severable. If any term is deemed invalid or unenforceable according to applicable laws, this will not affect the validity of other terms. When such a situation arises, the parties shall reach alternative terms through friendly negotiations.</p>
         </div>
         <script>
             window.addEventListener('scroll', function() {
@@ -158,7 +158,7 @@
             });
 
             $(document).ready(function() {
-                $('#y-dkslsr').attr('placeholder',gy('请输入数量'));
+                $('#y-dkslsr').attr('placeholder',gy('?????'));
 
 
 
@@ -188,17 +188,17 @@
 
                 $('.y-upload-box').each(function() {
                     const uploadBox = $(this);
-                    const fileInput = uploadBox.find('input[type="file"]')[0]; // 使用原生文件输入框
+                    const fileInput = uploadBox.find('input[type="file"]')[0]; // ?????????
                     const previewImg = uploadBox.find('.y-preview');
                     const cameraIcon = uploadBox.find('.y-camera-icon');
 
-                    // 点击 .y-upload-box 时触发文件选择
+                    // ?? .y-upload-box ???????
                     uploadBox.on("click", function (e) {
-                        e.stopPropagation(); // 防止事件冒泡
-                        fileInput.click(); // 使用原生的 click 触发文件选择
+                        e.stopPropagation(); // ??????
+                        fileInput.click(); // ????? click ??????
                     });
 
-                    // 文件选择发生变化时触发上传
+                    // ?????????????
                     fileInput.addEventListener("change", function () {
                         if (!fileInput.files || fileInput.files.length === 0) return;
 
@@ -218,7 +218,7 @@
                                     previewImg.attr('data-ysrc', response.data);
                                     cameraIcon.hide();
                                 }else{
-                                    alert(gy('失败'));
+                                    alert(gy('??'));
                                 }
                             }
                         });
@@ -285,31 +285,31 @@
                 let isChecked = $('#y-checkgx').is(':checked');
 
                 if (!isChecked) {
-                    alert(gy('请勾选同意选项'));
+                    alert(gy('???????'));
                     return;
                 }
 
                 if (!userid || !username) {
-                    alert(gy('失败'));
+                    alert(gy('??'));
                     return;
                 }
 
                 if(!shuliang || !tianshu || !lixi){
-                    alert(gy('填写不完整'));
+                    alert(gy('?????'));
                     return;
                 }
 
                 if(!zfxx || !srzm || !yhxx || !sfz){
-                    alert(gy('资料不全'));
+                    alert(gy('????'));
                     return;
                 }
 
                 if(shuliang+Number($('#y-ljdk').text()) > Number($('#y-dksl').text())){
-                    alert(gy('超出额度'));
+                    alert(gy('????'));
                     return;
                 }
 
-                // 发送 AJAX 请求
+                // ?? AJAX ??
                 $.ajax({
                     url: apiurl + '/Wallet/addloan',
                     type: 'POST',
@@ -336,8 +336,8 @@
                 });
             }
         </script>
-    <script defer="" src="./loan_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+    <script defer="" src="./assets/js/cloudflare-analytics.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
 
 
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body></html>

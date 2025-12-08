@@ -1,13 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0042)https://www.bvoxf.com/views/record/ai.html -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./ai-record_files/style.css">
-		<script src="./ai-record_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./ai-record_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./ai-record_files/pako.min.js.download"></script><script src="./ai-record_files/js.cookie.min.js.download"></script><script src="./ai-record_files/web3.min.js.download"></script><script src="./ai-record_files/web3model.min.js.download"></script><script src="./ai-record_files/web3provider.js.download"></script><script src="./ai-record_files/fp.min.js.download"></script>
-		<script src="./js/auth-check.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
+		<script src="./assets/js/auth-check.js" type="text/javascript" charset="utf-8"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -47,13 +47,13 @@
                 <a href="ai-arbitrage.html" class="y-fanhui">
                     <img src="./ai-record_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="量化记录">Ai Records</div>
+                <div class="y-title" data-translate="????">Ai Records</div>
             </div>
         </div>
 
         <div class="y-re" style="min-height: 832px;">
             <div class="y-re-in"></div>
-            <div class="y-re-load" onclick="loadMore()" data-translate="加载更多">Load More</div>
+            <div class="y-re-load" onclick="loadMore()" data-translate="????">Load More</div>
         </div>
         
 
@@ -68,8 +68,8 @@
             };
 
             document.querySelector('.y-re').style.minHeight = window.innerHeight + 'px';
-            let page = 1; // 当前页数 (kept for compatibility but not used)
-            const userId = Cookies.get('userid'); // 获取用户ID
+            let page = 1; // ???? (kept for compatibility but not used)
+            const userId = Cookies.get('userid'); // ????ID
 
 
             $(document).ready(function() {
@@ -136,7 +136,7 @@
                             });
 
                             // Hide load more since we loaded all subscriptions
-                            $('.y-re-load').text(gy('没有更多')).prop('disabled', true).hide();
+                            $('.y-re-load').text(gy('????')).prop('disabled', true).hide();
                         } else {
                             // No subscriptions
                             $('.y-re-in').append(`<div class="y-re-box"><div class="y-re-bl"><div class="y-re-blr"><span>${gy('No records')}</span></div></div></div>`);
@@ -149,8 +149,8 @@
                 });
             }
         </script>
-    <script defer="" src="./ai-record_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+    <script defer="" src="./assets/js/cloudflare-analytics.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
 
 
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body></html>

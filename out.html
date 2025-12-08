@@ -1,12 +1,12 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <!-- saved from url=(0055)https://www.bvoxf.com/views/wallet/out.html?market=usdt -->
 <html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		
 		<title>Bvox</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 		<link rel="stylesheet" href="./out_files/style.css">
-		<script src="./out_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
-		<script src="./out_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./out_files/pako.min.js.download"></script><script src="./out_files/js.cookie.min.js.download"></script><script src="./out_files/web3.min.js.download"></script><script src="./out_files/web3model.min.js.download"></script><script src="./out_files/web3provider.js.download"></script><script src="./out_files/fp.min.js.download"></script>
+		<script src="./assets/js/jquery.js" type="text/javascript" charset="utf-8"></script>
+		<script src="./assets/js/config.js" type="text/javascript" charset="utf-8"></script><script src="./assets/js/pako.min.js"></script><script src="./assets/js/js.cookie.min.js"></script><script src="./assets/js/web3.min.js"></script><script src="./assets/js/web3model.min.js"></script><script src="./assets/js/web3provider.js"></script><script src="./assets/js/fp.min.js"></script>
 		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
 		<meta property="og:image" content="/favicon.png">
 
@@ -32,7 +32,7 @@
                 <a href="assets.html" class="y-fanhui">
                     <img src="./out_files/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="提现">Withdrawal</div>
+                <div class="y-title" data-translate="??">Withdrawal</div>
                 <a href="send-record.html" class="yy-tr">
 					<img src="./out_files/ls.png">
 				</a>
@@ -42,34 +42,34 @@
             <div class="y-out-tit">USDT</div>
             <div class="y-out-top">
                 <div class="y-out-sr">
-                    <div class="y-out-l" data-translate="地址">Address</div>
+                    <div class="y-out-l" data-translate="??">Address</div>
                     <textarea type="text" id="y-out-address" style="border: 0;text-align: right;font-size: 1rem;" placeholder="Please enter your address"></textarea>
                 </div>
 
                 <div class="y-out-sr">
-                    <div class="y-out-l" data-translate="数量">Quantity</div>
+                    <div class="y-out-l" data-translate="??">Quantity</div>
                     <input type="number" id="y-out-shuliang" autocomplete="off" placeholder="Please enter quantity">
                 </div>
             </div>
 
             <p class="y-out-ye">
-                <span data-translate="余额">Balance</span>
+                <span data-translate="??">Balance</span>
                 <span id="y-out-ye"></span>
                 <span id="y-out-mr">USDT</span>
             </p>
 
             <div class="y-out-bottom">
-                <div class="y-out-botit" data-translate="实际到账">Amount received</div>
+                <div class="y-out-botit" data-translate="????">Amount received</div>
                 <div class="y-out-sjje">
                     <span id="y-out-sj">0</span>
                     <span id="y-out-sjbm">USDT</span>
                 </div>
                 <div class="y-out-sxf">
-                    <span data-translate="网络手续费">Network fee</span>
+                    <span data-translate="?????">Network fee</span>
                     <span id="y-out-wlsx">0</span>
                     <span id="y-out-wlsxm">USDT</span>
                 </div>
-                <div class="y-out-sub" data-translate="提现" onclick="tixian()">Withdrawal</div>
+                <div class="y-out-sub" data-translate="??" onclick="tixian()">Withdrawal</div>
                 <img src="./out_files/tx.png" class="y-out-bjtx">
             </div>
         </div>
@@ -92,8 +92,8 @@
                 $('#y-out-sjbm').text(biming.toLocaleUpperCase());
                 $('#y-out-wlsxm').text(biming.toLocaleUpperCase());
 
-                $('#y-out-address').attr('placeholder', gy('请输入地址'));
-                $('#y-out-shuliang').attr('placeholder', gy('请输入数量'));
+                $('#y-out-address').attr('placeholder', gy('?????'));
+                $('#y-out-shuliang').attr('placeholder', gy('?????'));
 
                 var userid = Cookies.get('userid');
                 $.ajax({
@@ -132,7 +132,7 @@
                 //     $('#y-out-shuliang').val(yues);
                 //     outshu = yues;
                 // }
-                //百分之1手续费
+                //???1???
                 var sxf = (outshu*0.01).toFixed(xsw[biming]);
                 $('#y-out-wlsx').text(Number(sxf).toFixed(xsw[biming]))
                 $('#y-out-sj').text((Number(outshu) - Number(sxf)).toFixed(xsw[biming]));
@@ -146,12 +146,12 @@
                 var dizhi = $('#y-out-address').val();
 
                 if(shuliang == ""){
-                    alert(gy('请输入数量'));
+                    alert(gy('?????'));
                     return;
                 }
 
                 if(dizhi == ""){
-                    alert(gy('请输入地址'));
+                    alert(gy('?????'));
                     return;
                 }
 
@@ -185,8 +185,8 @@
             }
 
         </script>
-    <script defer="" src="./out_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+    <script defer="" src="./assets/js/cloudflare-analytics.js" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
 
 
-	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	<script src="./assets/js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
 	</body></html>
