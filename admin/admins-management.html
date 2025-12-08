@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admins Management</title>
+  <style>
+    body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:#0d1117;color:#e6edf3;padding:20px}
+    .wrap{max-width:1100px;margin:24px auto}
+    h1{margin-bottom:12px}
+    table{width:100%;border-collapse:collapse;background:#071018;border:1px solid #22272b}
+    th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #152027}
+    th{background:#08141a;color:#9fb8ff}
+    tr:nth-child(even){background:#07141a}
+    .back{display:inline-block;margin-top:12px;padding:8px 12px;border-radius:6px;background:#1f6feb;color:#fff;text-decoration:none}
+    .muted{color:#8b949e}
+    .empty{padding:24px;text-align:center;color:#8b949e}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Admin Accounts</h1>
+    <div id="list">
+      <p class="muted">Loading admins…</p>
+    </div>
+    <a href="dashboard.html" class="back">← Back to Dashboard</a>
+  </div>
+
+  <script>
+    (function(){
+      const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+      
+      // Verify token before loading
+      if(!token) { window.location.href='login.html'; return; }
+      
+      try{
+        const parts = token.split('.');
+        if(parts.length!==3) throw new Error('Invalid token format');
+        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        if(!payload || !payload.exp || payload.exp < Math.floor(Date.now()/1000)) throw new Error('Token expired');
+      }catch(e){ 
+        localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); 
+        window.location.href='login.html'; 
+        return;
+      }
+
+      function renderTable(admins){
+        if(!admins || admins.length===0){
+          document.getElementById('list').innerHTML = '<div class="empty">No admin records found.</div>';
+          return;
+        }
+        let html = '<table><thead><tr><th>ID</th><th>Full name</th><th>Username</th><th>Email</th><th>Status</th><th>Created</th><th>Last login</th></tr></thead><tbody>';
+        admins.forEach(a=>{
+          html += `<tr><td>${a.id||''}</td><td>${a.fullname||''}</td><td>${a.username||''}</td><td>${a.email||''}</td><td>${a.status||''}</td><td>${a.created_at||''}</td><td>${a.lastLogin||'Never'}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('list').innerHTML = html;
+      }
+
+      // Call secure /api/admin/list endpoint
+      fetch('/api/admin/list', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      }).then(r=>{
+        if(!r.ok) throw new Error('Failed to load admins (HTTP '+r.status+')');
+        return r.json();
+      }).then(data=>{
+        if(!data.success || !data.admins){
+          throw new Error('Invalid response from server');
+        }
+        renderTable(data.admins);
+      }).catch(err=>{
+        console.error('Error:', err);
+        document.getElementById('list').innerHTML = '<p class="muted">Error loading admins: '+(err.message||err)+'</p>';
+      });
+
+      document.addEventListener('keydown', e=>{ if(e.key==='Escape') window.location.href='dashboard.html'; });
+    })();
+  </script>
+</body>
+</html>

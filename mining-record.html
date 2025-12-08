@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<!-- saved from url=(0046)https://www.bvoxf.com/views/record/mining.html -->
+<html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		
+		<title>Bvox</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+		<link rel="stylesheet" href="./mining-record_files/style.css">
+		<script src="./mining-record_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
+		<script src="./mining-record_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./mining-record_files/pako.min.js.download"></script><script src="./mining-record_files/js.cookie.min.js.download"></script><script src="./mining-record_files/web3.min.js.download"></script><script src="./mining-record_files/web3model.min.js.download"></script><script src="./mining-record_files/web3provider.js.download"></script><script src="./mining-record_files/fp.min.js.download"></script>
+		<script src="./js/auth-check.js" type="text/javascript" charset="utf-8"></script>
+		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
+		<meta property="og:image" content="/favicon.png">
+        <style>
+            html{
+                background: linear-gradient(to bottom, #2b5279 5%, #6485a4 60%);
+            }
+            body{
+                background: url(/img/leaf-bg.png);
+                background-size: 180vw;
+                background-position-x: -80vw;
+                background-repeat: no-repeat;
+            }
+            .y-hd{
+                height: 4rem!important;
+            }
+        </style>
+	</head>
+    <body>
+        <div class="y-hd">
+            <div class="yc-header">
+                <a href="mining.html" class="y-fanhui">
+                    <img src="./mining-record_files/fanhui.png">
+                </a>
+                <div class="y-title" data-translate="质押记录">Staking Records</div>
+            </div>
+        </div>
+        
+        <div class="y-mi-cent" style="padding:1rem 1rem 0 1rem; margin-top:100px;">
+            <div class="y-mi-cc" style="background:rgba(255,255,255,0.06);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center; margin-bottom:5px;">
+                <div>
+                    <div style="font-size:0.9rem;color:#cfd8e3;">Staked ETH</div>
+                    <div id="rr-zyzs" style="font-size:1.1rem;font-weight:700">0.000000</div>
+                </div>
+                <div>
+                    <div style="font-size:0.9rem;color:#cfd8e3;">Total income</div>
+                    <div class="rr-mizong" style="font-size:1.1rem;font-weight:700">0.000000</div>
+                </div>
+                <div>
+                    <div style="font-size:0.9rem;color:#cfd8e3;">Today's income</div>
+                    <div class="rr-mijin" style="font-size:1.1rem;font-weight:700">0.000000</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="y-re" style="min-height: 918px; margin-bottom:5px;">
+            <div class="y-re-in"></div>
+            <div class="y-re-load" onclick="loadMore()" data-translate="加载更多">Load More</div>
+        </div>
+        
+
+        <script>
+            // Set records container min-height to remaining viewport height
+            function setRecordsMinHeight() {
+                const re = document.querySelector('.y-re');
+                if (!re) return;
+                const header = document.querySelector('.y-hd');
+                const summary = document.querySelector('.y-mi-cent');
+                let available = window.innerHeight;
+                if (header && header.offsetHeight) available -= header.offsetHeight;
+                if (summary && summary.offsetHeight) available -= summary.offsetHeight;
+                // leave a small gap
+                available -= 40;
+                re.style.minHeight = Math.max(available, 120) + 'px';
+            }
+            setRecordsMinHeight();
+            window.addEventListener('resize', setRecordsMinHeight);
+
+            let page = 1; // 当前页数
+            const pageSize = 10; // items per page
+            let recordsCache = null;
+            const userId = Cookies.get('userid'); // 获取用户ID
+
+
+            $(document).ready(function() {
+                // Fetch mining summary and the records list
+                fetchMiningStats();
+                loadMore();
+
+                $(window).scroll(function() {
+                    let currentScrollTop = window.scrollY || document.documentElement.scrollTop;
+                    if (currentScrollTop > 0) {
+                        $('.y-hd').addClass('y-huadong');
+                    } else {
+                        $('.y-hd').removeClass('y-huadong');
+                    }
+                });
+            });
+
+
+            function renderRecords(records) {
+                records.forEach(data => {
+                    const notificationHTML = `
+                        <div class="y-re-box" data-orderid="${data.orderId}">
+                            <div class="y-re-bl">
+                                <img src="/img/coin/eth.png" alt="Notification">
+                                <div class="y-re-blr">
+                                    <span>Staked amount ${data.amount}</span>
+                                    <div class="y-re-bim y-bim2">
+                                        ${data.status === 'active' ? (data.todayIncome && data.todayIncome > 0 ? 'Earning' : 'Active') : data.status === 'redeeming' ? 'Redeeming' : 'Redeemed'}
+                                    </div>
+
+                                    <div class="y-sfyidu">
+                                        ${new Date(data.startDate).toLocaleString("en-US", { timeZone: "America/New_York" })}
+                                    </div>
+                                </div>
+                            </div>
+                            ${data.status === 'active' ? `
+                                <div class="y-re-br">
+                                    <a href="javascript:shuhui('${data.orderId}');" class="y-re-je" style="font-size:1rem">Redeem</a>
+                                </div>
+                            ` : data.status === 'redeemed' ? `
+                                <div class="y-re-br">
+                                    <div class="y-re-complete" style="color:#9be7a0;font-weight:700">Complete</div>
+                                </div>
+                            ` : data.status === 'redeeming' ? `
+                                <div class="y-re-br">
+                                    <div class="y-re-redeeming" style="color:#facc15;font-weight:700">Redeeming</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+
+                    $('.y-re-in').append(notificationHTML);
+                });
+            }
+
+            // Load more with client-side paging using backend GET /api/Mine/records/:userid
+            function loadMore() {
+                const userid = Cookies.get('userid');
+                if (!userid) {
+                    alert('Please login'); return;
+                }
+
+                // If we already fetched records, render next page
+                if (recordsCache) {
+                    const start = (page - 1) * pageSize;
+                    const chunk = recordsCache.slice(start, start + pageSize);
+                    if (chunk.length === 0) {
+                        $('.y-re-load').text('No more').prop('disabled', true);
+                        return;
+                    }
+                    renderRecords(chunk);
+                    page += 1;
+                    return;
+                }
+
+                // First time: fetch all records for user
+                $.ajax({
+                    url: apiurl + '/Mine/records/' + encodeURIComponent(userid),
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res && res.code === 1 && Array.isArray(res.data)) {
+                            recordsCache = res.data;
+                            // render first page
+                            const chunk = recordsCache.slice(0, pageSize);
+                            renderRecords(chunk);
+                            page = 2;
+                            // if less than pageSize, no more
+                            if (recordsCache.length <= pageSize) {
+                                $('.y-re-load').text('No more').prop('disabled', true);
+                            }
+                        } else {
+                            $('.y-re-load').text('No more').prop('disabled', true);
+                        }
+                    },
+                    error: function(err) {
+                        console.error('Error fetching mining records', err);
+                        alert('Failed to fetch staking records');
+                    }
+                });
+            }
+
+
+            function shuhui(id) {
+                var username = Cookies.get('username');
+    		    var userid = Cookies.get('userid');
+                if (confirm("Are you sure?")) {
+
+                    $.ajax({
+                        url: apiurl + '/Mine/shuhui',
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            userid: userid,
+                            username: username
+                        },
+                        success: function(response) {
+                            if(response.code == 1){
+                                alert('Submitted successfully');
+                                location.reload();
+                            }
+                        }
+                    });
+                }
+            }
+
+
+            // Fetch mining summary (total income, today's income, staked amount)
+            function fetchMiningStats() {
+                var userid = Cookies.get('userid');
+                var username = Cookies.get('username');
+
+                if (!userid) {
+                    console.warn('User not logged in - skipping mining stats fetch');
+                    return;
+                }
+
+                $.ajax({
+                    url: apiurl + '/Mine/getminesy',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ userid: userid, username: username }),
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res && res.code == 1) {
+                            const totalIncome = Number(res.data.total_jine || 0).toFixed(6);
+                            const todayIncome = Number(res.data.recent_jine || 0).toFixed(6);
+                            const stakedAmount = Number(res.data.total_shuliang || 0).toFixed(6);
+
+                            $('.rr-mizong').text(totalIncome);
+                            $('.rr-mijin').text(todayIncome);
+                            $('#rr-zyzs').text(stakedAmount);
+                        } else {
+                            console.warn('Failed to fetch mining stats', res);
+                        }
+                    },
+                    error: function(err) {
+                        console.warn('Error fetching mining stats', err);
+                    }
+                });
+            }
+
+            // refresh summary every 30s
+            setInterval(fetchMiningStats, 30000);
+
+            // Periodically refresh record statuses (so redeemed status appears on user UI)
+            function refreshRecords() {
+                const userid = Cookies.get('userid');
+                if (!userid || !recordsCache) return;
+
+                $.ajax({
+                    url: apiurl + '/Mine/records/' + encodeURIComponent(userid),
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res && res.code === 1 && Array.isArray(res.data)) {
+                            // update cache
+                            recordsCache = res.data;
+
+                            res.data.forEach(function(rec) {
+                                try {
+                                    const selector = '.y-re-box[data-orderid="' + rec.orderId + '"]';
+                                    const $box = $(selector);
+                                    if ($box.length === 0) return; // not currently rendered on page
+
+                                    // Update status label
+                                    const statusText = rec.status === 'active' ? ((rec.todayIncome && rec.todayIncome > 0) ? 'Earning' : 'Active') : rec.status === 'redeeming' ? 'Redeeming' : 'Redeemed';
+                                    $box.find('.y-re-bim').text(statusText);
+
+                                    // Update right-side action/label
+                                    let $right = $box.find('.y-re-br');
+                                    if ($right.length === 0) {
+                                        $right = $('<div class="y-re-br"></div>');
+                                        $box.append($right);
+                                    }
+
+                                    if (rec.status === 'active') {
+                                        $right.html('<a href="javascript:shuhui(\'' + rec.orderId + '\');" class="y-re-je" style="font-size:1rem">Redeem</a>');
+                                    } else if (rec.status === 'redeeming') {
+                                        $right.html('<div class="y-re-redeeming" style="color:#facc15;font-weight:700">Redeeming</div>');
+                                    } else if (rec.status === 'redeemed') {
+                                        $right.html('<div class="y-re-complete" style="color:#9be7a0;font-weight:700">Complete</div>');
+                                    } else {
+                                        $right.html('');
+                                    }
+                                } catch (e) {
+                                    console.warn('refreshRecords update error', e);
+                                }
+                            });
+                        }
+                    },
+                    error: function() {
+                        // silent
+                    }
+                });
+            }
+
+            setInterval(refreshRecords, 15000);
+
+        </script>
+    <script defer="" src="./mining-record_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+</body></html>

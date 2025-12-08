@@ -1,0 +1,396 @@
+﻿<!DOCTYPE html>
+<!-- saved from url=(0044)https://www.bvoxf.com/views/record/loan.html -->
+<html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		
+		<title>Bvox</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+		<link rel="stylesheet" href="./loan-record_files/style.css">
+		<script src="./loan-record_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
+		<script src="./loan-record_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./loan-record_files/pako.min.js.download"></script><script src="./loan-record_files/js.cookie.min.js.download"></script><script src="./loan-record_files/web3.min.js.download"></script><script src="./loan-record_files/web3model.min.js.download"></script><script src="./loan-record_files/web3provider.js.download"></script><script src="./loan-record_files/fp.min.js.download"></script>
+		<script src="./js/auth-check.js" type="text/javascript" charset="utf-8"></script>
+		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
+		<meta property="og:image" content="/favicon.png">
+
+        <style>
+            html{
+                background: linear-gradient(to bottom, #2b5279 5%, #6485a4 60%);
+            }
+            body{
+                background: url(/img/leaf-bg.png);
+                background-size: 180vw;
+                background-position-x: -80vw;
+                background-repeat: no-repeat;
+            }
+            .y-hd{
+                height: 4rem!important;
+            }
+
+            /* Enhanced Loan Record Card Styling - Mobile Optimized */
+            .y-re-box {
+                background: linear-gradient(135deg, #ffffff 0%, #f8f9fb 100%);
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+                border: 1px solid #e8ecf1;
+                transition: all 0.3s ease;
+                flex-direction: column;
+                padding: 0.8rem !important;
+                margin-top: 0.8rem !important;
+                position: relative;
+            }
+
+            .y-re-box:hover {
+                box-shadow: 0 4px 20px rgba(43, 82, 121, 0.15);
+                transform: translateY(-2px);
+            }
+
+            /* Status Badge */
+            .status-badge {
+                display: inline-block;
+                padding: 0.3rem 0.6rem;
+                border-radius: 0.3rem;
+                font-weight: 700;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+                position: absolute;
+                top: 0.8rem;
+                right: 0.8rem;
+            }
+
+            .status-badge.approved {
+                background: #00c693;
+                color: #fff;
+                border: none;
+            }
+
+            .status-badge.pending {
+                background: #ffc107;
+                color: #fff;
+                border: none;
+            }
+
+            .status-badge.rejected {
+                background: #dc3545;
+                color: #fff;
+                border: none;
+            }
+
+            /* Coin icon - smaller for mobile */
+            .y-re-bl {
+                width: 100%;
+                margin-bottom: 0.8rem;
+            }
+
+            .y-re-bl img {
+                width: 2rem;
+                height: 2rem;
+                padding: 0.3rem;
+                background: #f0f5fa;
+                border-radius: 0.6rem;
+                margin-right: 0;
+                display: inline-block;
+            }
+
+            /* Card Content Improvement */
+            .y-re-blr {
+                flex: 1;
+                width: 100%;
+                padding: 0;
+                padding-top: 1.8rem;
+            }
+
+            .y-re-blr span:first-child {
+                display: none;
+            }
+
+            /* Amount display - prominent at top */
+            .amount-row {
+                margin-bottom: 1rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #e8ecf1;
+            }
+
+            .amount-display {
+                font-size: 1.3rem;
+                font-weight: 700;
+                color: #2b5279;
+                margin-bottom: 0.2rem;
+            }
+
+            .amount-label {
+                font-size: 0.75rem;
+                color: #999;
+                font-weight: 500;
+            }
+
+            /* Compact grid for mobile - 2x2 layout */
+            .y-re-bim {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem 0.5rem;
+                margin: 0;
+                padding: 0;
+                border: none;
+            }
+
+            .y-re-bim p {
+                display: block;
+                margin: 0;
+                font-size: 0.8rem;
+                color: #555;
+            }
+
+            .y-re-bim p strong {
+                font-size: 0.7rem;
+                color: #999;
+                display: block;
+                margin-bottom: 0.2rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.3px;
+            }
+
+            .y-re-bim p span {
+                font-size: 0.95rem;
+                color: #333;
+                font-weight: 600;
+                display: block;
+            }
+
+            .y-re-bim p::before {
+                content: '';
+                display: none;
+            }
+
+            /* Return value - highlight with green */
+            .return-value {
+                color: #00c693 !important;
+                font-weight: 700 !important;
+            }
+
+            /* Time Info - compact single row */
+            .y-sfyidu {
+                margin-top: 0.6rem;
+                padding-top: 0;
+                border-top: none;
+                display: flex;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .y-sfyidu p {
+                margin: 0;
+                font-size: 0.8rem;
+                color: #888;
+                line-height: 1.3;
+                display: inline;
+            }
+
+            .y-sfyidu p br {
+                display: none;
+            }
+
+            .y-sfyidu p::before {
+                content: '';
+                display: none;
+            }
+
+            /* Load More Button */
+            .y-re-load {
+                background: linear-gradient(135deg, #2b5279 0%, #3d6fa0 100%);
+                color: #fff;
+                border: none;
+                font-weight: 600;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                font-size: 0.95rem;
+                padding: 0.6rem !important;
+                margin-top: 0.8rem !important;
+            }
+
+            .y-re-load:hover {
+                box-shadow: 0 4px 15px rgba(43, 82, 121, 0.3);
+                transform: translateY(-1px);
+            }
+
+            /* Tablet and Desktop View */
+            @media (min-width: 640px) {
+                .y-re-box {
+                    flex-direction: row;
+                    padding: 1rem !important;
+                    margin-top: 0.8rem !important;
+                    align-items: flex-start;
+                }
+
+                .y-re-bl {
+                    width: auto;
+                    margin-bottom: 0;
+                    margin-right: 1rem;
+                }
+
+                .y-re-bl img {
+                    width: 3rem;
+                    height: 3rem;
+                    padding: 0.5rem;
+                    margin-right: 0;
+                }
+
+                .y-re-bim {
+                    grid-template-columns: 1fr 1fr;
+                    gap: 0.8rem;
+                    margin: 1rem 0;
+                    padding: 1rem 0;
+                }
+
+                .status-badge {
+                    padding: 0.4rem 0.8rem;
+                    font-size: 0.85rem;
+                    margin-bottom: 0.8rem;
+                }
+            }
+
+            /* Extra Large Screens */
+            @media (min-width: 1024px) {
+                .y-re-box {
+                    padding: 1.2rem !important;
+                }
+
+                .y-re-bim {
+                    grid-template-columns: 1fr 1fr 1fr 1fr;
+                    gap: 1rem;
+                }
+
+                .status-badge {
+                    padding: 0.4rem 0.8rem;
+                    font-size: 0.9rem;
+                }
+            }
+        </style>
+	<style data-styled="active" data-styled-version="5.2.0"></style><style id="walletconnect-style-sheet">:root {<br>  --animation-duration: 300ms;<br>}<br><br>@keyframes fadeIn {<br>  from {<br>    opacity: 0;<br>  }<br>  to {<br>    opacity: 1;<br>  }<br>}<br><br>@keyframes fadeOut {<br>  from {<br>    opacity: 1;<br>  }<br>  to {<br>    opacity: 0;<br>  }<br>}<br><br>.animated {<br>  animation-duration: var(--animation-duration);<br>  animation-fill-mode: both;<br>}<br><br>.fadeIn {<br>  animation-name: fadeIn;<br>}<br><br>.fadeOut {<br>  animation-name: fadeOut;<br>}<br><br>#walletconnect-wrapper {<br>  -webkit-user-select: none;<br>  align-items: center;<br>  display: flex;<br>  height: 100%;<br>  justify-content: center;<br>  left: 0;<br>  pointer-events: none;<br>  position: fixed;<br>  top: 0;<br>  user-select: none;<br>  width: 100%;<br>  z-index: 99999999999999;<br>}<br><br>.walletconnect-modal__headerLogo {<br>  height: 21px;<br>}<br><br>.walletconnect-modal__header p {<br>  color: #ffffff;<br>  font-size: 20px;<br>  font-weight: 600;<br>  margin: 0;<br>  align-items: flex-start;<br>  display: flex;<br>  flex: 1;<br>  margin-left: 5px;<br>}<br><br>.walletconnect-modal__close__wrapper {<br>  position: absolute;<br>  top: 0px;<br>  right: 0px;<br>  z-index: 10000;<br>  background: white;<br>  border-radius: 26px;<br>  padding: 6px;<br>  box-sizing: border-box;<br>  width: 26px;<br>  height: 26px;<br>  cursor: pointer;<br>}<br><br>.walletconnect-modal__close__icon {<br>  position: relative;<br>  top: 7px;<br>  right: 0;<br>  display: flex;<br>  align-items: center;<br>  justify-content: center;<br>  transform: rotate(45deg);<br>}<br><br>.walletconnect-modal__close__line1 {<br>  position: absolute;<br>  width: 100%;<br>  border: 1px solid rgb(48, 52, 59);<br>}<br><br>.walletconnect-modal__close__line2 {<br>  position: absolute;<br>  width: 100%;<br>  border: 1px solid rgb(48, 52, 59);<br>  transform: rotate(90deg);<br>}<br><br>.walletconnect-qrcode__base {<br>  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);<br>  background: rgba(37, 41, 46, 0.95);<br>  height: 100%;<br>  left: 0;<br>  pointer-events: auto;<br>  position: fixed;<br>  top: 0;<br>  transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);<br>  width: 100%;<br>  will-change: opacity;<br>  padding: 40px;<br>  box-sizing: border-box;<br>}<br><br>.walletconnect-qrcode__text {<br>  color: rgba(60, 66, 82, 0.6);<br>  font-size: 16px;<br>  font-weight: 600;<br>  letter-spacing: 0;<br>  line-height: 1.1875em;<br>  margin: 10px 0 30px 0;<br>  text-align: center;<br>  width: 100%;<br>}<br><br>@media only screen and (max-width: 768px) {<br>  .walletconnect-qrcode__text {<br>    font-size: 4vw;<br>  }<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-qrcode__text {<br>    font-size: 14px;<br>  }<br>}<br><br>.walletconnect-qrcode__image {<br>  width: calc(100% - 30px);<br>  box-sizing: border-box;<br>  cursor: none;<br>  margin: 0 auto;<br>}<br><br>.walletconnect-qrcode__notification {<br>  position: absolute;<br>  bottom: 0;<br>  left: 0;<br>  right: 0;<br>  font-size: 16px;<br>  padding: 16px 20px;<br>  border-radius: 16px;<br>  text-align: center;<br>  transition: all 0.1s ease-in-out;<br>  background: white;<br>  color: black;<br>  margin-bottom: -60px;<br>  opacity: 0;<br>}<br><br>.walletconnect-qrcode__notification.notification__show {<br>  opacity: 1;<br>}<br><br>@media only screen and (max-width: 768px) {<br>  .walletconnect-modal__header {<br>    height: 130px;<br>  }<br>  .walletconnect-modal__base {<br>    overflow: auto;<br>  }<br>}<br><br>@media only screen and (min-device-width: 415px) and (max-width: 768px) {<br>  #content {<br>    max-width: 768px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>@media only screen and (min-width: 375px) and (max-width: 415px) {<br>  #content {<br>    max-width: 414px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>@media only screen and (min-width: 320px) and (max-width: 375px) {<br>  #content {<br>    max-width: 375px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>@media only screen and (max-width: 320px) {<br>  #content {<br>    max-width: 320px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>.walletconnect-modal__base {<br>  -webkit-font-smoothing: antialiased;<br>  background: #ffffff;<br>  border-radius: 24px;<br>  box-shadow: 0 10px 50px 5px rgba(0, 0, 0, 0.4);<br>  font-family: ui-rounded, "SF Pro Rounded", "SF Pro Text", medium-content-sans-serif-font,<br>    -apple-system, BlinkMacSystemFont, ui-sans-serif, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,<br>    "Open Sans", "Helvetica Neue", sans-serif;<br>  margin-top: 41px;<br>  padding: 24px 24px 22px;<br>  pointer-events: auto;<br>  position: relative;<br>  text-align: center;<br>  transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);<br>  will-change: transform;<br>  overflow: visible;<br>  transform: translateY(-50%);<br>  top: 50%;<br>  max-width: 500px;<br>  margin: auto;<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-modal__base {<br>    padding: 24px 12px;<br>  }<br>}<br><br>.walletconnect-modal__base .hidden {<br>  transform: translateY(150%);<br>  transition: 0.125s cubic-bezier(0.4, 0, 1, 1);<br>}<br><br>.walletconnect-modal__header {<br>  align-items: center;<br>  display: flex;<br>  height: 26px;<br>  left: 0;<br>  justify-content: space-between;<br>  position: absolute;<br>  top: -42px;<br>  width: 100%;<br>}<br><br>.walletconnect-modal__base .wc-logo {<br>  align-items: center;<br>  display: flex;<br>  height: 26px;<br>  margin-top: 15px;<br>  padding-bottom: 15px;<br>  pointer-events: auto;<br>}<br><br>.walletconnect-modal__base .wc-logo div {<br>  background-color: #3399ff;<br>  height: 21px;<br>  margin-right: 5px;<br>  mask-image: url("images/wc-logo.svg") center no-repeat;<br>  width: 32px;<br>}<br><br>.walletconnect-modal__base .wc-logo p {<br>  color: #ffffff;<br>  font-size: 20px;<br>  font-weight: 600;<br>  margin: 0;<br>}<br><br>.walletconnect-modal__base h2 {<br>  color: rgba(60, 66, 82, 0.6);<br>  font-size: 16px;<br>  font-weight: 600;<br>  letter-spacing: 0;<br>  line-height: 1.1875em;<br>  margin: 0 0 19px 0;<br>  text-align: center;<br>  width: 100%;<br>}<br><br>.walletconnect-modal__base__row {<br>  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);<br>  align-items: center;<br>  border-radius: 20px;<br>  cursor: pointer;<br>  display: flex;<br>  height: 56px;<br>  justify-content: space-between;<br>  padding: 0 15px;<br>  position: relative;<br>  margin: 0px 0px 8px;<br>  text-align: left;<br>  transition: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);<br>  will-change: transform;<br>  text-decoration: none;<br>}<br><br>.walletconnect-modal__base__row:hover {<br>  background: rgba(60, 66, 82, 0.06);<br>}<br><br>.walletconnect-modal__base__row:active {<br>  background: rgba(60, 66, 82, 0.06);<br>  transform: scale(0.975);<br>  transition: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);<br>}<br><br>.walletconnect-modal__base__row__h3 {<br>  color: #25292e;<br>  font-size: 20px;<br>  font-weight: 700;<br>  margin: 0;<br>  padding-bottom: 3px;<br>}<br><br>.walletconnect-modal__base__row__right {<br>  align-items: center;<br>  display: flex;<br>  justify-content: center;<br>}<br><br>.walletconnect-modal__base__row__right__app-icon {<br>  border-radius: 8px;<br>  height: 34px;<br>  margin: 0 11px 2px 0;<br>  width: 34px;<br>  background-size: 100%;<br>  box-shadow: 0 4px 12px 0 rgba(37, 41, 46, 0.25);<br>}<br><br>.walletconnect-modal__base__row__right__caret {<br>  height: 18px;<br>  opacity: 0.3;<br>  transition: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);<br>  width: 8px;<br>  will-change: opacity;<br>}<br><br>.walletconnect-modal__base__row:hover .caret,<br>.walletconnect-modal__base__row:active .caret {<br>  opacity: 0.6;<br>}<br><br>.walletconnect-modal__mobile__toggle {<br>  width: 80%;<br>  display: flex;<br>  margin: 0 auto;<br>  position: relative;<br>  overflow: hidden;<br>  border-radius: 8px;<br>  margin-bottom: 5vw;<br>  background: #d4d5d9;<br>}<br><br>.walletconnect-modal__mobile__toggle_selector {<br>  width: calc(50% - 8px);<br>  background: white;<br>  position: absolute;<br>  border-radius: 5px;<br>  height: calc(100% - 8px);<br>  top: 4px;<br>  transition: all 0.2s ease-in-out;<br>  transform: translate3d(4px, 0, 0);<br>}<br><br>.walletconnect-modal__mobile__toggle.right__selected .walletconnect-modal__mobile__toggle_selector {<br>  transform: translate3d(calc(100% + 12px), 0, 0);<br>}<br><br>.walletconnect-modal__mobile__toggle a {<br>  font-size: 12px;<br>  width: 50%;<br>  text-align: center;<br>  padding: 8px;<br>  margin: 0;<br>  font-weight: 600;<br>  z-index: 1;<br>}<br><br>.walletconnect-modal__footer {<br>  display: flex;<br>  justify-content: center;<br>  margin-top: 20px;<br>}<br><br>@media only screen and (max-width: 768px) {<br>  .walletconnect-modal__footer {<br>    margin-top: 5vw;<br>  }<br>}<br><br>.walletconnect-modal__footer a {<br>  cursor: pointer;<br>  color: #898d97;<br>  font-size: 15px;<br>  margin: 0 auto;<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-modal__footer a {<br>    font-size: 14px;<br>  }<br>}<br><br>.walletconnect-connect__buttons__wrapper {<br>  max-height: 44vh;<br>}<br><br>.walletconnect-connect__buttons__wrapper__android {<br>  margin: 50% 0;<br>}<br><br>.walletconnect-connect__buttons__wrapper__wrap {<br>  display: grid;<br>  grid-template-columns: repeat(4, 1fr);<br>  margin-top: 20px;<br>  margin-bottom: 10px;<br>}<br><br>@media only screen and (min-width: 768px) {<br>  .walletconnect-connect__buttons__wrapper__wrap {<br>    margin-top: 40px;<br>  }<br>}<br><br>.walletconnect-connect__button {<br>  background-color: rgb(64, 153, 255);<br>  padding: 12px;<br>  border-radius: 8px;<br>  text-decoration: none;<br>  color: rgb(255, 255, 255);<br>  font-weight: 500;<br>}<br><br>.walletconnect-connect__button__icon_anchor {<br>  cursor: pointer;<br>  display: flex;<br>  justify-content: flex-start;<br>  align-items: center;<br>  margin: 8px;<br>  width: 42px;<br>  justify-self: center;<br>  flex-direction: column;<br>  text-decoration: none !important;<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-connect__button__icon_anchor {<br>    margin: 4px;<br>  }<br>}<br><br>.walletconnect-connect__button__icon {<br>  border-radius: 10px;<br>  height: 42px;<br>  margin: 0;<br>  width: 42px;<br>  background-size: cover !important;<br>  box-shadow: 0 4px 12px 0 rgba(37, 41, 46, 0.25);<br>}<br><br>.walletconnect-connect__button__text {<br>  color: #424952;<br>  font-size: 2.7vw;<br>  text-decoration: none !important;<br>  padding: 0;<br>  margin-top: 1.8vw;<br>  font-weight: 600;<br>}<br><br>@media only screen and (min-width: 768px) {<br>  .walletconnect-connect__button__text {<br>    font-size: 16px;<br>    margin-top: 12px;<br>  }<br>}<br></style></head>
+    <body>
+        <div class="y-hd">
+            <div class="yc-header">
+                <a href="loan.html" class="y-fanhui">
+                    <img src="./loan-record_files/fanhui.png">
+                </a>
+                <div class="y-title" data-translate="贷款记录">Loan Records</div>
+            </div>
+        </div>
+
+        <div class="y-re" style="min-height: 832px;">
+            <div class="y-re-in"></div>
+            <div class="y-re-load" onclick="loadMore()" data-translate="加载更多">Load More</div>
+        </div>
+        
+
+        <script>
+            document.querySelector('.y-re').style.minHeight = window.innerHeight + 'px';
+            let page = 1; // 当前页数
+            const userId = Cookies.get('userid'); // 获取用户ID
+
+
+            $(document).ready(function() {
+                loadMore();
+
+                $(window).scroll(function() {
+                    let currentScrollTop = window.scrollY || document.documentElement.scrollTop;
+                    if (currentScrollTop > 0) {
+                        $('.y-hd').addClass('y-huadong');
+                    } else {
+                        $('.y-hd').removeClass('y-huadong');
+                    }
+                });
+            });
+
+
+            function loadMore() {
+                const userid = Cookies.get('userid'); // 获取用户ID，假设已存储在Cookie中
+
+                $.ajax({
+                    url: apiurl + '/Wallet/getloaned',
+                    type: 'POST',
+                    data: {
+                        userid: userid,
+                        page: page // 传递当前页码
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 1) {
+                            // Get full loan records from admin endpoint or use summary
+                            // For now, fetch all loan records
+                            $.ajax({
+                                url: apiurl + '/admin/loan-records',
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(adminRes) {
+                                    if (adminRes.code === 1 && adminRes.data && adminRes.data.length > 0) {
+                                        // Filter records for current user
+                                        const userLoans = adminRes.data.filter(l => String(l.userid) === String(userid));
+
+                                        if (userLoans.length === 0) {
+                                            $('.y-re-load').text('No records found').prop('disabled', true);
+                                            return;
+                                        }
+
+                                        // Render loan records
+                                        userLoans.forEach(data => {
+                                            const statusText = data.status === 'approved' ? 'Approved' : data.status === 'pending' ? 'Pending' : 'Rejected';
+                                            const statusClass = data.status === 'approved' ? 'approved' : data.status === 'pending' ? 'pending' : 'rejected';
+                                            const createdDate = new Date(data.created_at).toLocaleDateString('en-US');
+
+                                            const totalReturn = parseFloat(data.amount) + (parseFloat(data.amount) * parseFloat(data.interest) / 100);
+                                            const notificationHTML = `
+                                                <div class="y-re-box">
+                                                    <span class="status-badge ${statusClass}">
+                                                        ${statusText}
+                                                    </span>
+                                                    <div class="y-re-bl">
+                                                        <img src="/img/coin/usdt.png" alt="Loan">
+                                                    </div>
+                                                    <div class="y-re-blr">
+                                                        <div class="amount-row">
+                                                            <div class="amount-display">${data.amount} USDT</div>
+                                                            <div class="amount-label">Loan Amount</div>
+                                                        </div>
+
+                                                        <div class="y-re-bim">
+                                                            <p>
+                                                                <strong>Duration</strong>
+                                                                <span>${data.days} days</span>
+                                                            </p>
+                                                            <p>
+                                                                <strong>Interest</strong>
+                                                                <span>${data.interest}%</span>
+                                                            </p>
+                                                            <p>
+                                                                <strong>Total Return</strong>
+                                                                <span class="return-value">${totalReturn.toFixed(2)} USDT</span>
+                                                            </p>
+                                                            <p></p>
+                                                        </div>
+
+                                                        <div class="y-sfyidu y-sfyidu2">
+                                                            <p>Submitted: ${createdDate}</p>
+                                                            ${data.status === 'approved' && data.updated_at ? `<p>Approved: ${new Date(data.updated_at).toLocaleDateString('en-US')}</p>` : ''}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            `;
+
+                                            $('.y-re-in').append(notificationHTML);
+                                        });
+
+                                        // 增加页码
+                                        page += 1;
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        </script>
+    <script defer="" src="./loan-record_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+
+	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	</body></html>

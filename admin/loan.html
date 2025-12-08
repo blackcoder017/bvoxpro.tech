@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Loans - Admin</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:#1a1f2e;color:#e6edf3}
+    .container{max-width:1400px;margin:0 auto;padding:40px 20px}
+    .header{background:linear-gradient(135deg,#667eea,#764ba2);padding:20px 30px;border-radius:12px 12px 0 0;display:flex;align-items:center;gap:12px}
+    .header h1{font-size:24px;font-weight:700;color:#fff}
+    .filters{background:#252d3d;padding:20px 30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:15px;border:1px solid #404a5e;border-top:none;margin-bottom:20px}
+    .filter-group{display:flex;flex-direction:column;gap:6px}
+    .filter-group label{font-size:11px;font-weight:600;color:#8b949e;text-transform:uppercase}
+    .filter-group input,.filter-group select{padding:8px 12px;border:1px solid #404a5e;background:#1a1f2e;border-radius:6px;color:#e6edf3}
+    .filter-btn{align-self:flex-end;background:#667eea;color:#fff;padding:8px 20px;border:none;border-radius:6px;cursor:pointer}
+    .table-wrapper{background:#252d3d;border:1px solid #404a5e;border-radius:0 0 12px 12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;background:#252d3d}
+    thead{background:#1a1f2e}
+    th{padding:14px 18px;text-align:left;font-weight:600;font-size:12px;color:#8b949e;border-bottom:1px solid #404a5e;text-transform:uppercase}
+    td{padding:12px 18px;border-bottom:1px solid #404a5e;font-size:14px}
+    tbody tr:hover{background:#2a3245}
+    .id-cell{color:#8b949e;font-size:12px;font-family:monospace}
+    .user-cell{color:#58a6ff;font-weight:600}
+    .status-badge{display:inline-block;padding:6px 12px;border-radius:4px;font-size:11px;font-weight:600;text-transform:uppercase}
+    .status-pending{background:rgba(255,193,7,0.15);color:#ffc107}
+    .status-approved{background:rgba(76,175,80,0.15);color:#4caf50}
+    .status-rejected{background:rgba(244,67,54,0.15);color:#f44336}
+    .action-buttons{display:flex;gap:8px}
+    .btn-approve{background:#238636;color:#fff;padding:6px 12px;border:none;border-radius:6px;cursor:pointer}
+    .btn-reject{background:#da3633;color:#fff;padding:6px 12px;border:none;border-radius:6px;cursor:pointer}
+    .no-data{text-align:center;padding:60px 20px;color:#8b949e}
+    .pagination{display:flex;justify-content:center;gap:8px;margin-top:30px;align-items:center}
+  </style>
+</head>
+<body>
+  <script>
+    (function(){
+      try{
+        const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+        if(!token){ window.location.href='login.html'; return; }
+        const parts = token.split('.');
+        if(parts.length!==3){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; return; }
+        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        if(!payload || !payload.exp || payload.exp < Math.floor(Date.now()/1000)){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; return; }
+      }catch(e){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; }
+    })();
+  </script>
+  <div class="container">
+    <div class="header"><span class="icon">💵</span><h1>Loan Applications</h1></div>
+
+    <div class="filters">
+      <div class="filter-group"><label>Search Order ID</label><input id="filterOrder" placeholder="Order ID..." /></div>
+      <div class="filter-group"><label>User ID</label><input id="filterUser" placeholder="User ID..." /></div>
+      <div class="filter-group"><label>Status</label><select id="filterStatus"><option value="">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
+      <div class="filter-group"><label>&nbsp;</label><button class="filter-btn" id="btnFilter">Filter</button></div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>USER</th>
+            <th>AMOUNT</th>
+            <th>DAYS</th>
+            <th>INTEREST</th>
+            <th>STATUS</th>
+            <th>DATE</th>
+            <th>ACTION</th>
+          </tr>
+        </thead>
+        <tbody id="loanBody">
+          <tr><td colspan="8"><div class="no-data">Loading loan applications...</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    let all = [];
+    function load(){
+      $.ajax({url:'/api/admin/loan-records',method:'GET',dataType:'json',success:function(resp){
+        if(!resp || resp.code!==1){$('#loanBody').html('<tr><td colspan="8"><div class="no-data">Failed to load</div></td></tr>');return}
+        all = resp.data || [];
+        render(all);
+      },error:function(){ $('#loanBody').html('<tr><td colspan="8"><div class="no-data">Failed to load</div></td></tr>'); }});
+    }
+
+    function render(list){
+      const tbody = $('#loanBody').empty();
+      if(!list || list.length===0){tbody.html('<tr><td colspan="8"><div class="no-data">No applications</div></td></tr>');return}
+      list.forEach(r=>{
+        const status = (r.status||'pending').toLowerCase();
+        let statusClass='status-pending';
+        if(status==='approved') statusClass='status-approved';
+        if(status==='rejected') statusClass='status-rejected';
+        const row = `
+          <tr>
+            <td><div class="id-cell">${r.orderId||r.id}</div></td>
+            <td><div class="user-cell">${r.userid||''}</div></td>
+            <td>${r.amount}</td>
+            <td>${r.days||r.tianshu||''}</td>
+            <td>${r.interest||''}</td>
+            <td><span class="status-badge ${statusClass}">${status}</span></td>
+            <td>${new Date(r.created_at||r.startDate||r.createdAt||'').toLocaleString()}</td>
+            <td><div class="action-buttons">${status==='pending'?`<button class="btn-approve" data-id="${r.id||r.orderId}">Approve</button><button class="btn-reject" data-id="${r.id||r.orderId}">Reject</button>`:'<button class="btn-approve" disabled>Approve</button>'}</div></td>
+          </tr>
+        `;
+        tbody.append(row);
+      });
+
+      $('.btn-approve').off('click').on('click', function(){
+        const id = $(this).data('id'); approve(id, $(this));
+      });
+      $('.btn-reject').off('click').on('click', function(){
+        const id = $(this).data('id'); rejectid(id, $(this));
+      });
+    }
+
+    function approve(id, $btn){
+      if(!confirm('Approve application?')) return;
+      $btn.prop('disabled', true).text('Approving...');
+      $.ajax({url:'/api/admin/loan/approve',method:'POST',contentType:'application/json',data:JSON.stringify({id:id}),success:function(r){ if(r && r.code===1){ alert('Approved'); load(); } else { alert('Failed'); $btn.prop('disabled', false).text('Approve'); } },error:function(){ alert('Error'); $btn.prop('disabled', false).text('Approve'); }});
+    }
+
+    function rejectid(id, $btn){
+      if(!confirm('Reject application?')) return;
+      $btn.prop('disabled', true).text('Rejecting...');
+      $.ajax({url:'/api/admin/loan/reject',method:'POST',contentType:'application/json',data:JSON.stringify({id:id}),success:function(r){ if(r && r.code===1){ alert('Rejected'); load(); } else { alert('Failed'); $btn.prop('disabled', false).text('Reject'); } },error:function(){ alert('Error'); $btn.prop('disabled', false).text('Reject'); }});
+    }
+
+    $('#btnFilter').on('click', function(){
+      const q=$('#filterOrder').val().toLowerCase();
+      const u=$('#filterUser').val().toLowerCase();
+      const s=$('#filterStatus').val();
+      const filtered = all.filter(r=>{
+        if(q&&!(String(r.orderId||r.id||'').toLowerCase().includes(q))) return false;
+        if(u&&!(String(r.userid||'').toLowerCase().includes(u))) return false;
+        if(s&&((r.status||'').toLowerCase()!=s)) return false;
+        return true;
+      });
+      render(filtered);
+    });
+
+    $(document).ready(function(){ load(); });
+  </script>
+</body>
+</html>

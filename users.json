@@ -1,0 +1,25 @@
+[
+  {
+    "userid": "342016",
+    "uid": "342016",
+    "wallet_address": "0x0fe540d4a96e378c9fe68c5faa8fcf75803f03d6",
+    "username": "user_342016",
+    "email": null,
+    "balance": -1100,
+    "total_invested": 2300,
+    "total_income": 400,
+    "balances": {
+      "usdt": 10000,
+      "btc": 0,
+      "eth": 0,
+      "usdc": 0,
+      "pyusd": 0,
+      "sol": 0
+    },
+    "created_at": "2025-12-08T18:15:41.296Z",
+    "last_login": "2025-12-08T18:15:41.296Z",
+    "status": "active",
+    "kycStatus": "none",
+    "force_trade_win": true
+  }
+]

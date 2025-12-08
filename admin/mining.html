@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Mining Records</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:#0f1724;color:#e6edf3}
+    .container{max-width:1400px;margin:0 auto;padding:36px 20px}
+    .header{background:linear-gradient(135deg,#667eea,#764ba2);padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px}
+    .header h1{font-size:22px;font-weight:700;color:#fff}
+    .filters{background:#0b1220;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;border:1px solid #1f2937;border-top:none;margin-bottom:18px;border-radius:0 0 10px 10px}
+    .filter-group{display:flex;flex-direction:column;gap:6px}
+    .filter-group label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase}
+    .filter-group input,.filter-group select{padding:8px 12px;border:1px solid #1f2937;background:#071029;border-radius:6px;color:#e6edf3}
+    .filter-btn{align-self:flex-end;background:#667eea;color:#fff;padding:8px 18px;border:none;border-radius:6px;cursor:pointer}
+    .table-wrapper{background:#071029;border:1px solid #1f2937;border-radius:0 0 10px 10px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;background:transparent}
+    thead{background:#071029}
+    th{padding:14px 18px;text-align:left;font-weight:700;font-size:12px;color:#94a3b8;border-bottom:1px solid #1f2937;text-transform:uppercase}
+    td{padding:12px 18px;border-bottom:1px solid #1f2937;font-size:14px;color:#cbd5e1}
+    tbody tr:hover{background:#0b1220}
+    .id-cell{color:#94a3b8;font-size:12px;font-family:monospace}
+    .user-cell{color:#7dd3fc;font-weight:600}
+    .coin-badge{display:inline-block;padding:4px 10px;background:rgba(102,126,234,0.12);color:#93c5fd;border-radius:6px;font-size:12px}
+    .status-badge{display:inline-block;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:700;text-transform:uppercase}
+    .status-active{background:rgba(99,102,241,0.10);color:#a5b4fc}
+    .status-redeeming{background:rgba(250,204,21,0.08);color:#facc15}
+    .status-redeemed{background:rgba(34,197,94,0.08);color:#86efac}
+    .action-buttons{display:flex;gap:8px}
+    .btn-approve,.btn-reject,.btn-view,.btn-delete{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:700;transition:all 0.2s}
+    .btn-approve{background:#10b981;color:#042116}
+    .btn-approve:hover{opacity:0.95}
+    .btn-reject{background:#ef4444;color:#fff}
+    .btn-reject:hover{opacity:0.95}
+    .btn-view{background:#667eea;color:#fff}
+    .btn-view:hover{opacity:0.95}
+    .btn-delete{background:#7f1d1d;color:#fff}
+    .btn-delete:hover{opacity:0.95}
+    .no-data{text-align:center;padding:50px 20px;color:#94a3b8}
+    .pagination{display:flex;justify-content:center;gap:8px;margin-top:20px;align-items:center;padding:18px}
+    .pagination button,.pagination span{padding:8px 12px;border:1px solid #1f2937;background:#071029;color:#e6edf3;border-radius:6px;cursor:pointer}
+    .pagination .active{background:#667eea;color:#fff}
+    @media(max-width:480px){.container{padding:12px 10px}.header{padding:14px 16px;border-radius:8px}.header h1{font-size:18px}.filters{padding:12px;border-radius:0 0 8px 8px;grid-template-columns:1fr;gap:10px}.filter-group label{font-size:10px}.filter-group input,.filter-group select{padding:10px}.filter-btn{width:100%}.table-wrapper{border-radius:8px;border:none}.table-wrapper table{display:block}.thead{display:none}tbody{display:flex;flex-direction:column;gap:12px;padding:12px}tr{display:block;background:#071029;border:1px solid #1f2937;border-radius:8px;padding:12px}td{display:grid;grid-template-columns:110px 1fr;align-items:center;padding:8px 0;border-bottom:1px solid #1f2937}td:last-child{border-bottom:0;grid-template-columns:1fr}td::before{content:attr(data-label);font-weight:700;color:#94a3b8;text-transform:uppercase;font-size:10px}.action-buttons{flex-wrap:wrap}.btn-approve,.btn-view,.btn-reject,.btn-delete{padding:8px 10px;font-size:13px}}
+  </style>
+</head>
+<body>
+  <script>
+    (function(){
+      try{
+        const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+        if(!token){ window.location.href='login.html'; return; }
+        const parts = token.split('.');
+        if(parts.length!==3){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; return; }
+        const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+        if(!payload || !payload.exp || payload.exp < Math.floor(Date.now()/1000)){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; return; }
+      }catch(e){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; }
+    })();
+  </script>
+  <div class="container">
+    <div class="header"><span class="icon">⛏️</span><h1>Mining Records</h1></div>
+
+    <div class="filters">
+      <div class="filter-group"><label>Order ID / Keyword</label><input id="filterOrder" placeholder="Order ID or part..." /></div>
+      <div class="filter-group"><label>User ID</label><input id="filterUser" placeholder="User ID..." /></div>
+      <div class="filter-group"><label>Status</label><select id="filterStatus"><option value="">All Status</option><option value="active">Active</option><option value="redeeming">Redeeming</option><option value="redeemed">Redeemed</option></select></div>
+      <div class="filter-group"><label>&nbsp;</label><button class="filter-btn" id="btnFilter">Filter</button></div>
+    </div>
+
+    <div class="table-wrapper">
+      <table id="miningTable">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>User</th>
+            <th>Amount</th>
+            <th>Total Income</th>
+            <th>Today Income</th>
+            <th>Status</th>
+            <th>Start Date</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="miningBody">
+          <tr><td colspan="8"><div class="no-data"><div class="no-data-icon">📁</div><div>Loading mining records...</div></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    let allRecords = [];
+    let filteredRecords = [];
+    let currentPage = 1;
+    const recordsPerPage = 10;
+
+    function loadMiningRecords(){
+      $.ajax({url:'/api/admin/mining-records',method:'GET',dataType:'json',success:function(resp){
+        if(!resp || resp.code!==1){$('#miningBody').html('<tr><td colspan="8"><div class="no-data">Failed to load mining records</div></td></tr>');return}
+        allRecords = resp.data || [];
+        // Create deterministic sequential display IDs: Mining-000000
+        const sortedForIds = [...allRecords].sort((a,b)=>{
+          const ta = new Date(a.startDate||a.createdAt||0).getTime();
+          const tb = new Date(b.startDate||b.createdAt||0).getTime();
+          return ta - tb;
+        });
+        const idMap = {};
+        sortedForIds.forEach((rec, idx)=>{
+          idMap[rec.orderId || rec.id || ('idx_'+idx)] = 'Mining-' + String(idx).padStart(6,'0');
+        });
+        allRecords = allRecords.map(r=>({ ...r, display_id: idMap[r.orderId || r.id] || (r.display_id||r.orderId||r.id) }));
+
+        filteredRecords = [...allRecords];
+        displayPage(1);
+      },error:function(err){console.error('Failed to load mining records:',err);$('#miningBody').html('<tr><td colspan="8"><div class="no-data">Failed to load mining records</div></td></tr>');}});
+    }
+
+    function displayPage(pageNum){
+      currentPage = pageNum;
+      const start = (pageNum-1)*recordsPerPage;
+      const pageRecords = filteredRecords.slice(start, start+recordsPerPage);
+      displayRecords(pageRecords);
+      updatePagination();
+    }
+
+    function displayRecords(records){
+      const tbody = $('#miningBody'); tbody.empty();
+      if(!records || records.length===0){tbody.html('<tr><td colspan="8"><div class="no-data">No mining records found.</div></td></tr>');return}
+
+      records.forEach(r=>{
+        const status = (r.status||'active').toLowerCase();
+        let statusClass = 'status-active';
+        if(status==='redeeming') statusClass='status-redeeming';
+        if(status==='redeemed') statusClass='status-redeemed';
+
+        const startDate = new Date(r.startDate||r.createdAt||Date.now()).toLocaleString();
+
+        const row = `
+          <tr>
+            <td data-label="ID"><div class="id-cell">${r.display_id || r.orderId}</div></td>
+            <td data-label="User"><div class="user-cell">${r.userid || r.userId || ''}</div></td>
+            <td data-label="Amount"><strong>${r.amount} ${r.currency || 'ETH'}</strong></td>
+            <td data-label="Total Income">${Number(r.totalIncome||0).toFixed(6)}</td>
+            <td data-label="Today Income">${Number(r.todayIncome||0).toFixed(6)}</td>
+            <td data-label="Status"><span class="status-badge ${statusClass}">${status}</span></td>
+            <td data-label="Start Date">${startDate}</td>
+            <td data-label="Action">
+              <div class="action-buttons">
+                ${status==='redeeming' ? `
+                    <button class="btn-approve" data-id="${r.orderId}">Approve Redeem</button>
+                    <button class="btn-reject" data-id="${r.orderId}">Reject</button>
+                    <button class="btn-delete" data-id="${r.orderId}">Delete</button>
+                  ` : `
+                    <button class="btn-view" data-id="${r.orderId}">View</button>
+                    <button class="btn-reject" data-id="${r.orderId}">Reject</button>
+                    <button class="btn-delete" data-id="${r.orderId}">Delete</button>
+                  `}
+              </div>
+            </td>
+          </tr>
+        `;
+
+        tbody.append(row);
+      });
+
+      // Wire up approve, reject, delete and view buttons
+      $('.btn-approve').off('click').on('click', function(){
+        const id = $(this).data('id');
+        approveRedeem(id, $(this));
+      });
+      $('.btn-reject').off('click').on('click', function(){
+        const id = $(this).data('id');
+        rejectMining(id, $(this));
+      });
+      $('.btn-delete').off('click').on('click', function(){
+        const id = $(this).data('id');
+        deleteMiningRecord(id);
+      });
+      $('.btn-view').off('click').on('click', function(){ alert('Order ID: '+$(this).data('id')) });
+    }
+
+    function approveRedeem(orderId, $btn){
+      if(!confirm('Approve redeem for '+orderId+'?')) return;
+      $btn.prop('disabled', true).text('Approving...');
+      $.ajax({
+        url: '/api/admin/mine/redeem/complete',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: orderId }),
+        success: function(resp){
+          if(resp && resp.code===1){
+            alert('Redeem completed');
+            loadMiningRecords();
+          } else {
+            alert('Failed: ' + (resp && (resp.data||resp.info||resp.message) || 'Unknown'));
+            $btn.prop('disabled', false).text('Approve Redeem');
+          }
+        },
+        error: function(xhr, status, err){
+          alert('Server error: '+err);
+          $btn.prop('disabled', false).text('Approve Redeem');
+        }
+      });
+    }
+
+    function rejectMining(orderId, $btn){
+      if(!confirm('Reject redeem for '+orderId+'?')) return;
+      $btn.prop('disabled', true).text('Rejecting...');
+      $.ajax({
+        url: '/api/admin/mine/redeem/reject',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ id: orderId }),
+        success: function(resp){
+          if(resp && resp.code===1){
+            alert('Redeem rejected');
+            loadMiningRecords();
+          } else {
+            alert('Failed: ' + (resp && (resp.data||resp.info||resp.message) || 'Unknown'));
+            $btn.prop('disabled', false).text('Reject');
+          }
+        },
+        error: function(xhr, status, err){
+          alert('Server error: '+err+' (updated locally)');
+          // Fallback: update locally
+          const rec = allRecords.find(r=>r.orderId===orderId);
+          if(rec){ rec.status='redeemed'; }
+          displayPage(currentPage);
+          $btn.prop('disabled', false).text('Reject');
+        }
+      });
+    }
+
+    function deleteMiningRecord(orderId){
+      if(!confirm('Are you sure you want to delete mining record '+orderId+'? This cannot be undone.')) return;
+      const idx = allRecords.findIndex(r=>r.orderId===orderId);
+      if(idx===-1){ alert('Record not found'); return }
+      allRecords.splice(idx,1);
+      // Refresh filtered list and UI
+      applyFilters();
+      alert('Record deleted');
+    }
+
+    function applyFilters(){
+      const q = $('#filterOrder').val().toLowerCase();
+      const uid = $('#filterUser').val().toLowerCase();
+      const status = $('#filterStatus').val();
+
+      filteredRecords = allRecords.filter(r=>{
+        if(q){ if(!(String(r.orderId||'').toLowerCase().includes(q) || String(r.userid||'').toLowerCase().includes(q))) return false }
+        if(uid){ if(String(r.userid||'').toLowerCase().indexOf(uid)===-1) return false }
+        if(status){ if((r.status||'').toLowerCase() !== status) return false }
+        return true;
+      });
+      displayPage(1);
+    }
+
+    function updatePagination(){
+      const totalPages = Math.ceil(filteredRecords.length/recordsPerPage) || 1;
+      const $p = $('#pagination'); $p.empty();
+      if(totalPages<=1) return;
+      const prev = $(`<button ${currentPage===1? 'disabled' : ''}>« Prev</button>`).on('click', ()=>{ if(currentPage>1) displayPage(currentPage-1) });
+      $p.append(prev);
+      for(let i=1;i<=totalPages;i++){
+        const btn = $(`<span class="${i===currentPage?'active':''}">${i}</span>`);
+        if(i!==currentPage) btn.on('click', ()=>displayPage(i)).css('cursor','pointer');
+        $p.append(btn);
+      }
+      const next = $(`<button ${currentPage===totalPages? 'disabled' : ''}>Next »</button>`).on('click', ()=>{ if(currentPage<totalPages) displayPage(currentPage+1) });
+      $p.append(next);
+    }
+
+    $(document).ready(function(){
+      $('#btnFilter').on('click', applyFilters);
+      $('#filterOrder,#filterUser,#filterStatus').on('keyup change', function(e){ if(e.type==='change') applyFilters(); });
+      loadMiningRecords();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "Admin-001",
+    "fullname": "Admin User",
+    "username": "admin",
+    "email": "admin@bvox.com",
+    "password": "453885dadfef26c584ac82c19779e44b29dae9900f19da446e545abc5f9f07c9",
+    "created_at": "2024-01-01T00:00:00Z",
+    "status": "active",
+    "lastLogin": null
+  },
+  {
+    "id": "Admin-002",
+    "fullname": "Black Coder",
+    "username": "Blackcoder",
+    "email": "blackcoder.it@gmail.com",
+    "password": "4c354eb239960aec926f45fefda9cf0a67d1d4e3449becf0bf1d5a0f1e4963f9",
+    "created_at": "2025-12-05T20:07:26.279Z",
+    "status": "active",
+    "lastLogin": "2025-12-08T18:55:17.352Z"
+  },
+  {
+    "id": "Admin-003",
+    "fullname": "Myo Kyaw Hein",
+    "username": "myokyaw455930",
+    "email": "bellabester29@gmail.com",
+    "password": "75bb68f9b3b53e23aa5e954827f8b9716d4472d2d7d0452a9aee364f292efd17",
+    "created_at": "2025-12-06T03:17:21.934Z",
+    "status": "active",
+    "lastLogin": "2025-12-06T04:50:25.961Z"
+  }
+]

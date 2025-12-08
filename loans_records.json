@@ -1,0 +1,20 @@
+[
+  {
+    "id": "144a48c6-90b3-4192-a8ec-cc0888d2956d",
+    "orderId": "489de039-3be3-4361-94ff-c17e6c4a220e",
+    "userid": "37282",
+    "username": "0x0fe540d4A96E378C9Fe68C5FaA8Fcf75803f03d6",
+    "amount": 100,
+    "days": 1,
+    "interest": 2,
+    "images": {
+      "zfxx": "/uploads/proof_1764803905636_c6a8ude5b.png",
+      "srzm": "/uploads/proof_1764803909691_qeqq8oj2f.png",
+      "yhxx": "/uploads/proof_1764803913730_v2ywv8jxv.png",
+      "sfz": "/uploads/proof_1764803917448_bo5368m9s.png"
+    },
+    "status": "approved",
+    "created_at": "2025-12-03T23:21:40.605Z",
+    "updated_at": "2025-12-03T23:28:54.982Z"
+  }
+]

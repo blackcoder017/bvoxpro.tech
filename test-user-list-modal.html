@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User List Modal Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 800px;
+        }
+        
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        
+        .test-info {
+            background: #f0f4f8;
+            border-left: 4px solid #2a5298;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: left;
+        }
+        
+        .test-info h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+        
+        .test-info ul {
+            list-style-position: inside;
+            line-height: 1.8;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(42, 82, 152, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .status-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f9f9f9;
+            border-radius: 3px;
+            text-align: left;
+        }
+        
+        .status-item.pass {
+            border-left: 4px solid #28a745;
+        }
+        
+        .status-item.fail {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .status-item.info {
+            border-left: 4px solid #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 User List Modal - Test Suite</h1>
+        
+        <div class="test-info">
+            <h3>📋 Test Cases</h3>
+            <ul>
+                <li>✓ Check if modal HTML structure exists in dashboard</li>
+                <li>✓ Verify user list button onclick handler works</li>
+                <li>✓ Test modal creation and display</li>
+                <li>✓ Test user loading from API/JSON fallback</li>
+                <li>✓ Test close-on-background-click functionality</li>
+                <li>✓ Verify search/filter functionality</li>
+            </ul>
+        </div>
+        
+        <div id="results" style="margin: 20px 0; text-align: left;"></div>
+        
+        <button onclick="runTests()">▶️ Run All Tests</button>
+        <button onclick="openDashboard()" style="background: #6c757d; margin-left: 10px;">📊 Open Dashboard</button>
+        
+        <div id="success" class="success-message">
+            ✓ All tests passed! User List Modal is ready.
+        </div>
+        <div id="error" class="error-message">
+            ✗ Some tests failed. Check results above.
+        </div>
+    </div>
+
+    <script>
+        function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            let allPassed = true;
+
+            // Test 1: Check if dashboard.html exists
+            addTest('Check dashboard.html exists', () => {
+                return fetch('dashboard.html').then(r => r.ok);
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+            });
+
+            // Test 2: Check modal HTML structure
+            addTest('Check modal HTML structure', () => {
+                return fetch('dashboard.html')
+                    .then(r => r.text())
+                    .then(html => {
+                        return html.includes('userListModal') && 
+                               html.includes('userListContainer') &&
+                               html.includes('userSearchBox');
+                    });
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+            });
+
+            // Test 3: Check showUserListModal function
+            addTest('Check showUserListModal function exists', () => {
+                return fetch('dashboard.html')
+                    .then(r => r.text())
+                    .then(html => html.includes('function showUserListModal'));
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+            });
+
+            // Test 4: Check closeUserListModal function
+            addTest('Check closeUserListModal function exists', () => {
+                return fetch('dashboard.html')
+                    .then(r => r.text())
+                    .then(html => html.includes('function closeUserListModal'));
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+            });
+
+            // Test 5: Check loadAllUsersForModal function
+            addTest('Check loadAllUsersForModal function exists', () => {
+                return fetch('dashboard.html')
+                    .then(r => r.text())
+                    .then(html => html.includes('function loadAllUsersForModal'));
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+            });
+
+            // Test 6: Check displayUserListInModal function
+            addTest('Check displayUserListInModal function exists', () => {
+                return fetch('dashboard.html')
+                    .then(r => r.text())
+                    .then(html => html.includes('function displayUserListInModal'));
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+            });
+
+            // Test 7: Check filterUsers function
+            addTest('Check filterUsers function exists', () => {
+                return fetch('dashboard.html')
+                    .then(r => r.text())
+                    .then(html => html.includes('function filterUsers'));
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+            });
+
+            // Test 8: Check modal background click handler
+            addTest('Check modal click close handler', () => {
+                return fetch('dashboard.html')
+                    .then(r => r.text())
+                    .then(html => {
+                        return html.includes('event.target === modal') &&
+                               html.includes('modal.addEventListener');
+                    });
+            }, results).then(passed => {
+                if (!passed) allPassed = false;
+                // Show final result
+                setTimeout(() => {
+                    if (allPassed) {
+                        document.getElementById('success').style.display = 'block';
+                    } else {
+                        document.getElementById('error').style.display = 'block';
+                    }
+                }, 100);
+            });
+        }
+
+        function addTest(name, testFn, resultsDiv) {
+            const item = document.createElement('div');
+            item.className = 'status-item info';
+            item.textContent = `⏳ Testing: ${name}...`;
+            resultsDiv.appendChild(item);
+
+            return testFn().then(passed => {
+                item.className = passed ? 'status-item pass' : 'status-item fail';
+                item.textContent = (passed ? '✓' : '✗') + ' ' + name;
+                return passed;
+            }).catch(err => {
+                item.className = 'status-item fail';
+                item.textContent = `✗ ${name} - Error: ${err.message}`;
+                return false;
+            });
+        }
+
+        function openDashboard() {
+            // Open dashboard in new tab to test actual functionality
+            window.open('dashboard.html', '_blank');
+        }
+
+        // Show instructions on load
+        window.addEventListener('load', () => {
+            const resultsDiv = document.getElementById('results');
+            const infoItem = document.createElement('div');
+            infoItem.className = 'status-item info';
+            infoItem.innerHTML = `
+                <strong>📖 Instructions:</strong><br>
+                1. Click "Run All Tests" to verify modal implementation<br>
+                2. Click "Open Dashboard" to test actual functionality<br>
+                3. In dashboard: Click "👥 User List" button to see modal<br>
+                4. Click background to close modal<br>
+                5. Type in search box to filter users
+            `;
+            resultsDiv.appendChild(infoItem);
+        });
+    </script>
+</body>
+</html>

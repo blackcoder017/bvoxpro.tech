@@ -1,0 +1,14 @@
+{
+  "342016": {
+    "force_trade_win": true
+  },
+  "342017": {
+    "force_trade_win": false
+  },
+  "342020": {
+    "force_trade_win": true
+  },
+  "342022": {
+    "force_trade_win": true
+  }
+}

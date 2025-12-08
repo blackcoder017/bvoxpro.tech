@@ -1,0 +1,18 @@
+{
+  "name": "trading-system",
+  "version": "1.0.0",
+  "description": "Prediction trading system with real-time settlement",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0"
+  },
+  "devDependencies": {},
+  "keywords": ["trading", "prediction", "mongodb"],
+  "author": "",
+  "license": "ISC"
+}

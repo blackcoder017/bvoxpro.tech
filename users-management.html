@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users Management - BVOX Finance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e6edf3;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .page-header {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .header-title p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 10px 14px;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            flex: 1;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-icon {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #0d1117;
+        }
+
+        .users-table thead {
+            background: #161b22;
+            border-bottom: 2px solid #30363d;
+            position: sticky;
+            top: 0;
+        }
+
+        .users-table th {
+            padding: 16px 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-right: 1px solid #30363d;
+        }
+
+        .users-table th:last-child {
+            border-right: none;
+        }
+
+        .users-table tbody tr {
+            border-bottom: 1px solid #30363d;
+            transition: background 0.2s;
+        }
+
+        .users-table tbody tr:hover {
+            background: #161b22;
+        }
+
+        .users-table td {
+            padding: 14px 12px;
+            font-size: 14px;
+            color: #e6edf3;
+            border-right: 1px solid #30363d;
+        }
+
+        .users-table td:last-child {
+            border-right: none;
+        }
+
+        .user-id-cell {
+            font-weight: 600;
+            color: #58a6ff;
+        }
+
+        .address-cell {
+            color: #79c0ff;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .address-cell:hover {
+            color: #58a6ff;
+            text-decoration: underline;
+        }
+
+        .balance-cell {
+            text-align: right;
+            display: inline-block;
+            min-width: 50px;
+            font-weight: 500;
+            color: #3fb950;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .status-badge.active {
+            background: rgba(40, 167, 69, 0.2);
+            color: #3fb950;
+        }
+
+        .status-badge.pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #d29922;
+        }
+
+        .status-badge.inactive {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            background: #238636;
+            border: 1px solid #2ea043;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #2ea043;
+            box-shadow: 0 2px 6px rgba(46, 160, 67, 0.3);
+        }
+
+        .action-btn.danger {
+            background: #da3633;
+            border-color: #f85149;
+        }
+
+        .action-btn.danger:hover {
+            background: #f85149;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 20px;
+            color: #8b949e;
+        }
+
+        .no-data-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8b949e;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #30363d;
+            border-top: 4px solid #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .page-footer {
+            margin-top: 30px;
+            padding: 20px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            text-align: center;
+            color: #8b949e;
+            font-size: 13px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #161b22;
+            border: 1px solid #30363d;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #8b949e;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #58a6ff;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .header-controls {
+                flex-direction: column;
+                width: 100%;
+                gap: 12px;
+            }
+
+            .search-box {
+                min-width: unset;
+                width: 100%;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .users-table {
+                font-size: 12px;
+            }
+
+            .users-table th,
+            .users-table td {
+                padding: 10px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <script>
+      (function(){
+        try{
+          const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+          if(!token){ window.location.href='login.html'; return; }
+          const parts = token.split('.');
+          if(parts.length!==3){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; return; }
+          const payload = JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
+          if(!payload || !payload.exp || payload.exp < Math.floor(Date.now()/1000)){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; return; }
+        }catch(e){ localStorage.removeItem('adminToken'); sessionStorage.removeItem('adminToken'); window.location.href='login.html'; }
+      })();
+    </script>
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-top">
+                <div class="header-title">
+                    <span style="font-size: 32px;">👥</span>
+                    <div>
+                        <h1>Users Management</h1>
+                        <p>Monitor and manage all registered users</p>
+                    </div>
+                </div>
+                <a href="admin/dashboard.html" class="back-btn">← Back to Dashboard</a>
+            </div>
+
+            <div class="header-controls">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="userSearch" placeholder="Search by user ID or wallet address..."
+                           onkeyup="filterUsers(this.value)">
+                </div>
+                <button class="filter-btn" onclick="toggleFilterPanel()">⚙️ Filter</button>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-label">Total Users</div>
+                <div class="stat-value" id="totalUsers">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Active Users</div>
+                <div class="stat-value" id="activeUsers">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Total Balance</div>
+                <div class="stat-value" id="totalBalance">$0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Last Updated</div>
+                <div class="stat-value" id="lastUpdated" style="font-size: 14px;">Just now</div>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-section">
+            <div class="table-wrapper">
+                <div id="tableContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading users...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="page-footer">
+            <p>💡 Tip: Click on wallet address to copy • Hover over address for full details • Use search to filter users</p>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        let allUsersData = [];
+
+        // Load users on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllUsers();
+        });
+
+        function loadAllUsers() {
+            const container = document.getElementById('tableContainer');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading users...</p>
+                </div>
+            `;
+
+            // Try API first
+            $.ajax({
+                url: '/api/admin/users',
+                method: 'GET',
+                timeout: 5000,
+                success: function(response) {
+                    try {
+                        if (response && response.success && Array.isArray(response.users)) {
+                            displayUsers(response.users);
+                            return;
+                        }
+                    } catch (e) {
+                        console.warn('Error processing API response:', e);
+                    }
+                    // Fallback to users.json
+                    loadUsersFallback();
+                },
+                error: function(err) {
+                    console.warn('API failed, trying users.json fallback', err);
+                    loadUsersFallback();
+                }
+            });
+        }
+
+        function loadUsersFallback() {
+            $.getJSON('/users.json')
+                .done(function(data) {
+                    displayUsers(data || []);
+                })
+                .fail(function(err) {
+                    console.error('Failed to load users:', err);
+                    const container = document.getElementById('tableContainer');
+                    container.innerHTML = `
+                        <div class="no-data">
+                            <div class="no-data-icon">❌</div>
+                            <p>Failed to load users. Please try again later.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        function displayUsers(users) {
+            allUsersData = users || [];
+            updateStats();
+            renderTable(allUsersData);
+        }
+
+        function updateStats() {
+            // Total users
+            document.getElementById('totalUsers').textContent = allUsersData.length;
+
+            // Active users
+            const activeCount = allUsersData.filter(u => (u.status || 'active') === 'active').length;
+            document.getElementById('activeUsers').textContent = activeCount;
+
+            // Total balance (USDT + ETH converted)
+            let totalBalance = 0;
+            allUsersData.forEach(user => {
+                const balances = user.balances || {};
+                totalBalance += (balances.usdt || 0) + (balances.usdc || 0);
+            });
+            document.getElementById('totalBalance').textContent = '$' + totalBalance.toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+            // Last updated
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        }
+
+        function renderTable(users) {
+            const container = document.getElementById('tableContainer');
+
+            if (!users || users.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">👥</div>
+                        <p>No users found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tableHTML = `
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>USER ID</th>
+                            <th>WALLET ADDRESS</th>
+                            <th>USDT</th>
+                            <th>BTC</th>
+                            <th>ETH</th>
+                            <th>USDC</th>
+                            <th>PYUSD</th>
+                            <th>SOL</th>
+                            <th>STATUS</th>
+                            <th>REGISTERED</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            users.forEach((user, index) => {
+                const userId = user.userid || user.user_id || user.uid || '0';
+                const formattedUserId = String(userId).padStart(6, '0');
+                const walletAddress = user.wallet_address || user.address || 'N/A';
+                const shortAddress = walletAddress.length > 10 ? walletAddress.substring(0, 6) + '...' + walletAddress.substring(walletAddress.length - 4) : walletAddress;
+
+                const balances = user.balances || {};
+                const usdt = (balances.usdt || 0).toFixed(2);
+                const btc = (balances.btc || 0).toFixed(4);
+                const eth = (balances.eth || 0).toFixed(4);
+                const usdc = (balances.usdc || 0).toFixed(2);
+                const pyusd = (balances.pyusd || 0).toFixed(2);
+                const sol = (balances.sol || 0).toFixed(4);
+
+                const status = user.status || user.kycStatus || 'active';
+                const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A';
+
+                const statusClass = status === 'active' ? 'active' : status === 'pending' ? 'pending' : 'inactive';
+
+                tableHTML += `
+                    <tr>
+                        <td><span class="user-id-cell">${formattedUserId}</span></td>
+                        <td><span class="address-cell" title="${walletAddress}" onclick="copyToClipboard('${walletAddress}')">${shortAddress}</span></td>
+                        <td><span class="balance-cell">${usdt}</span></td>
+                        <td><span class="balance-cell">${btc}</span></td>
+                        <td><span class="balance-cell">${eth}</span></td>
+                        <td><span class="balance-cell">${usdc}</span></td>
+                        <td><span class="balance-cell">${pyusd}</span></td>
+                        <td><span class="balance-cell">${sol}</span></td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        <td>${createdDate}</td>
+                        <td>
+                                            <div class="action-buttons">
+                                                <button class="action-btn" onclick="openEditModal('${userId}')" title="Edit">✏️</button>
+                                                ${user.force_trade_win ? '<span title="Forced Win Enabled" style="align-self:center;color:#ffd33d;margin-left:4px">🏆</span>' : ''}
+                                                <button class="action-btn danger" onclick="deleteUser('${userId}')" title="Delete">🗑️</button>
+                                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = tableHTML;
+        }
+
+        function filterUsers(searchTerm) {
+            if (!allUsersData) return;
+
+            const filtered = allUsersData.filter(user => {
+                const userId = (user.userid || user.user_id || user.uid || '').toString().toLowerCase();
+                const address = (user.wallet_address || user.address || '').toLowerCase();
+                const search = searchTerm.toLowerCase();
+
+                return userId.includes(search) || address.includes(search);
+            });
+
+            renderTable(filtered);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Wallet address copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        function editUser(userId) {
+            openEditModal(userId);
+        }
+
+        function deleteUser(userId) {
+            if (confirm(`Are you sure you want to delete user ${userId}?`)) {
+                alert(`Delete functionality for user ${userId} will be implemented soon.`);
+            }
+        }
+
+        function toggleFilterPanel() {
+            alert('Advanced filter panel will be implemented soon.');
+        }
+
+        /* Edit modal for toggling force_trade_win */
+        function openEditModal(userId) {
+            // Find user data
+            const user = allUsersData.find(u => String(u.userid) === String(userId) || String(u.uid) === String(userId));
+            if (!user) { alert('User not found'); return; }
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = 'edit-user-modal';
+            modal.style.position = 'fixed';
+            modal.style.left = 0;
+            modal.style.top = 0;
+            modal.style.right = 0;
+            modal.style.bottom = 0;
+            modal.style.background = 'rgba(0,0,0,0.6)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            modal.style.zIndex = 99999;
+
+            const bodyHtml = `
+                <div style="background:#0d1117;color:#e6edf3;padding:20px;border-radius:10px;min-width:340px;">
+                    <h3 style="margin-bottom:8px;">Edit User ${userId}</h3>
+                    <p style="color:#8b949e;margin-bottom:12px;">Toggle admin flags for this user</p>
+                    <label style="display:block;margin-bottom:8px;">
+                        <input type="checkbox" id="forceTradeWinCheckbox" ${user.force_trade_win ? 'checked' : ''}> Force Trade Win
+                    </label>
+                    <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;">
+                        <button id="cancelEditBtn" style="padding:8px 12px;border-radius:6px;background:#30363d;color:#e6edf3;border:none;cursor:pointer">Cancel</button>
+                        <button id="saveEditBtn" style="padding:8px 12px;border-radius:6px;background:#238636;color:#fff;border:none;cursor:pointer">Save</button>
+                    </div>
+                </div>
+            `;
+
+            modal.innerHTML = bodyHtml;
+            document.body.appendChild(modal);
+
+            document.getElementById('cancelEditBtn').addEventListener('click', () => { modal.remove(); });
+            document.getElementById('saveEditBtn').addEventListener('click', () => {
+                const checked = document.getElementById('forceTradeWinCheckbox').checked;
+                // Call admin endpoint to set flag
+                $.ajax({
+                    url: '/api/admin/set-user-flag',
+                    method: 'POST',
+                    data: {
+                        user_id: userId,
+                        flag: 'force_trade_win',
+                        value: checked
+                    },
+                    success: function(resp) {
+                        if (resp && resp.success) {
+                            alert('User updated successfully');
+                            // Update local copy and rerender
+                            const idx = allUsersData.findIndex(u => String(u.userid) === String(userId) || String(u.uid) === String(userId));
+                            if (idx !== -1) { allUsersData[idx].force_trade_win = checked; renderTable(allUsersData); }
+                            modal.remove();
+                        } else {
+                            alert('Failed to update user');
+                        }
+                    },
+                    error: function(err) { alert('Failed to update user'); }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
