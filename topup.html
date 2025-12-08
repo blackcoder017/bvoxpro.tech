@@ -126,6 +126,31 @@
                 try { $('#y-bilian').text(addr); } catch (e) { console.error('Address update failed', e); }
             }
 
+            // Fallback copy function for older browsers
+            function fallbackCopyToClipboard(text) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                try {
+                    textarea.select();
+                    const success = document.execCommand('copy');
+                    if (success) {
+                        console.log('✅ Fallback copy succeeded:', text);
+                        alert('Address copied to clipboard!');
+                    } else {
+                        console.warn('❌ Fallback copy failed');
+                        alert('Copy failed. Please try again.');
+                    }
+                } catch (e) {
+                    console.error('❌ Fallback copy exception:', e);
+                    alert('Copy failed. Please try again.');
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+
             // Global topup function - MUST be outside $(document).ready) to be accessible from onclick
             function topup() {
                 // Prevent duplicate submissions
@@ -201,10 +226,33 @@
                 console.log('📝 Page loaded, initializing QR and address...');
                 updateQRAndAddress();
                 
-                // Ensure the image stays visible
+                // Copy address to clipboard
                 $(document).on('click', '.y-copydz', function() {
-                    console.log('📋 Copy button clicked, preserving QR...');
-                    updateQRAndAddress(); // Refresh after copy
+                    const address = $('#y-bilian').text();
+                    if (!address || address === 'Loading...') {
+                        alert('Address not loaded yet');
+                        return;
+                    }
+                    
+                    // Use modern Clipboard API
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(address)
+                            .then(() => {
+                                console.log('✅ Address copied:', address);
+                                alert('Address copied to clipboard!');
+                            })
+                            .catch(err => {
+                                console.error('❌ Clipboard copy failed:', err);
+                                // Fallback to older method
+                                fallbackCopyToClipboard(address);
+                            });
+                    } else {
+                        // Fallback for older browsers
+                        fallbackCopyToClipboard(address);
+                    }
+                    
+                    // Preserve QR visibility
+                    updateQRAndAddress();
                 });
                 
                 $('#y-tpje').attr('placeholder', _t('请输入数量'));
