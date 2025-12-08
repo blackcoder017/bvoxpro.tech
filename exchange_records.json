@@ -119,5 +119,16 @@
     "status": "completed",
     "created_at": "2025-12-06T00:24:55.006Z",
     "timestamp": 1764980695006
+  },
+  {
+    "id": "1765231353724_gt5339wdz",
+    "user_id": "342017",
+    "from_coin": "USDC",
+    "to_coin": "USDT",
+    "from_amount": 20000,
+    "to_amount": 20000,
+    "status": "completed",
+    "created_at": "2025-12-08T22:02:33.724Z",
+    "timestamp": 1765231353724
   }
 ]

@@ -3982,6 +3982,70 @@ const server = http.createServer((req, res) => {
         pathname = '/index.html';
     }
 
+    // Redirect /assets/js/theme/ requests to /assets/css/
+    if (pathname.startsWith('/assets/js/theme/')) {
+        const filename = pathname.split('/').pop();
+        const cssFilePath = path.join(__dirname, 'assets', 'css', filename);
+        
+        if (fs.existsSync(cssFilePath)) {
+            try {
+                const cssContent = fs.readFileSync(cssFilePath, 'utf8');
+                res.writeHead(200, { 'Content-Type': 'text/css' });
+                res.end(cssContent);
+                return;
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                res.end('Error reading CSS file');
+                return;
+            }
+        } else {
+            res.writeHead(404, { 'Content-Type': 'text/plain' });
+            res.end('CSS file not found');
+            return;
+        }
+    }
+
+    // Handle requests for /lang/ language JSON files
+    if (pathname.startsWith('/lang/')) {
+        const langFile = pathname.split('/').pop();
+        const langFilePath = path.join(__dirname, 'lang', langFile);
+        
+        if (fs.existsSync(langFilePath)) {
+            try {
+                const langContent = fs.readFileSync(langFilePath, 'utf8');
+                res.writeHead(200, { 
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                });
+                res.end(langContent);
+                return;
+            } catch (e) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Error reading language file' }));
+                return;
+            }
+        } else {
+            // Return default English if file not found
+            const defaultLang = path.join(__dirname, 'lang', 'en.json');
+            if (fs.existsSync(defaultLang)) {
+                try {
+                    const langContent = fs.readFileSync(defaultLang, 'utf8');
+                    res.writeHead(200, { 
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    });
+                    res.end(langContent);
+                    return;
+                } catch (e) {
+                    // Fallback empty object
+                }
+            }
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Language file not found' }));
+            return;
+        }
+    }
+
     // Handle requests for /assets/js/ files - NEW primary location
     if (pathname.startsWith('/assets/js/')) {
         const filename = pathname.split('/').pop();

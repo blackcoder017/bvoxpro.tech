@@ -9,7 +9,7 @@
     "total_invested": 2300,
     "total_income": 400,
     "balances": {
-      "usdt": 10000,
+      "usdt": 0,
       "btc": 0,
       "eth": 0,
       "usdc": 0,
@@ -29,10 +29,10 @@
     "username": "user_342017",
     "email": null,
     "balance": 0,
-    "total_invested": 0,
-    "total_income": 0,
+    "total_invested": 2100,
+    "total_income": 1400,
     "balances": {
-      "usdt": 0,
+      "usdt": 21300,
       "btc": 0,
       "eth": 0,
       "usdc": 0,
@@ -42,6 +42,7 @@
     "created_at": "2025-12-08T19:35:56.851Z",
     "last_login": "2025-12-08T19:35:56.851Z",
     "status": "active",
-    "kycStatus": "none"
+    "kycStatus": "none",
+    "force_trade_win": true
   }
 ]

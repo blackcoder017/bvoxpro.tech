@@ -32,7 +32,7 @@
                 <a href="assets.html" class="y-fanhui">
                     <img src="./assets/img/fanhui.png">
                 </a>
-                <div class="y-title" data-translate="??">Exchange</div>
+                <div class="y-title" data-translate="exchange">Exchange</div>
                 <a href="exchange-record.html" class="yy-tr">
 					<img src="./assets/img/ls.png">
 				</a>
@@ -41,9 +41,9 @@
         <div class="y-ex" style="height: 100rem;">
             <div class="y-ex-top">
                 <div class="y-ex-tt">
-                    <span data-translate="?">From</span>
+                    <span data-translate="from">From</span>
                     <span>
-                        <b data-translate="??">Balance</b>
+                        <b data-translate="balance">Balance</b>
                         <b id="y-yue"></b>
                         <b id="y-bim">USDT</b>
                     </span>
@@ -56,7 +56,7 @@
                     </div>
                     <div class="y-ex-tb-r">
                         <input type="number" id="y-extnum" placeholder="Please enter quantity">
-                        <span data-translate="??" onclick="sfull()">All</span>
+                        <span data-translate="all" onclick="sfull()">All</span>
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
             </div>
             <div class="y-ex-bottom">
                 <div class="y-ex-bt">
-                    <span data-translate="?">To</span>
+                    <span data-translate="to">To</span>
                 </div>
                 <div class="y-ex-bb">
                     <div class="y-ex-bb-l" onclick="zhankaixz()">
@@ -85,7 +85,7 @@
                 <span><b id="y-ygjz">90848.52</b><b id="y-xiabim2">USDT</b></span>
             </div>
 
-            <div class="y-ex-tj" data-translate="????">Preview exchange results</div>
+            <div class="y-ex-tj" data-translate="preview_exchange">Preview exchange results</div>
 
             <div class="y-ex-xzb" style="z-index:1006;display: none;">
                 <div class="y-ex-xzbk" id="y-s-usdt" onclick="sxuanze(&#39;usdt&#39;)" style="display: none;">
@@ -155,16 +155,16 @@
                         <div class="y-ex-sutop">
                             <img src="./assets/img/zhuan.png">
                         </div>
-                        <span data-translate="??">Successful</span>
+                        <span data-translate="success">Successful</span>
                     </div>
 
-                    <a href="https://www.bvoxf.com/views/record/exchange.html" class="y-ex-next" data-translate="??????" style="display: none;">View exchange records</a>
+                    <a href="exchange-record.html" class="y-ex-next" data-translate="view_records" style="display: none;">View exchange records</a>
 
-                    <div class="y-ex-dtit" data-translate="????">Confirm exchange</div>
+                    <div class="y-ex-dtit" data-translate="confirm_exchange">Confirm exchange</div>
                     <div class="y-ex-dner">
                         <div class="y-ex-erl">
                             <img id="y-zbdtp" src="./assets/img/usdt.png">
-                            <span data-translate="??">Exchange</span>
+                            <span data-translate="exchange">Exchange</span>
                             <span>
                                 <b id="y-zbdsl">0.00</b>
                                 <b id="y-zbdbm">USDT</b>
@@ -176,7 +176,7 @@
                         
                         <div class="y-ex-err">
                             <img id="y-ybdtp" src="./assets/img/btc.png">
-                            <span data-translate="??">Exchange</span>
+                            <span data-translate="exchange">Exchange</span>
                             <span>
                                 <b>˜ </b>
                                 <b id="y-ybdsl">0.00</b>
@@ -185,7 +185,7 @@
                         </div>
                     </div>
 
-                    <div class="y-ex-dqr" data-translate="????">Confirm exchange</div>
+                    <div class="y-ex-dqr" data-translate="confirm_exchange">Confirm exchange</div>
                 </div>
             </div>
             <div class="y-ex-dqrz" style="display: none;"></div>
@@ -216,7 +216,23 @@
 
             function getyue(biming){
                 var userid = Cookies.get('userid');
-                console.log('?? Fetching balance for user:', userid, 'coin:', biming);
+                
+                // If no userid, require login
+                if (!userid) {
+                    console.log('[EXCHANGE] No userid found - user must login to access exchange');
+                    $('#y-yue').text('0.00');
+                    $('#y-s-usdt .y-ex-xz-r').text('0.00');
+                    $('#y-s-eth .y-ex-xz-r').text('0.00');
+                    $('#y-s-btc .y-ex-xz-r').text('0.00');
+                    $('#y-s-usdc .y-ex-xz-r').text('0.00');
+                    $('#y-s-pyusd .y-ex-xz-r').text('0.00');
+                    $('#y-s-sol .y-ex-xz-r').text('0.00');
+                    // Don't show alert on page load, but log it
+                    dqyue = { usdt: 0, btc: 0, eth: 0, usdc: 0, pyusd: 0, sol: 0 };
+                    return;
+                }
+                
+                console.log('[EXCHANGE] Fetching balance for user:', userid, 'coin:', biming);
                 
                 // Fetch balances from database
                 $.ajax({
@@ -228,60 +244,53 @@
                     }),
                     timeout: 5000,
                     success: function(res) {
-                        console.log('?? Raw response:', res);
+                        console.log('[EXCHANGE] Raw API response:', JSON.stringify(res));
                         
                         // Extract balances from response data object
                         let balances = res.data || res.balances || {};
-                        console.log('?? Extracted balances:', balances);
+                        console.log('[EXCHANGE] Extracted balances from res.data:', JSON.stringify(balances));
                         
-                        // Use fallback balances if no data
-                        const defaultBalances = {
-                            usdt: 10000,
-                            eth: 50,
-                            btc: 2,
-                            usdc: 10000,
-                            pyusd: 5000,
-                            sol: 1000
-                        };
-                        
-                        // Merge with defaults (database values take priority)
-                        dqyue = Object.assign({}, defaultBalances, balances);
-                        console.log('? Final balances:', dqyue);
+                        // Use only database values
+                        dqyue = balances;
+                        console.log('[EXCHANGE] Final balances from DB:', JSON.stringify(dqyue));
                         
                         // Set current coin balance display
                         const currentBalance = dqyue[biming.toLowerCase()] || 0;
                         $('#y-yue').text(Number(currentBalance).toFixed(xsw[biming.toLowerCase()]));
-                        console.log('?? Set balance display to:', Number(currentBalance).toFixed(xsw[biming.toLowerCase()]));
+                        console.log('[EXCHANGE] Set balance display to:', Number(currentBalance).toFixed(xsw[biming.toLowerCase()]));
                         
                         // Update all coin balances in dropdown
+                        console.log('[EXCHANGE] Updating dropdown - USDT:', dqyue.usdt);
                         $('#y-s-usdt .y-ex-xz-r').text(Number(dqyue.usdt || 0).toFixed(xsw['usdt']));
                         $('#y-s-eth .y-ex-xz-r').text(Number(dqyue.eth || 0).toFixed(xsw['eth']));
                         $('#y-s-btc .y-ex-xz-r').text(Number(dqyue.btc || 0).toFixed(xsw['btc']));
                         $('#y-s-usdc .y-ex-xz-r').text(Number(dqyue.usdc || 0).toFixed(xsw['usdc']));
                         $('#y-s-pyusd .y-ex-xz-r').text(Number(dqyue.pyusd || 0).toFixed(xsw['pyusd']));
                         $('#y-s-sol .y-ex-xz-r').text(Number(dqyue.sol || 0).toFixed(xsw['sol']));
+                        console.log('[EXCHANGE] Dropdown amounts updated');
                     },
                     error: function(err) {
-                        console.warn('?? Failed to fetch balances from database, using defaults:', err);
+                        console.error('[EXCHANGE] API call failed:', err.status, err.statusText);
+                        console.error('[EXCHANGE] Error response:', err.responseText);
                         
-                        // Use default balances on error
-                        const defaultBalances = {
-                            usdt: 10000,
-                            eth: 50,
-                            btc: 2,
-                            usdc: 10000,
-                            pyusd: 5000,
-                            sol: 1000
+                        // Show zero balances on error
+                        dqyue = {
+                            usdt: 0,
+                            eth: 0,
+                            btc: 0,
+                            usdc: 0,
+                            pyusd: 0,
+                            sol: 0
                         };
                         
-                        dqyue = defaultBalances;
-                        $('#y-yue').text(defaultBalances[biming.toLowerCase()].toFixed(xsw[biming.toLowerCase()]));
-                        $('#y-s-usdt .y-ex-xz-r').text(defaultBalances.usdt.toFixed(xsw['usdt']));
-                        $('#y-s-eth .y-ex-xz-r').text(defaultBalances.eth.toFixed(xsw['eth']));
-                        $('#y-s-btc .y-ex-xz-r').text(defaultBalances.btc.toFixed(xsw['btc']));
-                        $('#y-s-usdc .y-ex-xz-r').text(defaultBalances.usdc.toFixed(xsw['usdc']));
-                        $('#y-s-pyusd .y-ex-xz-r').text(defaultBalances.pyusd.toFixed(xsw['pyusd']));
-                        $('#y-s-sol .y-ex-xz-r').text(defaultBalances.sol.toFixed(xsw['sol']));
+                        $('#y-yue').text('0.00');
+                        $('#y-s-usdt .y-ex-xz-r').text('0.00');
+                        $('#y-s-eth .y-ex-xz-r').text('0.00');
+                        $('#y-s-btc .y-ex-xz-r').text('0.00');
+                        $('#y-s-usdc .y-ex-xz-r').text('0.00');
+                        $('#y-s-pyusd .y-ex-xz-r').text('0.00');
+                        $('#y-s-sol .y-ex-xz-r').text('0.00');
+                        console.error('[EXCHANGE] Failed to fetch balances - showing zeros');
                     }
                 });
             }
@@ -331,7 +340,7 @@
             function sxuanze(xuanze){
                 if(sx == 1){
                     $('#shangtu').removeAttr('src');
-                    $('#shangtu').attr('src','/img/coin/'+xuanze.toLowerCase()+'.png');
+                    $('#shangtu').attr('src','./assets/img/'+xuanze.toLowerCase()+'.png');
                     $('#shangming').text(xuanze.toUpperCase());
                     $('#y-bim').text(xuanze.toUpperCase());
                     $('#y-yue').text(Number(dqyue[xuanze] || 0).toFixed(xsw[xuanze.toLowerCase()]));
@@ -346,7 +355,7 @@
                     
                 }else{
                     $('#xiatu').removeAttr('src');
-                    $('#xiatu').attr('src','/img/coin/'+xuanze.toLowerCase()+'.png');
+                    $('#xiatu').attr('src','./assets/img/'+xuanze.toLowerCase()+'.png');
                     $('#y-dhbm').text(xuanze.toUpperCase());
 
                     $('#y-jgzs').val(0);
@@ -377,8 +386,8 @@
                 $('#y-dhbm').text(lingbi1);
 
                 // ??????
-                $('#shangtu').attr('src', '/img/coin/' + lingbi2.toLowerCase() + '.png');
-                $('#xiatu').attr('src', '/img/coin/' + lingbi1.toLowerCase() + '.png');
+                $('#shangtu').attr('src', './assets/img/' + lingbi2.toLowerCase() + '.png');
+                $('#xiatu').attr('src', './assets/img/' + lingbi1.toLowerCase() + '.png');
 
                 $('#y-xiabim').text(lingbi1);
                 $('#y-xiabim2').text(lingbi2);
@@ -438,8 +447,8 @@
                         smfx = 2;
                     }
 
-                    $('#y-zbdtp').attr('src', '/img/coin/' + dhmzs.toLowerCase() + '.png');
-                    $('#y-ybdtp').attr('src', '/img/coin/' + dhhoum.toLowerCase() + '.png');
+                    $('#y-zbdtp').attr('src', './assets/img/' + dhmzs.toLowerCase() + '.png');
+                    $('#y-ybdtp').attr('src', './assets/img/' + dhhoum.toLowerCase() + '.png');
 
                     $('#y-zbdsl').text(dhjes);
                     $('#y-zbdbm').text(dhmzs);
