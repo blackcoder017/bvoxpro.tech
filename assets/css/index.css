@@ -103,13 +103,13 @@ input, textarea, button, select {
 
 .y-right-kefu{
     position: absolute;
-    right: 4rem;
+    right: 1rem;
     top: 1rem;
     background-color: rgba(0, 0, 0, .2);
     border-radius: 50%;
     width: 2.5rem;
     height: 2.5rem;
-    padding: 0.4rem;
+    padding: 0rem;
 }
 
 .y-in{

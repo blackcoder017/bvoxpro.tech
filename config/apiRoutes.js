@@ -270,6 +270,27 @@ router.get('/api/admin/topup-records', async (req, res) => {
     }
 });
 
+// GET /api/admin/withdrawal-records - Get all withdrawal records for admin dashboard (MongoDB)
+router.get('/api/admin/withdrawal-records', async (req, res) => {
+    try {
+        const admin = await verifyAdminToken(req);
+        if (!admin) return res.status(401).json({ success: false, error: 'Unauthorized' });
+        
+        const limit = parseInt(req.query.limit) || 100;
+        const skip = parseInt(req.query.skip) || 0;
+        const Withdrawal = require('../models/Withdrawal');
+        const records = await Withdrawal.find({})
+            .limit(limit)
+            .skip(skip)
+            .sort({ created_at: -1 });
+        
+        return res.json({ success: true, records });
+    } catch (e) {
+        console.error('[admin/withdrawal-records] error:', e && e.message);
+        return res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 // POST /api/admin/add-topup
 router.post('/api/admin/add-topup', async (req, res) => {
     try {
@@ -323,6 +344,135 @@ router.post('/api/admin/add-withdrawal', async (req, res) => {
     }
 });
 
+// ============= ADMIN ARBITRAGE RECORDS =============
+
+// GET /api/admin/arbitrage/records - Get all arbitrage subscription records (paginated)
+router.get('/api/admin/arbitrage/records', async (req, res) => {
+    try {
+        // Disable caching for admin API endpoints
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        
+        // Don't require admin verification for now - allow from frontend
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 100;
+        const skip = (page - 1) * limit;
+
+        const ArbitrageSubscription = require('../models/ArbitrageSubscription');
+        
+        // Get total count
+        const totalRecords = await ArbitrageSubscription.countDocuments();
+        
+        // Get paginated records sorted by newest first
+        const records = await ArbitrageSubscription.find()
+            .sort({ created_at: -1 })
+            .limit(limit)
+            .skip(skip)
+            .lean();
+
+        // Format records for frontend
+        const formattedRecords = records.map(sub => {
+            const amount = Number(sub.amount) || 0;
+            const totalIncome = Number(sub.total_income) || 0;
+            const roi = amount > 0 ? ((totalIncome / amount) * 100) : 0;
+            
+            return {
+                id: sub._id || sub.id || '',
+                user_id: sub.user_id || '',
+                username: sub.username || '',
+                product_id: sub.product_id || '',
+                product_name: sub.product_name || 'N/A',
+                amount: amount,
+                total_income: totalIncome,
+                roi: roi.toFixed(2),
+                status: sub.status || 'active',
+                start_date: sub.start_date || sub.created_at,
+                end_date: sub.end_date,
+                created_at: sub.created_at ? new Date(sub.created_at).toISOString() : new Date().toISOString(),
+                updated_at: sub.updated_at ? new Date(sub.updated_at).toISOString() : new Date().toISOString()
+            };
+        });
+
+        const totalPages = Math.ceil(totalRecords / limit);
+        
+        return res.json({
+            code: 1,
+            data: formattedRecords,
+            pagination: {
+                page: page,
+                limit: limit,
+                total: totalRecords,
+                pages: totalPages
+            }
+        });
+    } catch (e) {
+        console.error('[admin/arbitrage/records] error:', e && e.message);
+        return res.status(500).json({ code: 0, data: [], message: e.message });
+    }
+});
+
+// GET /api/admin/contract/records - Get all contract/trade records (paginated)
+router.get('/api/admin/contract/records', async (req, res) => {
+    try {
+        // Disable caching for admin API endpoints
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        
+        // Don't require admin verification for now - allow from frontend
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 100;
+        const skip = (page - 1) * limit;
+
+        const Trade = require('../models/Trade');
+        
+        // Get total count
+        const totalRecords = await Trade.countDocuments();
+        
+        // Get paginated records sorted by newest first
+        const records = await Trade.find()
+            .sort({ created_at: -1 })
+            .limit(limit)
+            .skip(skip)
+            .lean();
+
+        // Format records for frontend (map to contract format)
+        const formattedRecords = records.map(trade => {
+            return {
+                id: trade._id || trade.id || '',
+                user_id: trade.userid || trade.user_id || '',
+                username: trade.username || '',
+                type: trade.status === 'win' ? 'Fixed' : (trade.status === 'loss' ? 'Loss' : 'Pending'),
+                amount: Number(trade.num) || Number(trade.amount) || 0,
+                term: parseInt(trade.miaoshu) || 0,
+                rate: parseFloat(trade.buyprice) || 0,
+                status: trade.status || 'pending',
+                created_at: trade.created_at ? new Date(trade.created_at).toISOString() : new Date().toISOString(),
+                ying: Number(trade.ying) || 0,
+                biming: trade.biming || trade.coin || 'btc',
+                fangxiang: parseInt(trade.fangxiang) || 1
+            };
+        });
+
+        const totalPages = Math.ceil(totalRecords / limit);
+        
+        return res.json({
+            code: 1,
+            data: formattedRecords,
+            pagination: {
+                page: page,
+                limit: limit,
+                total: totalRecords,
+                pages: totalPages
+            }
+        });
+    } catch (e) {
+        console.error('[admin/contract/records] error:', e && e.message);
+        return res.status(500).json({ code: 0, data: [], message: e.message });
+    }
+});
+
 // ============= TOPUP ENDPOINTS =============
 
 // GET /api/admin/topup-records - Get all topup records for admin dashboard
@@ -349,10 +499,10 @@ router.put('/api/admin/topup/approve-mongo', async (req, res) => {
         const { id } = req.body;
         if (!id) return res.status(400).json({ success: false, error: 'Missing topup ID' });
         
-        // Get the topup record
+        // Get the topup record by string ID (not ObjectId)
         const Topup = require('../models/Topup');
-        const topup = await Topup.findByIdAndUpdate(
-            id,
+        const topup = await Topup.findOneAndUpdate(
+            { id: id },
             { status: 'complete', updated_at: new Date() },
             { new: true }
         );
@@ -389,10 +539,10 @@ router.put('/api/admin/topup/reject-mongo', async (req, res) => {
         const { id } = req.body;
         if (!id) return res.status(400).json({ success: false, error: 'Missing topup ID' });
         
-        // Update topup status to rejected
+        // Update topup status to rejected by string ID (not ObjectId)
         const Topup = require('../models/Topup');
-        const topup = await Topup.findByIdAndUpdate(
-            id,
+        const topup = await Topup.findOneAndUpdate(
+            { id: id },
             { status: 'rejected', updated_at: new Date() },
             { new: true }
         );
@@ -580,6 +730,96 @@ router.put('/api/withdrawal/:withdrawalId/status', async (req, res) => {
         res.json(updated);
     } catch (e) {
         res.status(500).json({ error: e.message });
+    }
+});
+
+// PUT /api/admin/withdrawal/approve-mongo - Approve withdrawal and deduct from user balance
+router.put('/api/admin/withdrawal/approve-mongo', async (req, res) => {
+    try {
+        const admin = await verifyAdminToken(req);
+        if (!admin) return res.status(401).json({ success: false, error: 'Unauthorized' });
+        
+        const { id } = req.body;
+        if (!id) return res.status(400).json({ success: false, error: 'Missing withdrawal ID' });
+        
+        // Get the withdrawal record by string ID (not ObjectId)
+        const Withdrawal = require('../models/Withdrawal');
+        const withdrawal = await Withdrawal.findOneAndUpdate(
+            { id: id },
+            { status: 'complete', updated_at: new Date() },
+            { new: true }
+        );
+        
+        if (!withdrawal) return res.status(404).json({ success: false, error: 'Withdrawal record not found' });
+        
+        // Update user balance - deduct the withdrawn amount
+        const User = require('../models/User');
+        const coinKey = `balances.${withdrawal.coin.toLowerCase()}`;
+        const updated = await User.findOneAndUpdate(
+            { userid: withdrawal.user_id },
+            { $inc: { [coinKey]: -withdrawal.amount } },
+            { new: true }
+        );
+        
+        if (!updated) {
+            console.warn(`[admin/withdrawal/approve-mongo] User not found for user_id: ${withdrawal.user_id}`);
+        }
+        
+        console.log(`[admin/withdrawal/approve-mongo] Approved withdrawal ${id} for user ${withdrawal.user_id}: -${withdrawal.amount} ${withdrawal.coin}`);
+        return res.json({ success: true, record: withdrawal, updatedUser: updated });
+    } catch (e) {
+        console.error('[admin/withdrawal/approve-mongo] error:', e && e.message);
+        return res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// PUT /api/admin/withdrawal/reject-mongo - Reject withdrawal record
+router.put('/api/admin/withdrawal/reject-mongo', async (req, res) => {
+    try {
+        const admin = await verifyAdminToken(req);
+        if (!admin) return res.status(401).json({ success: false, error: 'Unauthorized' });
+        
+        const { id } = req.body;
+        if (!id) return res.status(400).json({ success: false, error: 'Missing withdrawal ID' });
+        
+        // Update withdrawal status to rejected by string ID (not ObjectId)
+        const Withdrawal = require('../models/Withdrawal');
+        const withdrawal = await Withdrawal.findOneAndUpdate(
+            { id: id },
+            { status: 'rejected', updated_at: new Date() },
+            { new: true }
+        );
+        
+        if (!withdrawal) return res.status(404).json({ success: false, error: 'Withdrawal record not found' });
+        
+        console.log(`[admin/withdrawal/reject-mongo] Rejected withdrawal ${id} for user ${withdrawal.user_id}`);
+        return res.json({ success: true, record: withdrawal });
+    } catch (e) {
+        console.error('[admin/withdrawal/reject-mongo] error:', e && e.message);
+        return res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// DELETE /api/admin/withdrawal/delete - Delete withdrawal record
+router.delete('/api/admin/withdrawal/delete', async (req, res) => {
+    try {
+        const admin = await verifyAdminToken(req);
+        if (!admin) return res.status(401).json({ success: false, error: 'Unauthorized' });
+        
+        const { id } = req.body;
+        if (!id) return res.status(400).json({ success: false, error: 'Missing withdrawal ID' });
+        
+        // Delete withdrawal record
+        const Withdrawal = require('../models/Withdrawal');
+        const deleted = await Withdrawal.findByIdAndDelete(id);
+        
+        if (!deleted) return res.status(404).json({ success: false, error: 'Withdrawal record not found' });
+        
+        console.log(`[admin/withdrawal/delete] Deleted withdrawal ${id}`);
+        return res.json({ success: true, message: 'Record deleted successfully' });
+    } catch (e) {
+        console.error('[admin/withdrawal/delete] error:', e && e.message);
+        return res.status(500).json({ success: false, error: e.message });
     }
 });
 
@@ -1065,35 +1305,416 @@ router.put('/api/kyc/:userId/verify', async (req, res) => {
 
 // ============= ARBITRAGE ENDPOINTS =============
 
+router.get('/api/arbitrage/stats', async (req, res) => {
+    try {
+        const user_id = req.query.user_id || req.body.user_id;
+        if (!user_id) return res.status(400).json({ code: 0, data: 'Missing user_id' });
+        
+        const ArbitrageSubscription = require('../models/ArbitrageSubscription');
+        const subscriptions = await ArbitrageSubscription.find({ user_id: user_id }).lean();
+        
+        if (!subscriptions || subscriptions.length === 0) {
+            return res.json({ code: 1, info: 'success', data: {
+                total_jine: 0,
+                recent_jine: 0,
+                total_shuliang: 0
+            }});
+        }
+        
+        const total_jine = subscriptions.reduce((sum, sub) => sum + (Number(sub.amount) || 0), 0);
+        const recent_jine = subscriptions[subscriptions.length - 1]?.amount || 0;
+        const total_shuliang = subscriptions.length;
+        
+        res.json({ code: 1, info: 'success', data: { total_jine, recent_jine, total_shuliang }});
+    } catch (e) {
+        res.status(500).json({ code: 0, data: e.message });
+    }
+});
+
 router.get('/api/arbitrage/products', async (req, res) => {
     try {
-        const limit = parseInt(req.query.limit) || 20;
-        const products = await db.getAllArbitrageProducts(limit);
-        res.json(products);
+        const ArbitrageProduct = require('../models/ArbitrageProduct');
+        let products = await ArbitrageProduct.find({ status: 'active' }).lean();
+        
+        if (!products || products.length === 0) {
+            // Return seed data if database is empty - format matches what ai-arbitrage.html expects
+            products = [
+                {
+                    id: '1',
+                    name: 'Smart Plan A',
+                    duration: '1 Day',
+                    duration_days: 1,
+                    min_amount: 500,
+                    max_amount: 5000,
+                    daily_return_min: 1.60,
+                    daily_return_max: 1.80,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                {
+                    id: '2',
+                    name: 'Smart Plan B',
+                    duration: '3 Days',
+                    duration_days: 3,
+                    min_amount: 5001,
+                    max_amount: 30000,
+                    daily_return_min: 1.90,
+                    daily_return_max: 2.60,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                {
+                    id: '3',
+                    name: 'Smart Plan C',
+                    duration: '7 Days',
+                    duration_days: 7,
+                    min_amount: 30001,
+                    max_amount: 100000,
+                    daily_return_min: 2.80,
+                    daily_return_max: 3.20,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH', 'USDT'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                {
+                    id: '4',
+                    name: 'Smart Plan D',
+                    duration: '15 Days',
+                    duration_days: 15,
+                    min_amount: 100001,
+                    max_amount: 500000,
+                    daily_return_min: 3.50,
+                    daily_return_max: 5.30,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                {
+                    id: '5',
+                    name: 'Smart Plan VIP',
+                    duration: '30 Days',
+                    duration_days: 30,
+                    min_amount: 500001,
+                    max_amount: 1000000,
+                    daily_return_min: 5.80,
+                    daily_return_max: 6.30,
+                    times: 1,
+                    arbitrage_types: ['BTC'],
+                    image: 'tl2.jpg',
+                    status: 'active'
+                }
+            ];
+        }
+        
+        res.json({ success: true, products: products });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        console.error('[arbitrage/products] error:', e.message);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// GET single arbitrage product by ID
+router.get('/api/arbitrage/product/:id', async (req, res) => {
+    try {
+        const productId = req.params.id;
+        if (!productId) {
+            return res.status(400).json({ success: false, error: 'Product ID required' });
+        }
+        
+        const ArbitrageProduct = require('../models/ArbitrageProduct');
+        
+        // Try to find by MongoDB _id first, then by custom id field
+        let product = await ArbitrageProduct.findById(productId).lean().catch(() => null);
+        
+        if (!product) {
+            product = await ArbitrageProduct.findOne({ id: productId }).lean();
+        }
+        
+        // If no product found in DB, return seed data for backward compatibility
+        if (!product) {
+            const seedProducts = {
+                '1': {
+                    id: '1',
+                    name: 'Smart Plan A',
+                    duration: '1 Day',
+                    duration_days: 1,
+                    min_amount: 500,
+                    max_amount: 5000,
+                    daily_return_min: 1.60,
+                    daily_return_max: 1.80,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                '2': {
+                    id: '2',
+                    name: 'Smart Plan B',
+                    duration: '3 Days',
+                    duration_days: 3,
+                    min_amount: 5001,
+                    max_amount: 30000,
+                    daily_return_min: 1.90,
+                    daily_return_max: 2.60,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                '3': {
+                    id: '3',
+                    name: 'Smart Plan C',
+                    duration: '7 Days',
+                    duration_days: 7,
+                    min_amount: 30001,
+                    max_amount: 100000,
+                    daily_return_min: 2.80,
+                    daily_return_max: 3.20,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH', 'USDT'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                '4': {
+                    id: '4',
+                    name: 'Smart Plan D',
+                    duration: '15 Days',
+                    duration_days: 15,
+                    min_amount: 100001,
+                    max_amount: 500000,
+                    daily_return_min: 3.50,
+                    daily_return_max: 5.30,
+                    times: 1,
+                    arbitrage_types: ['BTC', 'ETH'],
+                    image: 'tl1.jpg',
+                    status: 'active'
+                },
+                '5': {
+                    id: '5',
+                    name: 'Smart Plan VIP',
+                    duration: '30 Days',
+                    duration_days: 30,
+                    min_amount: 500001,
+                    max_amount: 1000000,
+                    daily_return_min: 5.80,
+                    daily_return_max: 6.30,
+                    times: 1,
+                    arbitrage_types: ['BTC'],
+                    image: 'tl2.jpg',
+                    status: 'active'
+                }
+            };
+            
+            product = seedProducts[productId];
+        }
+        
+        if (!product) {
+            return res.status(404).json({ success: false, error: 'Product not found' });
+        }
+        
+        res.json({ success: true, product: product });
+    } catch (e) {
+        console.error('[arbitrage/product/:id] error:', e.message);
+        res.status(500).json({ success: false, error: e.message });
     }
 });
 
 router.post('/api/arbitrage/subscribe', async (req, res) => {
     try {
-        const subscriptionData = {
-            id: req.body.id || `arb_sub_${Date.now()}_${uuidv4().substring(0, 9)}`,
-            user_id: req.body.user_id,
-            product_id: req.body.product_id,
-            amount: req.body.amount,
-            daily_return: req.body.daily_return,
-            total_return: req.body.total_return,
-            status: req.body.status || 'active',
+        const { user_id, product_id, amount } = req.body;
+        
+        // Validate required fields
+        if (!user_id || !product_id || !amount) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+        
+        const investAmount = parseFloat(amount);
+        if (isNaN(investAmount) || investAmount <= 0) {
+            return res.status(400).json({ success: false, message: 'Invalid amount' });
+        }
+        
+        // Fetch product from database
+        const ArbitrageProduct = require('../models/ArbitrageProduct');
+        let product = await ArbitrageProduct.findById(product_id).lean().catch(() => null);
+        
+        if (!product) {
+            product = await ArbitrageProduct.findOne({ id: product_id }).lean();
+        }
+        
+        // If no product in DB, check seed data
+        if (!product) {
+            const seedProducts = {
+                '1': { id: '1', name: 'Smart Plan A', min_amount: 500, max_amount: 5000, duration_days: 1, daily_return_min: 1.60, daily_return_max: 1.80 },
+                '2': { id: '2', name: 'Smart Plan B', min_amount: 5001, max_amount: 30000, duration_days: 3, daily_return_min: 1.90, daily_return_max: 2.60 },
+                '3': { id: '3', name: 'Smart Plan C', min_amount: 30001, max_amount: 100000, duration_days: 7, daily_return_min: 2.80, daily_return_max: 3.20 },
+                '4': { id: '4', name: 'Smart Plan D', min_amount: 100001, max_amount: 500000, duration_days: 15, daily_return_min: 3.50, daily_return_max: 5.30 },
+                '5': { id: '5', name: 'Smart Plan VIP', min_amount: 500001, max_amount: 1000000, duration_days: 30, daily_return_min: 5.80, daily_return_max: 6.30 }
+            };
+            product = seedProducts[product_id];
+        }
+        
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        
+        // Validate amount is within min/max range
+        if (investAmount < product.min_amount || investAmount > product.max_amount) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Amount must be between $${product.min_amount} and $${product.max_amount}` 
+            });
+        }
+        
+        // Fetch user by id, userid, or uid field
+        const User = require('../models/User');
+        let user = await User.findOne({ $or: [
+            { id: user_id },
+            { userid: user_id },
+            { uid: user_id }
+        ] }).lean();
+        
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        
+        const currentUsdt = parseFloat(user.balances?.usdt) || 0;
+        if (currentUsdt < investAmount) {
+            return res.status(400).json({ 
+                success: false, 
+                message: `Insufficient USDT balance. You have $${currentUsdt.toFixed(2)} but need $${investAmount.toFixed(2)}` 
+            });
+        }
+        
+        // Calculate profit based on average daily return
+        const dailyReturnMin = parseFloat(product.daily_return_min) || 0;
+        const dailyReturnMax = parseFloat(product.daily_return_max) || 0;
+        const avgDailyReturn = (dailyReturnMin + dailyReturnMax) / 2;
+        const durationDays = parseInt(product.duration_days) || 1;
+        const totalReturnPercent = avgDailyReturn * durationDays;
+        const totalIncome = (investAmount * totalReturnPercent) / 100;
+        
+        // Create subscription record
+        const ArbitrageSubscription = require('../models/ArbitrageSubscription');
+        const subscription = new ArbitrageSubscription({
+            id: `arb_sub_${Date.now()}_${uuidv4().substring(0, 9)}`,
+            user_id: user_id,
+            product_id: product_id,
+            product_name: product.name,
+            amount: investAmount,
+            earned: 0,
+            days_completed: 0,
+            daily_return_min: dailyReturnMin,
+            daily_return_max: dailyReturnMax,
+            total_return_percent: totalReturnPercent,
+            total_income: totalIncome,
+            status: 'active',
             start_date: new Date(),
+            end_date: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000),
             timestamp: Date.now(),
             created_at: new Date(),
             updated_at: new Date()
-        };
-        const subscription = await db.createArbitrageSubscription(subscriptionData);
-        res.status(201).json(subscription);
+        });
+        
+        const savedSubscription = await subscription.save();
+        
+        // Deduct USDT from user balance - find user by any of the ID fields
+        const userDoc = await User.findOne({ $or: [
+            { id: user_id },
+            { userid: user_id },
+            { uid: user_id }
+        ] });
+        
+        if (userDoc) {
+            const newUsdt = Math.round((currentUsdt - investAmount) * 100) / 100;
+            userDoc.balances = userDoc.balances || {};
+            userDoc.balances.usdt = newUsdt;
+            await userDoc.save();
+        }
+        
+        // Log as topup record (negative amount for audit trail)
+        try {
+            const Topup = require('../models/Topup');
+            await Topup.create({
+                id: `topup_${Date.now()}`,
+                user_id: user_id,
+                coin: 'USDT',
+                amount: -investAmount,
+                status: 'complete',
+                timestamp: Date.now(),
+                created_at: new Date()
+            });
+        } catch (e) {
+            console.error('[arbitrage-subscribe] Failed to create topup record:', e.message);
+            // Continue even if ledger fails
+        }
+        
+        // Return success response
+        res.status(201).json({ 
+            success: true, 
+            subscription: {
+                id: savedSubscription._id,
+                user_id: savedSubscription.user_id,
+                product_id: savedSubscription.product_id,
+                product_name: savedSubscription.product_name,
+                amount: savedSubscription.amount,
+                total_income: savedSubscription.total_income,
+                total_return_percent: savedSubscription.total_return_percent,
+                duration_days: durationDays,
+                status: savedSubscription.status,
+                start_date: savedSubscription.start_date,
+                end_date: savedSubscription.end_date
+            }
+        });
     } catch (e) {
-        res.status(500).json({ error: e.message });
+        console.error('[arbitrage-subscribe] Error:', e.message);
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// GET user's arbitrage subscriptions (legacy endpoint for ui compatibility)
+router.get('/api/arbitrage/subscriptions', async (req, res) => {
+    try {
+        const user_id = req.query.user_id || req.body.user_id;
+        
+        if (!user_id) {
+            return res.status(400).json({ success: false, message: 'Missing user_id parameter' });
+        }
+        
+        const ArbitrageSubscription = require('../models/ArbitrageSubscription');
+        const subscriptions = await ArbitrageSubscription.find({ user_id: user_id }).lean().sort({ created_at: -1 });
+        
+        if (!subscriptions) {
+            return res.json({ success: true, subscriptions: [] });
+        }
+        
+        res.json({ 
+            success: true, 
+            subscriptions: subscriptions.map(sub => ({
+                id: sub._id,
+                user_id: sub.user_id,
+                product_id: sub.product_id,
+                product_name: sub.product_name,
+                amount: sub.amount,
+                earned: sub.earned || 0,
+                days_completed: sub.days_completed || 0,
+                total_income: sub.total_income || 0,
+                total_return_percent: sub.total_return_percent || 0,
+                status: sub.status,
+                start_date: sub.start_date,
+                end_date: sub.end_date,
+                created_at: sub.created_at,
+                updated_at: sub.updated_at
+            }))
+        });
+    } catch (e) {
+        console.error('[arbitrage/subscriptions] Error:', e.message);
+        res.status(500).json({ success: false, message: e.message });
     }
 });
 
@@ -1277,6 +1898,34 @@ router.post(['/api/Record/getcontract', '/api/record/getcontract'], async (req, 
             if (isloss === 1) ying = -num;
             else if (zuizhong === 1) ying = Number(trade.payout || trade.settled_amount || num + (trade.profit || 0));
             const buytime = trade.created_at ? Math.floor(new Date(trade.created_at).getTime() / 1000) : (trade.buytime || 0);
+
+            // Determine canonical profit percent (rate) to return to legacy frontends.
+            // Prefer an explicit stored profit_percent / syl field. If stored rate looks like a price
+            // (very large), fall back to duration mapping (60->40,120->50,180->70,300->100).
+            const durationVal = Number(trade.miaoshu || trade.duration) || 0;
+            let ratePercent = parseFloat(trade.profit_percent || trade.profit || trade.syl || trade.rate);
+            if (!ratePercent || isNaN(ratePercent) || ratePercent <= 0 || ratePercent > 1000) {
+                if (durationVal === 60) ratePercent = 40;
+                else if (durationVal === 120) ratePercent = 50;
+                else if (durationVal === 180) ratePercent = 70;
+                else if (durationVal === 300) ratePercent = 100;
+                else ratePercent = parseFloat(trade.syl) || 40;
+            }
+
+            // Compute 'ying' (matured payout) for legacy shape. If the trade was settled and marked as win (zuizhong),
+            // prefer stored payout fields; otherwise compute from num + profitPercent.
+            let payout = ying;
+            if ((zuizhong === 1 || String(trade.status).toLowerCase() === 'win') ) {
+                // Prefer explicit payout/settled_amount if present
+                const storedPayout = parseFloat(trade.payout || trade.settled_amount || trade.settled_amount_usd || NaN);
+                if (!isNaN(storedPayout) && storedPayout > 0) {
+                    payout = Number(storedPayout);
+                } else {
+                    const profitAmt = Number((num * (Number(ratePercent) / 100)).toFixed(2));
+                    payout = Number((num + profitAmt).toFixed(2));
+                }
+            }
+
             return {
                 id: trade.id || trade._id,
                 biming: trade.biming || trade.coin || '',
@@ -1286,7 +1935,8 @@ router.post(['/api/Record/getcontract', '/api/record/getcontract'], async (req, 
                 buytime: buytime,
                 zhuangtai: zhuangtai,
                 zuizhong: zuizhong,
-                ying: ying
+                ying: payout,
+                rate: Number(Number(ratePercent).toFixed(2))
             };
         });
 
@@ -1298,6 +1948,364 @@ router.post(['/api/Record/getcontract', '/api/record/getcontract'], async (req, 
     } catch (e) {
         console.error('[legacy record/getcontract] error:', e.message);
         res.status(500).json({ code: 0, data: [], message: e.message });
+    }
+});
+
+// POST /api/trade/getorder - Get trade order status
+router.post(['/api/trade/getorder', '/api/Trade/getorder'], async (req, res) => {
+    try {
+        const id = req.body?.id || req.query?.id;
+        if (!id) return res.status(400).json({ code: 0, data: 'Missing trade ID' });
+        
+        const Trade = require('../models/Trade');
+        let orderStatus = 0; // Default: unspecified
+        
+        // Get trade from database
+        const trade = await Trade.findOne({ id: id });
+        
+        if (trade) {
+            // PRIORITY 1: If forced outcome, use it
+            if (trade.forcedOutcome) {
+                if (String(trade.forcedOutcome) === 'win') {
+                    orderStatus = 1;
+                    console.log('[getorder] Forced WIN for trade', id);
+                } else if (String(trade.forcedOutcome) === 'loss') {
+                    orderStatus = 2;
+                    console.log('[getorder] Forced LOSS for trade', id);
+                }
+            }
+            // PRIORITY 2: If already settled, map status
+            else if (trade.status) {
+                if (trade.status === 'win') orderStatus = 1;
+                else if (trade.status === 'loss') orderStatus = 2;
+            }
+            // PRIORITY 3: Check if expired and settle based on price
+            else if (trade.status === 'pending' || !trade.status) {
+                const createdTs = new Date(trade.created_at).getTime();
+                const elapsedSec = Math.floor((Date.now() - createdTs) / 1000);
+                const duration = Number(trade.duration) || Number(trade.miaoshu) || 0;
+                
+                if (duration > 0 && elapsedSec >= duration) {
+                    // Trade expired - settlement will happen on next call to /api/trade/getorderjs
+                    console.log('[getorder] Trade expired, status remains 0 for settlement');
+                    orderStatus = 0;
+                }
+            }
+        }
+        
+        console.log('[getorder] Returning status=' + orderStatus + ' for orderId=' + id);
+        return res.json({ code: 1, data: orderStatus });
+    } catch (e) {
+        console.error('[getorder] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
+    }
+});
+
+// POST /api/trade/getorderjs - Get trade result with profit/loss amount
+// Also performs server-side settlement when the trade has matured and settlement wasn't applied
+router.post(['/api/trade/getorderjs', '/api/Trade/getorderjs'], async (req, res) => {
+    try {
+        const { id } = req.body || {};
+        if (!id) return res.status(400).json({ code: 0, data: 'Missing trade ID' });
+        
+        const Trade = require('../models/Trade');
+        let profit = 'wjs'; // 'wjs' = waiting
+        
+        const trade = await Trade.findOne({ id: id });
+        
+        if (trade && trade.status && trade.status !== 'pending') {
+            // Trade is already settled
+            if (trade.status === 'win') {
+                const investedAmount = parseFloat(trade.num) || 0;
+                const profitPercent = parseFloat(trade.syl) || 40;
+                profit = Number((investedAmount * (profitPercent / 100)).toFixed(2));
+                console.log('[getorderjs] WIN result: profit=' + profit + ' for trade', id);
+            } else if (trade.status === 'loss') {
+                const investedAmount = parseFloat(trade.num) || 0;
+                profit = -Number((investedAmount).toFixed(2));
+                console.log('[getorderjs] LOSS result: loss=' + Math.abs(profit) + ' for trade', id);
+            }
+        } else if (trade && (!trade.status || trade.status === 'pending')) {
+            // Still pending - attempt server-side settlement if duration elapsed
+            try {
+                const createdTs = new Date(trade.created_at).getTime();
+                const elapsedSec = Math.floor((Date.now() - createdTs) / 1000);
+                const duration = Number(trade.duration) || Number(trade.miaoshu) || 0;
+                const User = require('../models/User');
+
+                if (duration > 0 && elapsedSec >= duration) {
+                    // If forcedOutcome is present, honor it. If not, also honor a user-level flag (force_trade_win).
+                    let finalStatus = trade.forcedOutcome ? (String(trade.forcedOutcome) === 'win' ? 'win' : 'loss') : null;
+                    if (!finalStatus) {
+                        try {
+                            const dbUser = await db.getUserById(trade.user_id || trade.userid);
+                            if (dbUser && (dbUser.force_trade_win === true || String(dbUser.force_trade_win) === 'true')) {
+                                finalStatus = 'win';
+                                console.log('[getorderjs] Applying user-level force_trade_win for trade', id);
+                            }
+                        } catch (e) {
+                            console.warn('[getorderjs] Could not check user-level force flag:', e && e.message);
+                        }
+                    }
+
+                    // If no forced outcome, try to fetch final price from Binance and determine result
+                    let finalPrice = null;
+                    if (!finalStatus) {
+                        try {
+                            const https = require('https');
+                            const coin = (trade.biming || '').toString().toUpperCase();
+                            const symbol = coin ? coin + 'USDT' : null;
+                            if (symbol) {
+                                finalPrice = await new Promise((resolve) => {
+                                    const url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
+                                    const reqBin = https.get(url, (binRes) => {
+                                        let buf = '';
+                                        binRes.on('data', c => buf += c);
+                                        binRes.on('end', () => {
+                                            try {
+                                                const parsed = JSON.parse(buf);
+                                                resolve(Number(parsed.price || parsed.P || parsed.p || 0));
+                                            } catch (e) { resolve(null); }
+                                        });
+                                    });
+                                    reqBin.on('error', () => resolve(null));
+                                    reqBin.setTimeout(2000, () => { reqBin.abort(); resolve(null); });
+                                });
+                            }
+                        } catch (e) {
+                            // ignore fetch errors; we'll fallback to marking wjs
+                            finalPrice = null;
+                        }
+
+                        // If Binance fetch failed (e.g., 451) try CoinGecko fallback
+                        if (!finalPrice) {
+                            try {
+                                const https = require('https');
+                                const coinLower = (trade.biming || '').toString().toLowerCase();
+                                const coinMap = {
+                                    btc: 'bitcoin',
+                                    eth: 'ethereum',
+                                    sol: 'solana',
+                                    ada: 'cardano',
+                                    bnb: 'binancecoin',
+                                    trx: 'tron',
+                                    ltc: 'litecoin',
+                                    doge: 'dogecoin',
+                                    matic: 'matic-network',
+                                    avax: 'avalanche-2',
+                                    dot: 'polkadot'
+                                };
+                                const cgId = coinMap[coinLower];
+                                if (cgId) {
+                                    finalPrice = await new Promise((resolve) => {
+                                        const url = `https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=usd`;
+                                        const reqCg = https.get(url, (cgRes) => {
+                                            let buf = '';
+                                            cgRes.on('data', c => buf += c);
+                                            cgRes.on('end', () => {
+                                                try {
+                                                    const parsed = JSON.parse(buf);
+                                                    const p = parsed[cgId] && parsed[cgId].usd ? Number(parsed[cgId].usd) : null;
+                                                    resolve(p);
+                                                } catch (e) { resolve(null); }
+                                            });
+                                        });
+                                        reqCg.on('error', () => resolve(null));
+                                        reqCg.setTimeout(2000, () => { reqCg.abort(); resolve(null); });
+                                    });
+                                    if (finalPrice) console.log('[getorderjs] CoinGecko fallback price for', trade.biming, finalPrice);
+                                }
+                            } catch (e) {
+                                finalPrice = null;
+                            }
+                        }
+                    }
+
+                    if (finalPrice && !finalStatus) {
+                        // Robust numeric parsing (strip commas/currency symbols)
+                        const toNum = (v) => {
+                            if (v === null || typeof v === 'undefined') return NaN;
+                            if (typeof v === 'number') return v;
+                            const s = String(v).replace(/[^0-9.\-]/g, '');
+                            return Number(s);
+                        };
+
+                        const buyprice = toNum(trade.buyprice) || 0;
+                        const finalNum = toNum(finalPrice) || 0;
+
+                        // Normalize direction: handle arrays [2] or scalars 2, '1', 'up', etc.
+                        let fRaw = trade.fangxiang;
+                        if (Array.isArray(fRaw)) fRaw = fRaw[0]; // Extract from array if needed
+                        fRaw = String(fRaw || '').toLowerCase();
+                        const isUp = (fRaw === '1' || fRaw.indexOf('up') !== -1 || fRaw.indexOf('upward') !== -1 || fRaw === 'up');
+
+                        // Determine win/loss strictly by numeric comparison
+                        if ((isUp && finalNum > buyprice) || (!isUp && finalNum < buyprice)) {
+                            finalStatus = 'win';
+                        } else {
+                            finalStatus = 'loss';
+                        }
+
+                        console.log('[getorderjs] Settlement calc:', { id: trade.id, buyprice, finalNum, fangxiang: trade.fangxiang, isUp, finalStatus });
+                    }
+
+                    // If we have a finalStatus, apply settlement (if not applied)
+                    if (finalStatus && !trade.settlement_applied) {
+                        // Apply settlement atomically: only proceed if settlement_applied was not already true
+                        const filter = { id: id, $or: [{ settlement_applied: { $exists: false } }, { settlement_applied: false }] };
+                        const setFields = { status: finalStatus, settlement_applied: true, settled_price: finalPrice || trade.settled_price || null, updated_at: new Date() };
+                        const updatedTrade = await Trade.findOneAndUpdate(filter, { $set: setFields }, { new: false });
+                        if (!updatedTrade) {
+                            // Another process already applied settlement
+                            console.log('[getorderjs] Settlement already applied by another process for trade', id);
+                        } else {
+                            const userid = updatedTrade.user_id || updatedTrade.userid;
+                            const investedAmount = parseFloat(updatedTrade.num) || 0;
+                            const profitRatio = parseFloat(updatedTrade.syl) || 40;
+
+                            if (finalStatus === 'win') {
+                                const profitAmount = Number((investedAmount * (profitRatio / 100)).toFixed(2));
+                                await User.findOneAndUpdate(
+                                    { userid: userid },
+                                    { $inc: { 'balances.usdt': profitAmount, 'total_income': profitAmount } },
+                                    { new: true }
+                                );
+                                profit = profitAmount;
+                            } else {
+                                await User.findOneAndUpdate(
+                                    { userid: userid },
+                                    { $inc: { 'balances.usdt': -investedAmount } },
+                                    { new: true }
+                                );
+                                profit = -investedAmount;
+                            }
+
+                            console.log('[getorderjs] Settlement applied: status=' + finalStatus + ', profit=' + profit + ' for trade', id);
+                        }
+                    } else {
+                        console.log('[getorderjs] Trade still pending, returning wjs');
+                    }
+                } else {
+                    console.log('[getorderjs] Trade still pending, returning wjs');
+                }
+            } catch (e) {
+                console.error('[getorderjs] Settlement attempt error:', e && e.message);
+            }
+        }
+        
+        return res.json({ code: 1, data: profit });
+    } catch (e) {
+        console.error('[getorderjs] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
+    }
+});
+
+// POST /api/trade/setordersy - Set trade result (win/loss) and apply settlement
+router.post(['/api/trade/setordersy', '/api/Trade/setordersy'], async (req, res) => {
+    try {
+        const { id, shuying } = req.body || {};
+        if (!id) return res.status(400).json({ code: 0, data: 'Missing trade ID' });
+        if (!shuying) return res.status(400).json({ code: 0, data: 'Missing result (shuying)' });
+        
+        const Trade = require('../models/Trade');
+        const User = require('../models/User');
+        
+        // Find and update trade
+        const trade = await Trade.findOne({ id: id });
+        if (!trade) return res.status(404).json({ code: 0, data: 'Trade not found' });
+        
+        // Map shuying: 1 = win, 2 = loss
+        let finalStatus = shuying === 1 || shuying === '1' ? 'win' : 'loss';
+        
+        // PRIORITY: If forced outcome exists, use it instead
+        if (trade.forcedOutcome) {
+            finalStatus = String(trade.forcedOutcome) === 'win' ? 'win' : 'loss';
+            console.log('[setordersy] Overriding client result with forcedOutcome:', finalStatus, 'for trade', id);
+        } else {
+            // Also honor user-level force flag if present on the account
+            try {
+                const dbUser = await db.getUserById(trade.user_id || trade.userid);
+                if (dbUser && (dbUser.force_trade_win === true || String(dbUser.force_trade_win) === 'true')) {
+                    finalStatus = 'win';
+                    console.log('[setordersy] Overriding client result with user-level force_trade_win for trade', id);
+                }
+            } catch (e) {
+                console.warn('[setordersy] Could not check user-level force flag:', e && e.message);
+            }
+        }
+        
+        // Prevent double-application of settlement. Allow admin-authenticated requests to bypass maturity.
+        const admin = await verifyAdminToken(req).catch(() => null);
+        const createdTs = new Date(trade.created_at).getTime();
+        const elapsedSec = Math.floor((Date.now() - createdTs) / 1000);
+        const duration = Number(trade.duration) || Number(trade.miaoshu) || 0;
+        const tradeMatured = duration > 0 && elapsedSec >= duration;
+
+        if (!trade.settlement_applied) {
+            if (!tradeMatured && !trade.forcedOutcome && !admin) {
+                // Trade not matured yet and no forced outcome and caller not admin - do not apply settlement prematurely
+                return res.status(400).json({ code: 0, data: 'Trade not matured yet' });
+            }
+
+            // Apply settlement atomically: update trade record only if settlement_applied was not already true
+            const filter = { id: id, $or: [{ settlement_applied: { $exists: false } }, { settlement_applied: false }] };
+            const setFields = { status: finalStatus, settlement_applied: true, updated_at: new Date() };
+            const updatedTrade = await Trade.findOneAndUpdate(filter, { $set: setFields }, { new: false });
+            if (!updatedTrade) {
+                // Another process already applied settlement
+                console.log('[setordersy] Settlement already applied by another process for trade', id);
+            } else {
+                try {
+                    const userid = updatedTrade.user_id || updatedTrade.userid;
+                    const invested = parseFloat(updatedTrade.num) || 0;
+                    // Compute profit using stored rate or syl
+                    let profit = 0;
+                    const storedRate = parseFloat(updatedTrade.rate);
+                    if (finalStatus === 'win') {
+                        if (!isNaN(storedRate) && storedRate > 0) {
+                            if (storedRate <= 10) {
+                                profit = Number((invested * storedRate).toFixed(2));
+                            } else if (storedRate > 10 && storedRate <= 1000) {
+                                profit = Number((invested * (storedRate / 100)).toFixed(2));
+                            } else {
+                                const profitRatio = parseFloat(updatedTrade.syl) || 40;
+                                profit = Number((invested * (profitRatio / 100)).toFixed(2));
+                            }
+                        } else {
+                            const profitRatio = parseFloat(updatedTrade.syl) || 40;
+                            profit = Number((invested * (profitRatio / 100)).toFixed(2));
+                        }
+
+                        await User.findOneAndUpdate(
+                            { userid: userid },
+                            { $inc: { 'balances.usdt': profit, 'total_income': profit } },
+                            { new: true }
+                        );
+                        console.log('[setordersy] WIN settlement applied: +' + profit + ' profit for user', userid);
+                    } else {
+                        // LOSS
+                        await User.findOneAndUpdate(
+                            { userid: userid },
+                            { $inc: { 'balances.usdt': -invested } },
+                            { new: true }
+                        );
+                        console.log('[setordersy] LOSS settlement applied: -' + invested + ' stake deducted for user', userid);
+                    }
+                } catch (e) {
+                    console.error('[setordersy] Error applying settlement to user balance:', e.message);
+                }
+            }
+        } else {
+            // Settlement already applied, just update status if needed (no balance changes)
+            trade.status = finalStatus;
+            trade.updated_at = new Date();
+            await trade.save();
+        }
+        
+        return res.json({ code: 1, data: 'Order updated' });
+    } catch (e) {
+        console.error('[setordersy] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
     }
 });
 
@@ -1315,6 +2323,19 @@ router.post(['/api/trade/buy', '/api/Trade/buy'], async (req, res) => {
 
         if (!userid || !biming || !num || !buyprice) return res.status(400).json({ code: 0, data: 'Missing required fields' });
 
+        // Check user flags (e.g., force_trade_win) and set forcedOutcome when applicable
+        let forcedOutcome = null;
+        try {
+            const UserModel = require('../models/User');
+            const user = await db.getUserById(userid);
+            if (user && (user.force_trade_win === true || String(user.force_trade_win) === 'true')) {
+                forcedOutcome = 'win';
+                console.log('[legacy trade/buy] User flagged for forced win, marking trade forcedOutcome=win for user', userid);
+            }
+        } catch (e) {
+            console.warn('[legacy trade/buy] could not check user flags:', e && e.message);
+        }
+
         const tradeData = {
             id: Date.now().toString(),
             user_id: userid,
@@ -1328,12 +2349,13 @@ router.post(['/api/trade/buy', '/api/Trade/buy'], async (req, res) => {
             syl: syl,
             zengjia: data.zengjia,
             jianshao: data.jianshao,
+            forcedOutcome: forcedOutcome,
             status: 'pending',
             created_at: new Date()
         };
 
         const created = await db.createTrade(tradeData);
-        res.json({ code: 1, data: created });
+        res.json({ code: 1, data: created?.id || created?._id || created });
     } catch (e) {
         console.error('[legacy trade/buy] error:', e.message);
         res.status(500).json({ code: 0, data: e.message });

@@ -58,7 +58,25 @@ app.use((err, req, res, next) => {
 // Connect to database and start server
 async function start() {
     try {
-        await connectDB();
+        // Connect to database first
+        const db = await connectDB();
+        if (!db) {
+            console.warn('⚠️  Connected without database - falling back to JSON');
+        } else {
+            console.log('✅ Database connection established');
+        }
+        
+        // Warn if DB exists but arbitrage products are missing
+        try {
+            const ArbitrageProduct = require('./models/ArbitrageProduct');
+            const count = await ArbitrageProduct.countDocuments();
+            if (count === 0) {
+                console.warn('\n⚠️  No arbitrage products found in the database.');
+                console.warn('   To seed default products from JSON, run: node scripts/migrate-json-to-db.js\n');
+            }
+        } catch (e) {
+            console.warn('[seed-check] Could not verify arbitrage products:', e.message);
+        }
         
         app.listen(PORT, () => {
             console.log(`\n🚀 BVOX Finance Server Started`);

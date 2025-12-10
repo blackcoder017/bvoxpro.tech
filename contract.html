@@ -19,7 +19,7 @@
                 background: linear-gradient(to bottom, #2b5279 5%, #6485a4 60%);
             }
 			body{
-                background: url(assets/img/leaf-bg.png);
+                background: url(/assets/img/leaf-bg.png);
                 background-size: 180vw;
                 background-position-x: -80vw;
                 background-repeat: no-repeat;
@@ -734,6 +734,10 @@
 			id1 = id;
 			miaoshu1 = miaoshu;
 			fangxiang1 = fangxiang;
+			// Start the visual animation immediately using a random initial direction
+			try {
+				setTarget(suiji12 == 1, miaoshu);
+			} catch (e) { console.warn('[jiesuan] setTarget failed:', e); }
 			orderst = setTimestampInterval(() => getorder(id1, miaoshu1, fangxiang1), 1000);
 		}
 
@@ -755,6 +759,15 @@
                 success: function(res) {
                     if (res.code == 1) {
 						console.log('[getorder] Response received: res.data=' + res.data + ', kongzhi=' + kongzhi + ', sfyks=' + sfyks);
+						// Prevent client from accepting/displaying settlement results before local countdown completes
+						// Admins may bypass this (they have an admin token stored)
+						const _adminToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+						const _elapsed = Number(elapsedTime) || 0;
+						const _total = Number(totalTime) || Number(miaoshu) || 0;
+						if (!_adminToken && _total > 0 && _elapsed < _total) {
+							console.log('[getorder] Ignoring early settlement from server until countdown finishes (elapsed=' + _elapsed + ', total=' + _total + ').');
+							return; // do not process settlement yet for non-admin users
+						}
 						if (sfyks == 0) {
 							// ?????
 							sfyks = 1;
@@ -764,22 +777,8 @@
 								console.log('[getorder] First settlement result received: data=' + res.data + ', fangxiang=' + fangxiang);
 
 								if (res.data == 0) {
-									// ?????,?????????
-									if (fangxiang == 1) {  // ??
-										setTarget(suiji12 == 1, miaoshu);  // suiji12 == 1 ???
-										if(suiji12 == 1){
-											setordersy(id,1);
-										}else{
-											setordersy(id,2);
-										}
-									} else if (fangxiang == 2) {  // ??
-										setTarget(suiji12 == 2, miaoshu);  // suiji12 == 2 ???
-										if(suiji12 == 2){
-											setordersy(id,1);
-										}else{
-											setordersy(id,2);
-										}
-									}
+									// res.data == 0 means 'unknown/pending' from server - do NOT force settlement from client.
+									// The server will perform settlement when appropriate (via getorderjs), so just skip.
 								} else if (res.data == 1) {
 									// ??????
 									if (fangxiang == 1) {  // ??
@@ -849,18 +848,49 @@
 		}
 
 		function setordersy(id,shuying){
+			// Ensure we only attempt to set settlement after the local countdown has finished
+			const adminToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+			const _elapsed = Number(elapsedTime) || 0;
+			const _total = Number(totalTime) || Number(miaoshu1) || 0;
+			if (!adminToken && _total > 0 && _elapsed < _total) {
+				const remaining = Math.max(0, Math.ceil(_total - _elapsed));
+				console.log('[setordersy] Delaying setordersy until countdown finishes. remaining=' + remaining + 's');
+				setTimeout(function(){
+					setordersy(id, shuying);
+				}, (remaining * 1000) + 300);
+				return;
+			}
+			const headers = {};
+			if (adminToken) headers['Authorization'] = 'Bearer ' + adminToken;
 			$.ajax({
-                url: apiurl + '/trade/setordersy',
-                type: 'POST',
-                data: {
-                    'id': id,
-					'shuying': shuying
-                },
-                dataType: 'json',
-                success: function(res) {
-                    
+				url: apiurl + '/trade/setordersy',
+				type: 'POST',
+				contentType: 'application/json',
+				headers: headers,
+				data: JSON.stringify({ id: id, shuying: shuying }),
+				dataType: 'json',
+				success: function(res) {
+					if (res && res.code == 1) {
+						console.log('[setordersy] Trade settlement submitted for id=' + id + ', shuying=' + shuying);
+						orderjs = setTimestampInterval(getorderjs, 2000);
+					} else {
+						console.warn('[setordersy] Not applied:', res && res.data);
+					}
+				},
+				error: function(xhr) {
+					try {
+						const body = xhr && xhr.responseJSON ? xhr.responseJSON : (xhr && xhr.responseText ? JSON.parse(xhr.responseText) : null);
+						if (body && body.data && String(body.data).toLowerCase().indexOf('trade not matured') !== -1) {
+							console.log('[setordersy] Trade not matured yet (server).');
+							// If server still says not matured, schedule a retry shortly after the remaining time
+							const retryAfter = 2000; // 2s
+							setTimeout(function(){ setordersy(id, shuying); }, retryAfter);
+							return;
+						}
+					} catch (e) {}
+					console.error('[setordersy] AJAX error:', xhr);
 				}
-            });
+			});
 		}
 
 		function getorderjs(){
@@ -873,6 +903,14 @@
                 dataType: 'json',
                 success: function(res) {
                     if(res.code == 1){
+					// Prevent showing final result before local countdown completes for non-admin users
+					const _adminToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+					const _elapsed = Number(elapsedTime) || 0;
+					const _total = Number(totalTime) || 0;
+					if (!_adminToken && _total > 0 && _elapsed < _total) {
+						console.log('[getorderjs] Ignoring early final result until countdown finishes (elapsed=' + _elapsed + ', total=' + _total + ').');
+						return;
+					}
 					if(res.data != 'wjs'){
 						if(res.data < 0){
 							$('.y-load').hide();
@@ -885,39 +923,9 @@
 							clearTimestampInterval(orderjs);
 						}
 					} else {
-						// still waiting on server — attempt local settlement fallback using public price
-						try{
-							const coin = (new URLSearchParams(window.location.search).get('market') || coinname || '').toUpperCase();
-							if(coin){
-								const symbol = coin + 'USDT';
-								fetch('https://api.binance.com/api/v3/ticker/price?symbol=' + symbol)
-								.then(r => r.json())
-								.then(data => {
-									const finalPrice = Number(data.price || data.P || data.p || 0);
-									const buyprice = Number($('#y-gmj').text()) || Number($('#y-dqjg').text()) || 0;
-									let shuying = 2; // default loss
-									if ((finalPrice > buyprice && ($('#y-gmfx').text().toLowerCase().indexOf('up') !== -1 || $('#y-gmfx').text().indexOf('??') !== -1)) || (finalPrice < buyprice && ($('#y-gmfx').text().toLowerCase().indexOf('down') !== -1 || $('#y-gmfx').text().indexOf('??') !== -1))) {
-										shuying = 1;
-									}
-									// persist result to server so records update
-									$.post(apiurl + '/trade/setordersy', { id: dqid, shuying: shuying }, function(sr){
-										// now show UI based on shuying
-										if(shuying == 1){
-											const profitPercent = parseInt($('#y-hysc').text()) || parseInt($('#y-syl').val()) || 40;
-											const profit = (parseFloat($('#y-gmsl').text() || $('#y-buynum').val() || 0) * (profitPercent/100)).toFixed(2);
-											$('.y-load').hide();
-											$('.y-hyy-top').text('+ $' + profit);
-											$('.y-hyy').show();
-										} else {
-											$('.y-load').hide();
-											$('.y-hyh').show();
-										}
-										clearTimestampInterval(orderjs);
-									});
-								})
-								.catch(()=>{});
-							}
-						} catch(e){}
+						// still waiting on server — do not attempt local public-price settlement here.
+						// Server is responsible for final price fetching and settlement (avoids CORS/451 and race conditions).
+						// Simply keep showing the waiting state until server responds.
 					}
 					}
 				}
@@ -1085,6 +1093,14 @@
 					countdownNumberEl.textContent = "Time's up!";
 					$('.y-countdown-container').hide();
 					$('.y-load').show();
+					
+					// Wait a moment then start polling for result
+					setTimeout(function() {
+						if (typeof orderjs !== 'undefined') {
+							clearTimestampInterval(orderjs);
+						}
+						orderjs = setTimestampInterval(getorderjs, 1000);
+					}, 500);
 				}
 			}, 1000);
 		}

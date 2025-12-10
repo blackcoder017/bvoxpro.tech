@@ -65,6 +65,7 @@
             function loadMore() {
                 const userid = Cookies.get('userid'); // ????ID,??????Cookie?
 
+                // Call legacy API endpoint which maps DB trades to legacy format
                 $.ajax({
                     url: apiurl + '/Record/getcontract',
                     type: 'POST',
@@ -74,7 +75,7 @@
                     },
                     dataType: 'json',
                     success: function(res) {
-                        if (res.code === 1 && res.data.length > 0) { // ?? data ??????
+                        if (res.code === 1 && res.data && res.data.length > 0) { // Check legacy response format
                             const notifyData = res.data;
 
                             // ????????
@@ -83,59 +84,75 @@
                                 return;
                             }
 
-                            // ????????????
+                            // ???????????? Map legacy format fields and compute rate from duration
                             notifyData.forEach(data => {
-                                // compute profit/loss display
-                                const numVal = (typeof data.num !== 'undefined') ? Number(data.num) : null;
-                                const yingVal = (typeof data.ying !== 'undefined') ? Number(data.ying) : null;
+                                // Legacy fields: num (invested), ying (payout), zhuangtai (0=settled, 1=pending), miaoshu (duration in seconds or array)
+                                const investedAmount = Number(data.num) || 0;
+                                const isPending = data.zhuangtai === 1;
+                                
+                                // Extract duration: miaoshu can be a number, array, or string like "60" or "[60]"
+                                let durationSec = 60;
+                                if (Array.isArray(data.miaoshu) && data.miaoshu.length > 0) {
+                                    durationSec = Number(data.miaoshu[0]) || 60;
+                                } else if (typeof data.miaoshu === 'string') {
+                                    const parsed = Number(data.miaoshu.replace(/[^\d]/g, '')) || 60;
+                                    durationSec = parsed;
+                                } else {
+                                    durationSec = Number(data.miaoshu) || 60;
+                                }
+                                
+                                // Map duration to profit percent: 60s→40%, 120s→50%, 180s→70%, 300s→100%
+                                let profitPercent = 40;
+                                if (durationSec === 120) profitPercent = 50;
+                                else if (durationSec === 180) profitPercent = 70;
+                                else if (durationSec === 300) profitPercent = 100;
+                                else if (durationSec === 60) profitPercent = 40;
+                                
+                                const durationMin = Math.floor(durationSec / 60);
                                 let profitHTML = '';
-                                if (data.zhuangtai === 1) {
+                                
+                                if (isPending) {
                                     // Pending/unsettled
                                     profitHTML = `\n                                            <div class="y-re-br">\n                                                ${gy('???')}\n                                            </div>`;
-                                } else if (numVal !== null && yingVal !== null && !Number.isNaN(numVal) && !Number.isNaN(yingVal)) {
-                                    // Settled (win or loss)
-                                    // For loss: ying will be negative (-num), so just show ying directly
-                                    // For win: ying will be positive, so profit = ying - num
-                                    let displayAmount;
-                                    let isLoss = false;
+                                } else {
+                                    // Settled - check ying to determine win/loss
+                                    const yingVal = Number(data.ying) || 0;
                                     if (yingVal < 0) {
-                                        // Loss case: show the negative payout directly
-                                        displayAmount = yingVal;
-                                        isLoss = true;
-                                    } else {
-                                        // Win/profit case: calculate profit
-                                        displayAmount = yingVal - numVal;
+                                        // Loss case: ying is negative (-invested_amount)
+                                        profitHTML = `\n                                            <div class="y-re-br" style="color: #e74c3c; font-weight: bold;">\n                                                ${yingVal.toFixed(2)}\n                                            </div>`;
+                                    } else if (yingVal > 0) {
+                                        // Win case: show profit (ying - invested_amount)
+                                        const profit = yingVal - investedAmount;
+                                        const sign = profit >= 0 ? '+' : '';
+                                        profitHTML = `\n                                            <div class="y-re-br" style="color: #27ae60; font-weight: bold;">\n                                                ${sign}${profit.toFixed(2)}\n                                            </div>`;
                                     }
-                                    const sign = displayAmount >= 0 ? '+' : '';
-                                    let profitClass = '';
-                                    if (displayAmount < 0) {
-                                        profitClass = 'style="color: #e74c3c; font-weight: bold;"'; // Red for loss
-                                    } else if (displayAmount > 0) {
-                                        profitClass = 'style="color: #27ae60; font-weight: bold;"'; // Green for win
-                                    }
-                                    profitHTML = `\n                                            <div class="y-re-br" ${profitClass}>\n                                                ${sign} ${displayAmount.toFixed(2)}\n                                            </div>`;
+
                                 }
 
+                                // Map legacy coin name to display format
+                                const coinDisplay = data.biming ? data.biming.toUpperCase() : 'BTC';
+                                const createdDate = new Date(parseInt(data.buytime) * 1000).toLocaleString('en-US', { timeZone: 'America/New_York' });
+                                
                                 const notificationHTML = `
                                     <div class="y-re-box">
                                         <div class="y-re-bl">
-                                            <img src="/img/coin/${data.biming}.png" alt="Notification">
+                                            <img src="/img/coin/${data.biming || 'btc'}.png" alt="Notification">
                                             <div class="y-re-blr">
-                                                <span>${data.biming.toLocaleUpperCase()} / USDT</span>
+                                                <span>${coinDisplay} / USDT</span>
                                                 <div class="y-re-bim y-bim3">
                                                     <p>
-                                                        ${gy('??')}:${data.num}
+                                                        ${gy('??')}:${investedAmount}
                                                     </p>
                                                     <p>
                                                         ${gy('??')}: ${data.fangxiang == 1 ? gy('??'): gy('??')}    
                                                     </p>
                                                     <p>
-                                                        ${gy('Contract duration')}:${data.miaoshu}
+                                                        ${gy('Contract duration')}:${durationMin} min
                                                     </p>
                                                 </div>
 
                                                 <div class="y-sfyidu">
-                                                    ${new Date(parseInt(data.buytime) * 1000).toLocaleString("en-US", { timeZone: "America/New_York" })}
+                                                    ${createdDate}
                                                 </div>
                                             </div>
                                         </div>

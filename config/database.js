@@ -377,6 +377,23 @@ async function getAllArbitrageProducts(limit = 20) {
     }
 }
 
+async function getArbitrageProductById(productId) {
+    try {
+        // Try to find by the `id` field which is often a string like '1',
+        // fall back to _id if the provided value is a valid ObjectId.
+        const mongoose = require('mongoose');
+        const queries = [{ id: productId }];
+        if (mongoose.Types.ObjectId.isValid(String(productId))) {
+            queries.push({ _id: productId });
+        }
+        const product = await ArbitrageProduct.findOne({ $or: queries });
+        return product;
+    } catch (e) {
+        console.error('Error getting arbitrage product by id:', e);
+        return null;
+    }
+}
+
 async function createArbitrageSubscription(subscriptionData) {
     try {
         const subscription = new ArbitrageSubscription(subscriptionData);
@@ -556,6 +573,7 @@ module.exports = {
     updateKYCStatus,
     // Arbitrage
     getAllArbitrageProducts,
+    getArbitrageProductById,
     createArbitrageSubscription,
     getUserArbitrageSubscriptions,
     updateSubscriptionPayout,

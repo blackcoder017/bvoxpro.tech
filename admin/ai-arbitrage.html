@@ -648,26 +648,27 @@
 
         // Load arbitrage records (from subscriptions file)
         function loadArbitrageRecords() {
-            // Try to fetch subscriptions from repository JSON; fallback to sample data
+            // Fetch all users' arbitrage subscription records from admin API
             $.ajax({
-                url: '/arbitrage_subscriptions.json',
+                url: '/api/admin/arbitrage/records?page=1&limit=100',
                 method: 'GET',
                 dataType: 'json',
-                success: function(data) {
+                success: function(response) {
                     // Map subscription structure to table-friendly record structure
-                    if (Array.isArray(data)) {
-                        allRecords = data.map(s => ({
+                    if (response && response.data && Array.isArray(response.data)) {
+                        allRecords = response.data.map(s => ({
                             id: s.id || '',
                             user_id: s.user_id || '',
                             pair: s.product_name || s.product_id || 'N/A',
                             initial_amount: s.amount || 0,
                             profit: s.total_income || 0,
-                            roi: s.amount ? ((s.total_income || 0) / s.amount * 100) : 0,
+                            roi: s.roi || (s.amount ? ((s.total_income || 0) / s.amount * 100) : 0),
                             status: s.status || 'unknown',
                             created_at: s.created_at || s.start_date || new Date().toISOString()
                         }));
                     } else {
-                        allRecords = sampleArbitrage;
+                        console.log('No records found or invalid response format');
+                        allRecords = [];
                     }
 
                     // Assign a deterministic sequential display ID for each record
@@ -688,7 +689,8 @@
                     displayPage(1);
                 },
                 error: function(err) {
-                    console.log('Using sample arbitrage data');
+                    console.error('Error loading arbitrage records:', err);
+                    console.log('Using sample arbitrage data as fallback');
                     allRecords = sampleArbitrage;
                     filteredRecords = [...allRecords];
                     displayPage(1);

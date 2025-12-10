@@ -1492,6 +1492,66 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // Admin endpoint: get ALL users' arbitrage subscription records (paginated) - /api/admin/arbitrage/records
+    if ((pathname === '/api/admin/arbitrage/records' || pathname === '/api/admin/arbitrage/all') && req.method === 'GET') {
+        try {
+            const subscriptionsFilePath = path.join(__dirname, 'arbitrage_subscriptions.json');
+            let subscriptions = [];
+            if (fs.existsSync(subscriptionsFilePath)) {
+                try { subscriptions = JSON.parse(fs.readFileSync(subscriptionsFilePath, 'utf8')) || []; } catch (e) { subscriptions = []; }
+            }
+
+            // Get query parameters for pagination
+            const urlParts = url.parse(req.url, true);
+            const page = Number(urlParts.query.page || 1) || 1;
+            const pageSize = Number(urlParts.query.limit || 20) || 20;
+
+            // Sort by created_at descending (newest first)
+            let sortedSubs = [...subscriptions].sort((a, b) => {
+                const ta = a && a.created_at ? new Date(a.created_at).getTime() : 0;
+                const tb = b && b.created_at ? new Date(b.created_at).getTime() : 0;
+                return tb - ta;
+            });
+
+            // Paginate
+            const start = (page - 1) * pageSize;
+            const pageSubs = sortedSubs.slice(start, start + pageSize).map(sub => {
+                const amount = Number(sub.amount) || 0;
+                const totalIncome = Number(sub.total_income) || 0;
+                const roi = amount > 0 ? ((totalIncome / amount) * 100) : 0;
+                
+                return {
+                    id: sub.id || '',
+                    user_id: sub.user_id || '',
+                    username: sub.username || '',
+                    product_id: sub.product_id || '',
+                    product_name: sub.product_name || 'N/A',
+                    amount: amount,
+                    total_income: totalIncome,
+                    roi: roi,
+                    status: sub.status || 'active',
+                    start_date: sub.start_date || sub.created_at,
+                    end_date: sub.end_date,
+                    created_at: sub.created_at || new Date().toISOString(),
+                    updated_at: sub.updated_at
+                };
+            });
+            const totalRecords = sortedSubs.length;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                code: 1, 
+                data: pageSubs,
+                pagination: { page: page, limit: pageSize, total: totalRecords, pages: totalPages }
+            }));
+        } catch (e) {
+            console.error('[admin-arbitrage] Error:', e.message);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ code: 0, data: [], message: e.message }));
+        }
+        return;
+    }
+
     // Loan: get loan summary for user (POST) - /api/Wallet/getloaned
     if ((pathname === '/api/Wallet/getloaned' || pathname === '/api/wallet/getloaned') && req.method === 'POST') {
         let body = '';
@@ -3633,20 +3693,27 @@ const server = http.createServer((req, res) => {
                                             try {
                                                 const parsed = JSON.parse(buf);
                                                 const finalPrice = Number(parsed.price || parsed.P || parsed.p || 0);
-                                                const buyprice = Number(trade.buyprice) || 0;
-                                                if (Number.isFinite(finalPrice) && finalPrice > 0) {
-                                                    // Determine win/loss based on direction and price
-                                                    if ((trade.fangxiang === 'upward' && finalPrice > buyprice) || 
-                                                        (trade.fangxiang === '1' && finalPrice > buyprice)) {
-                                                        trade.status = 'win';
-                                                    } else if ((trade.fangxiang === 'downward' && finalPrice < buyprice) || 
-                                                               (trade.fangxiang === '2' && finalPrice < buyprice)) {
+                                                // Robust numeric parsing helper
+                                                const toNum = (v) => {
+                                                    if (v === null || typeof v === 'undefined') return NaN;
+                                                    if (typeof v === 'number') return v;
+                                                    const s = String(v).replace(/[^0-9.\-]/g, '');
+                                                    return Number(s);
+                                                };
+                                                const buyprice = toNum(trade.buyprice) || 0;
+                                                const finalNum = toNum(finalPrice) || 0;
+                                                if (Number.isFinite(finalNum) && finalNum > 0) {
+                                                    // Normalize direction and decide win/loss
+                                                    const fRaw = String(trade.fangxiang || '').toLowerCase();
+                                                    const isUp = (fRaw === '1' || fRaw.indexOf('up') !== -1 || fRaw.indexOf('upward') !== -1 || fRaw === 'up');
+                                                    if ((isUp && finalNum > buyprice) || (!isUp && finalNum < buyprice)) {
                                                         trade.status = 'win';
                                                     } else {
                                                         trade.status = 'loss';
                                                     }
-                                                    trade.settled_price = finalPrice;
+                                                    trade.settled_price = finalNum;
                                                     trade.updated_at = new Date().toISOString();
+                                                    console.log('[getorderjs] Legacy settlement calc:', trade.id, { buyprice, finalNum, fangxiang: trade.fangxiang, status: trade.status });
 
                                                     // Apply settlement to user's balance immediately (so server-side settlement matches setordersy)
                                                     try {

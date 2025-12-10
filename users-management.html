@@ -471,11 +471,27 @@
                 </div>
             `;
 
-            // Try API first
+            // Load users from DB-only API (no JSON fallback)
+            const adminToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+            if (!adminToken) {
+                const container = document.getElementById('tableContainer');
+                container.innerHTML = `
+                    <div class="no-data">
+                        <div class="no-data-icon">❌</div>
+                        <p>Missing admin authentication. Please login again.</p>
+                    </div>
+                `;
+                return;
+            }
+
             $.ajax({
                 url: '/api/admin/users',
                 method: 'GET',
                 timeout: 5000,
+                cache: false,
+                headers: {
+                    'Authorization': 'Bearer ' + adminToken
+                },
                 success: function(response) {
                     try {
                         if (response && response.success && Array.isArray(response.users)) {
@@ -485,32 +501,28 @@
                     } catch (e) {
                         console.warn('Error processing API response:', e);
                     }
-                    // Fallback to users.json
-                    loadUsersFallback();
-                },
-                error: function(err) {
-                    console.warn('API failed, trying users.json fallback', err);
-                    loadUsersFallback();
-                }
-            });
-        }
-
-        function loadUsersFallback() {
-            $.getJSON('/users.json')
-                .done(function(data) {
-                    displayUsers(data || []);
-                })
-                .fail(function(err) {
-                    console.error('Failed to load users:', err);
+                    // API returned unexpected format
                     const container = document.getElementById('tableContainer');
                     container.innerHTML = `
                         <div class="no-data">
                             <div class="no-data-icon">❌</div>
-                            <p>Failed to load users. Please try again later.</p>
+                            <p>Failed to load users from database. Unexpected response format.</p>
                         </div>
                     `;
-                });
+                },
+                error: function(err) {
+                    console.warn('API failed to load users:', err);
+                    const container = document.getElementById('tableContainer');
+                    container.innerHTML = `
+                        <div class="no-data">
+                            <div class="no-data-icon">❌</div>
+                            <p>Failed to load users from database. Please try again later.</p>
+                        </div>
+                    `;
+                }
+            });
         }
+        
 
         function displayUsers(users) {
             allUsersData = users || [];

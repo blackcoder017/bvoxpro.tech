@@ -561,10 +561,9 @@
                     <tr>
                         <th>ID</th>
                         <th>USER</th>
-                        <th>CONTRACT TYPE</th>
                         <th>AMOUNT</th>
-                        <th>TERM (DAYS)</th>
                         <th>RATE</th>
+                        <th>PROFIT</th>
                         <th>STATUS</th>
                         <th>START DATE</th>
                         <th>ACTION</th>
@@ -629,14 +628,15 @@
                     if (response && response.data && Array.isArray(response.data)) {
                         allRecords = response.data.map(trade => {
                             // Map trade data to contract format
+                            // Note: API already returns formatted data, just need to ensure proper field mapping
                             return {
                                 id: trade.id,
-                                user_id: trade.userid || '',
+                                user_id: trade.user_id || trade.userid || '',
                                 username: trade.username || '',
-                                type: trade.status === 'win' ? 'Fixed' : (trade.status === 'loss' ? 'Loss' : 'Pending'),
-                                amount: trade.num || 0,
-                                term: parseInt(trade.miaoshu) || 0,
-                                rate: parseFloat(trade.buyprice) || 0,
+                                type: trade.type || (trade.status === 'win' ? 'Fixed' : (trade.status === 'loss' ? 'Loss' : 'Pending')),
+                                amount: Number(trade.amount || trade.num || 0),
+                                term: parseInt(trade.term || trade.miaoshu || 0),
+                                rate: parseFloat(trade.rate || trade.buyprice || 0),
                                 status: trade.status || 'pending',
                                 created_at: trade.created_at || new Date().toISOString(),
                                 ying: trade.ying || 0,
@@ -679,10 +679,10 @@
             const tbody = $('#contractsBody');
             tbody.empty();
 
-            if (records.length === 0) {
+                if (records.length === 0) {
                 tbody.html(`
                     <tr>
-                        <td colspan="9">
+                        <td colspan="8">
                             <div class="no-data">
                                 <div class="no-data-icon">📁</div>
                                 <div>No contracts found.</div>
@@ -693,7 +693,7 @@
                 return;
             }
 
-            records.forEach(record => {
+            records.forEach((record, index) => {
                 const statusClass = `status-${record.status || 'pending'}`;
                 const createdDate = new Date(record.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -701,26 +701,113 @@
                     day: 'numeric'
                 });
 
+                // compute profit using duration-based percent: 60s→40%, 120s→50%, 180s→70%, 300s→100%
+                function computeProfit(rec) {
+                    const invested = Number(rec.amount || 0);
+                    // Map duration (in seconds) to profit percent
+                    const duration = Number(rec.duration || rec.term || rec.miaoshu || 0);
+                    let profitPercent = 40; // default
+                    if (duration === 60 || duration === '60') profitPercent = 40;
+                    else if (duration === 120 || duration === '120') profitPercent = 50;
+                    else if (duration === 180 || duration === '180') profitPercent = 70;
+                    else if (duration === 300 || duration === '300') profitPercent = 100;
+                    const profit = Number((invested * (profitPercent / 100)).toFixed(2));
+                    return { profit, profitPercent };
+                }
+
+                const p = computeProfit(record);
+                // Format ID as CTR-000001, CTR-000002, etc.
+                const displayId = 'CTR-' + String(index + 1).padStart(6, '0');
+                // For LOSS status, show invested amount as result; for WIN show profit; for pending show nothing
+                let resultDisplay = '';
+                let resultClass = '';
+                if (record.status === 'win') {
+                    resultDisplay = `<span style="color: #22c55e; font-weight: bold;">+${p.profit.toFixed(2)}</span>`;
+                    resultClass = '';
+                } else if (record.status === 'loss') {
+                    resultDisplay = `<span style="color: #ef4444; font-weight: bold;">-${record.amount.toFixed(2)}</span>`;
+                    resultClass = '';
+                } else {
+                    resultDisplay = '-';
+                    resultClass = '';
+                }
+
                 const row = `
                     <tr>
-                        <td><div class="id-cell">${record.id}</div></td>
+                        <td><div class="id-cell">${displayId}</div></td>
                         <td><div class="user-cell">${record.user_id}</div></td>
-                        <td><span class="type-badge">${record.type}</span></td>
                         <td><div class="amount-cell">${record.amount.toLocaleString()} USD</div></td>
-                        <td><strong>${record.term} days</strong></td>
-                        <td><strong>${record.rate}%</strong></td>
-                        <td><span class="status-badge ${statusClass}">${record.status || 'pending'}</span></td>
+                        <td><strong>${p.profitPercent}%</strong></td>
+                        <td><div class="profit-cell" ${resultClass}>${resultDisplay}</div></td>
+                        <td><span class="status-badge ${statusClass}" style="${record.status === 'win' ? 'background: rgba(34, 197, 94, 0.2); color: #22c55e;' : record.status === 'loss' ? 'background: rgba(239, 68, 68, 0.2); color: #ef4444;' : 'background: rgba(251, 191, 36, 0.2); color: #fbbf24;'}">${record.status || 'pending'}</span></td>
                         <td><div class="date-cell">${createdDate}</div></td>
                         <td>
                             <div class="action-buttons">
                                 <button class="btn-view">View</button>
-                                ${record.status === 'active' ? `<button class="btn-close" onclick="updateStatus('${record.id}', 'closed')">Close</button>` : ''}
+                                ${record.settlement_applied ? '' : `<button class="btn-win" data-id="${record.id}" data-action="win">Set Win</button><button class="btn-loss" data-id="${record.id}" data-action="loss">Set Loss</button>`}
                             </div>
                         </td>
                     </tr>
                 `;
 
                 tbody.append(row);
+            });
+
+            // Bind Set Win / Set Loss buttons after rows appended
+            tbody.find('.btn-win').off('click').on('click', function() {
+                const id = $(this).data('id');
+                if (!confirm('Apply WIN settlement for this trade?')) return;
+                $(this).prop('disabled', true);
+                const adminToken = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+                if (!adminToken) {
+                    alert('Admin token not found. Please login to the admin panel before applying settlements.');
+                    $(this).prop('disabled', false);
+                    return;
+                }
+                $.ajax({
+                    url: '/api/trade/setordersy',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    headers: { 'Authorization': 'Bearer ' + (adminToken || '') },
+                    data: JSON.stringify({ id: id, shuying: 1 }),
+                    success: function(resp) {
+                        alert('WIN settlement applied');
+                        loadContractRecords();
+                    },
+                    error: function(xhr) {
+                        console.error('Error applying WIN settlement:', xhr && xhr.responseText ? xhr.responseText : xhr);
+                        const msg = xhr && xhr.responseJSON && xhr.responseJSON.data ? xhr.responseJSON.data : (xhr && xhr.responseText) || 'Failed to apply settlement';
+                        alert(msg);
+                    }
+                });
+            });
+
+            tbody.find('.btn-loss').off('click').on('click', function() {
+                const id = $(this).data('id');
+                if (!confirm('Apply LOSS settlement for this trade?')) return;
+                $(this).prop('disabled', true);
+                const adminToken2 = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+                if (!adminToken2) {
+                    alert('Admin token not found. Please login to the admin panel before applying settlements.');
+                    $(this).prop('disabled', false);
+                    return;
+                }
+                $.ajax({
+                    url: '/api/trade/setordersy',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    headers: { 'Authorization': 'Bearer ' + (adminToken2 || '') },
+                    data: JSON.stringify({ id: id, shuying: 2 }),
+                    success: function(resp) {
+                        alert('LOSS settlement applied');
+                        loadContractRecords();
+                    },
+                    error: function(xhr) {
+                        console.error('Error applying LOSS settlement:', xhr && xhr.responseText ? xhr.responseText : xhr);
+                        const msg = xhr && xhr.responseJSON && xhr.responseJSON.data ? xhr.responseJSON.data : (xhr && xhr.responseText) || 'Failed to apply settlement';
+                        alert(msg);
+                    }
+                });
             });
         }
 

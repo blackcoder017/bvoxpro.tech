@@ -106,15 +106,27 @@
     const recordsPerPage = 10;
 
     function loadWithdrawalRecords(){
-      $.ajax({url:'/withdrawals_records.json',method:'GET',dataType:'json',success:function(data){allRecords=data||[];// Create deterministic sequential display IDs
-const baseSeq=-1;
-const sortedForIds=[...allRecords].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-const idMap={};
-sortedForIds.forEach((r,idx)=>{
-const num=baseSeq+idx+1;
-idMap[r.id]='With-'+String(num).padStart(6,'0');
-});
-allRecords=allRecords.map(r=>({...r,display_id:idMap[r.id]||r.id}));filteredRecords=[...allRecords];displayPage(1);},error:function(err){console.error('Failed to load withdrawal records:',err);$('#withdrawalsBody').html('<tr><td colspan="9"><div class="no-data"><div class="no-data-icon">❌</div><div>Failed to load withdrawals</div></div></td></tr>');}});
+      const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+      $.ajax({
+        url:'/api/admin/withdrawal-records',
+        method:'GET',
+        dataType:'json',
+        headers:{
+          'Authorization':`Bearer ${token}`
+        },
+        success:function(data){
+          allRecords = (data.records || data || []).map((r, idx) => ({
+            ...r,
+            display_id: 'With-' + String(idx + 1).padStart(6, '0')
+          }));
+          filteredRecords=[...allRecords];
+          displayPage(1);
+        },
+        error:function(err){
+          console.error('Failed to load withdrawal records:',err);
+          $('#withdrawalsBody').html('<tr><td colspan="9"><div class="no-data"><div class="no-data-icon">❌</div><div>Failed to load withdrawals from database</div></div></td></tr>');
+        }
+      });
     }
 
     function displayPage(pageNum){
@@ -144,7 +156,7 @@ allRecords=allRecords.map(r=>({...r,display_id:idMap[r.id]||r.id}));filteredReco
             <td data-label="ID"><div class="id-cell">${record.display_id||record.id}</div></td>
             <td data-label="USER"><div class="user-cell">${record.user_id}</div></td>
             <td data-label="COIN"><span class="coin-badge">${record.coin}</span></td>
-            <td data-label="QUANTITY"><strong>${record.quantity}</strong></td>
+            <td data-label="QUANTITY"><strong>${record.amount || record.quantity || 'N/A'}</strong></td>
             <td data-label="ADDRESS"><div class="address-cell">${record.address}</div></td>
             <td data-label="STATUS"><span class="status-badge ${statusClass}">${record.status||'pending'}</span></td>
             <td data-label="DATE"><div class="date-cell">${createdDate}</div></td>
@@ -206,48 +218,45 @@ allRecords=allRecords.map(r=>({...r,display_id:idMap[r.id]||r.id}));filteredReco
       button.disabled=true;
       button.textContent='Processing...';
       
-      // Determine API endpoint
+      // Determine API endpoint based on status
       let apiUrl;
       if(newStatus==='completed' || newStatus==='complete'){
-        apiUrl='/api/admin/withdrawal/complete';
+        apiUrl='/api/admin/withdrawal/approve-mongo';
       }else if(newStatus==='rejected'){
-        apiUrl='/api/admin/withdrawal/reject';
+        apiUrl='/api/admin/withdrawal/reject-mongo';
       }else{
         button.disabled=false;
         button.textContent=originalText;
         return;
       }
       
-      // Call API to update JSON file
+      const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
+      
+      // Call API to update MongoDB
       $.ajax({
         url:apiUrl,
         method:'PUT',
         contentType:'application/json',
         data:JSON.stringify({id:recordId}),
-        headers:{'X-Admin-ID':'admin_user'},
+        headers:{
+          'Authorization':`Bearer ${token}`
+        },
         success:function(response){
-          if(response.code===1||response.success){
-            // Update local state
-            record.status=newStatus;
-            filteredRecords=filteredRecords.map(r=>r.id===recordId?record:r);
+          if(response.success){
+            // Reload records from database
+            loadWithdrawalRecords();
+            const past = pastMap[actionText] || (actionText + 'ed');
+            alert(`Withdrawal ${past} successfully! User balance updated.`);
             console.log(`✓ Successfully ${actionText} record ${recordId}`);
             console.log('API Response:',response);
-            const past = pastMap[actionText] || (actionText + 'ed');
-            alert(`Withdrawal ${past} successfully!`);
-            displayPage(currentPage);
           }else{
-            alert('Error: '+(response.info||response.message||'Operation failed'));
+            alert('Error: '+(response.error||response.message||'Operation failed'));
           }
         },
         error:function(xhr,status,error){
           console.error(`✗ Error updating record ${recordId}:`,error);
-          alert('Could not connect to server. Updating locally...');
-          record.status=newStatus;
-          filteredRecords=filteredRecords.map(r=>r.id===recordId?record:r);
-          const pastLocal = pastMap[actionText] || (actionText + 'ed');
-          // Show local update message using past tense
-          console.log(`(local) Withdrawal ${pastLocal} for ${recordId}`);
-          displayPage(currentPage);
+          const errorMsg = xhr.responseJSON?.error || 'Could not connect to server';
+          alert('Error: ' + errorMsg);
         },
         complete:function(){
           button.disabled=false;

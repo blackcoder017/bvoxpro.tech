@@ -1398,7 +1398,7 @@ input, textarea, button, select {
 
 .y-lingh{
     padding: 0 1rem;
-    background: linear-gradient(to bottom, #2b5279 5%, #6485a4 60%), url(/img/leaf-bg.png);
+    background: linear-gradient(to bottom, #2b5279 5%, #6485a4 60%), url(assets/img/leaf-bg.png);
     background-blend-mode: difference;
     padding-bottom: 2rem;
 }

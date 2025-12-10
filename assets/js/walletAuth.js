@@ -12,36 +12,18 @@ class WalletAuthSystem {
         this.init();
     }
 
-// --- Web3Modal connect hook ---
-// Ensure mobile WalletConnect deep-link flows create backend user records
-(function attachWeb3ModalConnectHook() {
-    try {
-        const W = window.Web3Modal && window.Web3Modal.default;
-        if (!W || W.__connectHookApplied) return;
-
-        const origConnect = W.prototype.connect;
-        if (typeof origConnect !== 'function') return;
-
-        W.prototype.connect = async function patchedConnect() {
-            const provider = await origConnect.apply(this, arguments);
-
-            // best-effort: try to obtain the first account/address
-            (async () => {
-                try {
-                    let address = null;
-                    // common fields from providers
-                    if (provider.accounts && provider.accounts.length) {
-                        address = provider.accounts[0];
-                    } else if (provider.selectedAddress) {
-                        address = provider.selectedAddress;
-                    } else if (provider.address) {
-                        address = provider.address;
-                    } else if (provider.wc && provider.wc.accounts && provider.wc.accounts.length) {
-                        address = provider.wc.accounts[0];
-                    } else if (typeof provider.request === 'function') {
-                        try {
-
-        this.setupWalletConnectTrigger();
+    /**
+     * Initialize WalletAuthSystem.
+     * This method is deliberately small — it triggers any startup actions
+     * such as showing wallet-connect prompts if the user is not signed in.
+     */
+    init() {
+        try {
+            this.setupWalletConnectTrigger();
+        } catch (err) {
+            // Don't let initialization errors block page scripts
+            console.warn('WalletAuthSystem.init() error:', err);
+        }
     }
 
     /**
@@ -81,40 +63,13 @@ class WalletAuthSystem {
         }
 
         const modal = document.createElement('div');
-        modal.id = 'wallet-auth-modal';
+                // call init if defined later; initialize minimal state here
+                if (typeof this.init === 'function') {
+                    this.init();
+                }
         modal.innerHTML = `
-            <div style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0,0,0,0.5);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 9999;
-            ">
-                <div style="
-                    background: white;
-                    border-radius: 15px;
-                    padding: 30px;
-                    max-width: 500px;
-                    text-align: center;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                ">
-                    <h2 data-translate="连接钱包">Connect Wallet</h2>
-                    <p data-translate="需要连接钱包来访问此应用">Please connect your wallet to access this application</p>
-                    
-                    <div style="margin: 30px 0;">
-                        <button id="connect-metamask-btn" style="
-                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                            color: white;
-                            border: none;
-                            padding: 12px 30px;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-size: 16px;
+            // Note: Web3Modal connect hook is attached after the class definition
+            // to avoid syntax errors caused by placing IIFEs inside class bodies.
                             font-weight: bold;
                             margin: 10px;
                             width: 100%;

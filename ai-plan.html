@@ -326,7 +326,7 @@
                     }
                 }
 
-                // Create subscription via API
+                // Create subscription via API (use same origin relative path)
                 $.ajax({
                     url: '/api/arbitrage/subscribe',
                     type: 'POST',
@@ -342,11 +342,16 @@
                             alert('Investment successful! Amount: $' + jine);
                             location.href = "ai-record.html";
                         } else {
-                            alert('Error: ' + res.message);
+                            alert('Investment failed: ' + (res.message || 'Unknown error'));
                         }
                     },
-                    error: function() {
-                        alert('Error creating subscription');
+                    error: function(xhr) {
+                        try {
+                            var errorRes = JSON.parse(xhr.responseText);
+                            alert('Error: ' + (errorRes.message || 'Failed to create investment'));
+                        } catch(e) {
+                            alert('Error creating investment');
+                        }
                     }
                 });
             }

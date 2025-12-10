@@ -670,13 +670,22 @@
                     allRecords = data || [];
 
                     // Assign deterministic sequential display IDs (TopUp-000000, TopUp-000001, ...)
+                    // and ensure id field is set for API calls
                     const sortedForIds = [...allRecords].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
                     const idMap = {};
                     sortedForIds.forEach((r, idx) => {
                         const num = idx;
-                        idMap[r._id || r.id] = 'TopUp-' + String(num).padStart(6, '0');
+                        const key = r.id || r._id;
+                        idMap[key] = 'TopUp-' + String(num).padStart(6, '0');
                     });
-                    allRecords = allRecords.map(r => ({ ...r, display_id: idMap[r._id || r.id] || r.id }));
+                    allRecords = allRecords.map(r => {
+                        const key = r.id || r._id;
+                        return {
+                            ...r,
+                            id: r.id || r._id,  // Ensure id field is set
+                            display_id: idMap[key] || r.id
+                        };
+                    });
 
                     filteredRecords = [...allRecords];
                     displayPage(1);
@@ -841,7 +850,6 @@
             button.textContent = 'Processing...';
 
             const token = localStorage.getItem('adminToken') || sessionStorage.getItem('adminToken');
-            const mongoId = record._id || recordId;
             
             // Determine API endpoint (use MongoDB endpoints)
             let apiUrl;
@@ -858,13 +866,13 @@
                 return;
             }
 
-            // Call MongoDB API
+            // Call MongoDB API with string ID
             $.ajax({
                 url: apiUrl,
                 method: 'PUT',
                 contentType: 'application/json',
                 headers: token ? { 'Authorization': 'Bearer ' + token } : {},
-                data: JSON.stringify({ id: mongoId }),
+                data: JSON.stringify({ id: recordId }),
                 success: function(response) {
                     if (response.success) {
                         // Update local state
