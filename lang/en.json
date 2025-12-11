@@ -135,5 +135,21 @@
   "now": "Now",
   "profit_credited": "Your profit has been credited to your account.",
   "insufficient_balance_error": "Insufficient balance",
-  "please_enter_quantity": "Please enter quantity"
+  "please_enter_quantity": "Please enter quantity",
+  "Seconds contract order": "Seconds contract order",
+  "Seconds settlement": "Seconds settlement",
+  "Top-up": "Top-up",
+  "Withdrawal": "Withdrawal",
+  "Buy AI arbitrage": "Buy AI arbitrage",
+  "AI arbitrage income": "AI arbitrage income",
+  "AI set recycling": "AI set recycling",
+  "Cash out": "Cash out",
+  "Cash in": "Cash in",
+  "System increase": "System increase",
+  "System deduction": "System deduction",
+  "Withdrawal rejected": "Withdrawal rejected",
+  "Mining pledge": "Mining pledge",
+  "Mining income": "Mining income",
+  "Loan transfer in": "Loan transfer in",
+  "Mining redemption": "Mining redemption"
 }

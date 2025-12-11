@@ -143,7 +143,8 @@
                         page: page,
                         type: type // ??????
                     },
-                    success: function(res) {
+                        timeout: 4000, // 4s timeout to avoid long blocking waits
+                        success: function(res) {
                         if (res.code === 1) {
                             $('.y-re-load').remove();
                             const transactions = res.data;
@@ -178,8 +179,10 @@
                             page++;
                         }
                     },
-                    error: function() {
-                        alert('Failed to load transactions. Please try again.');
+                    error: function(xhr, status, err) {
+                        console.warn('Failed to load transactions:', status, err);
+                        $('.y-re-load').remove();
+                        $('.y-re').append('<div class="y-re-error">' + gy('Failed to load transactions. Please try again.') + '</div>');
                     }
                 });
             }

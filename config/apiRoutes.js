@@ -234,6 +234,73 @@ router.get('/api/public/admin-info', async (req, res) => {
     }
 });
 
+// POST /api/Record/getTransactions - unified transaction listing for frontend
+router.post('/api/Record/getTransactions', async (req, res) => {
+    try {
+        const userid = req.body.userid || req.body.userId || req.body.uid;
+        const page = parseInt(req.body.page || req.query.page || 1) || 1;
+        const type = String(req.body.type || req.query.type || '0');
+        const limit = 20;
+
+        if (!userid) return res.status(400).json({ code: 0, error: 'Missing userid' });
+
+        const toTs = (doc) => {
+            if (!doc) return Math.floor(Date.now() / 1000);
+            if (doc.timestamp) return Number(doc.timestamp);
+            if (doc.created_at) return Math.floor(new Date(doc.created_at).getTime() / 1000);
+            return Math.floor(Date.now() / 1000);
+        };
+
+        const records = [];
+
+        if (type === '0' || type === '3') {
+            const topups = await db.getUserTopupRecords(userid, 200).catch(() => []);
+            topups.forEach(t => records.push({ shijian: toTs(t), bizhong: t.coin || (t.currency || 'USDT'), jine: Number(t.amount || 0), gaibian: 3, raw: t }));
+        }
+
+        if (type === '0' || type === '4') {
+            const withdrawals = await db.getUserWithdrawalRecords(userid, 200).catch(() => []);
+            withdrawals.forEach(w => records.push({ shijian: toTs(w), bizhong: w.coin || 'USDT', jine: Number(w.amount || 0), gaibian: 4, raw: w }));
+        }
+
+        if (type === '0' || type === '8' || type === '9') {
+            const exchanges = await db.getUserExchangeRecords(userid, 200).catch(() => []);
+            exchanges.forEach(e => {
+                records.push({ shijian: toTs(e), bizhong: e.from_coin || e.from || 'USDT', jine: Number(e.from_amount || 0), gaibian: 8, raw: e });
+                records.push({ shijian: toTs(e), bizhong: e.to_coin || e.to || 'USDT', jine: Number(e.to_amount || 0), gaibian: 9, raw: e });
+            });
+        }
+
+        if (type === '0' || type === '1' || type === '2') {
+            const trades = await db.getUserTrades(userid, 200).catch(() => []);
+            trades.forEach(t => {
+                const profit = Number(t.profit_amount || t.pnl || 0);
+                const amt = Number(t.amount || t.num || 0);
+                const code = (t.status === 'closed' || t.status === 'settled' || profit !== 0) ? 2 : 1;
+                records.push({ shijian: toTs(t), bizhong: (t.pair || t.biming || 'USDT').split(/\W+/)[0] || 'USDT', jine: (code === 2 ? profit : amt), gaibian: code, raw: t });
+            });
+        }
+
+        if (type === '0' || type === '5' || type === '6' || type === '7') {
+            const subs = await db.getUserArbitrageSubscriptions(userid).catch(() => []);
+            subs.forEach(s => {
+                records.push({ shijian: toTs(s), bizhong: s.coin || 'USDT', jine: Number(s.amount || s.price || 0), gaibian: 5, raw: s });
+                if (s.earned && Number(s.earned) > 0) {
+                    records.push({ shijian: toTs(s), bizhong: s.coin || 'USDT', jine: Number(s.earned || 0), gaibian: 6, raw: s });
+                }
+            });
+        }
+
+        records.sort((a, b) => Number(b.shijian) - Number(a.shijian));
+        const start = (page - 1) * limit;
+        const paged = records.slice(start, start + limit);
+        return res.json({ code: 1, data: paged });
+    } catch (e) {
+        console.error('[Record/getTransactions] Error:', e && e.message);
+        return res.status(500).json({ code: 0, error: e && e.message });
+    }
+});
+
 // GET /api/admin/users - returns users list for admin pages
 router.get('/api/admin/users', async (req, res) => {
     try {
@@ -1777,7 +1844,7 @@ router.get('/api/arbitrage/products', async (req, res) => {
                     daily_return_min: 1.90,
                     daily_return_max: 2.60,
                     times: 1,
-                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl1.jpg',
                     status: 'active'
                 },
@@ -1791,7 +1858,7 @@ router.get('/api/arbitrage/products', async (req, res) => {
                     daily_return_min: 2.80,
                     daily_return_max: 3.20,
                     times: 1,
-                    arbitrage_types: ['BTC', 'ETH', 'USDT'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl1.jpg',
                     status: 'active'
                 },
@@ -1805,7 +1872,7 @@ router.get('/api/arbitrage/products', async (req, res) => {
                     daily_return_min: 3.50,
                     daily_return_max: 5.30,
                     times: 1,
-                    arbitrage_types: ['BTC', 'ETH'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl1.jpg',
                     status: 'active'
                 },
@@ -1819,7 +1886,7 @@ router.get('/api/arbitrage/products', async (req, res) => {
                     daily_return_min: 5.80,
                     daily_return_max: 6.30,
                     times: 1,
-                    arbitrage_types: ['BTC'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl2.jpg',
                     status: 'active'
                 }
@@ -1877,7 +1944,7 @@ router.get('/api/arbitrage/product/:id', async (req, res) => {
                     daily_return_min: 1.90,
                     daily_return_max: 2.60,
                     times: 1,
-                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl1.jpg',
                     status: 'active'
                 },
@@ -1891,7 +1958,7 @@ router.get('/api/arbitrage/product/:id', async (req, res) => {
                     daily_return_min: 2.80,
                     daily_return_max: 3.20,
                     times: 1,
-                    arbitrage_types: ['BTC', 'ETH', 'USDT'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl1.jpg',
                     status: 'active'
                 },
@@ -1905,7 +1972,7 @@ router.get('/api/arbitrage/product/:id', async (req, res) => {
                     daily_return_min: 3.50,
                     daily_return_max: 5.30,
                     times: 1,
-                    arbitrage_types: ['BTC', 'ETH'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl1.jpg',
                     status: 'active'
                 },
@@ -1919,7 +1986,7 @@ router.get('/api/arbitrage/product/:id', async (req, res) => {
                     daily_return_min: 5.80,
                     daily_return_max: 6.30,
                     times: 1,
-                    arbitrage_types: ['BTC'],
+                    arbitrage_types: ['BTC', 'ETH', 'USDT', 'USDC', 'PYUSD'],
                     image: 'tl2.jpg',
                     status: 'active'
                 }

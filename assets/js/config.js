@@ -14,22 +14,22 @@ function loadScript(url, callback) {
 
 function translateGaibian(gaibian) {
     const translations = {
-        1: gy('购买合约'),
-        2: gy('合约盈利'),
-        3: gy('充值'),
-        4: gy('提现'),
-        5: gy('购买量化'),
-        6: gy('量化收益'),
-        7: gy('量化本金返回'),
-        8: gy('兑换扣除'),
-        9: gy('兑换兑入'),
-        21: gy('系统增加'),
-        22: gy('系统划扣'),
-        23: gy('提现驳回'),
-        24: gy('矿机质押'),
-        25: gy('矿机收益'),
-        26: gy('贷款汇入'),
-        27: gy('矿机赎回')
+        1: gy('Seconds contract order'),
+        2: gy('Seconds settlement'),
+        3: gy('Top-up'),
+        4: gy('Withdrawal'),
+        5: gy('Buy AI arbitrage'),
+        6: gy('AI arbitrage income'),
+        7: gy('AI set recycling'),
+        8: gy('Cash out'),
+        9: gy('Cash in'),
+        21: gy('System increase'),
+        22: gy('System deduction'),
+        23: gy('Withdrawal rejected'),
+        24: gy('Mining pledge'),
+        25: gy('Mining income'),
+        26: gy('Loan transfer in'),
+        27: gy('Mining redemption')
     };
     return translations[gaibian] || '';
 }

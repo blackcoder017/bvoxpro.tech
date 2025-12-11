@@ -99,7 +99,7 @@
                                     <div class="y-ai-bbtit" data-translate="Arbitrage type">Arbitrage type</div>
                                     <div class="y-ai-typet">
                                         <div class="y-ai-typetl">
-                                            <img src="./assets/img/8.png"><img src="./assets/img/9.png"><img src="./assets/img/12.png"><img src="./assets/img/4.png"><img src="./assets/img/7.png">
+                                            <img src="./assets/img/sol.png"><img src="./assets/img/ada.png"><img src="./assets/img/usdt.png"><img src="./assets/img/usdc.png"><img src="./assets/img/pyusd.png">
                                         </div>
                                         <a href="ai-plan.html?id=1" class="y-ai-typetr">
                                             <img src="./assets/img/qianj.png">
@@ -131,7 +131,7 @@
                                     <div class="y-ai-bbtit" data-translate="Arbitrage type">Arbitrage type</div>
                                     <div class="y-ai-typet">
                                         <div class="y-ai-typetl">
-                                            <img src="./assets/img/12.png"><img src="./assets/img/10.png"><img src="./assets/img/4.png"><img src="./assets/img/9.png"><img src="./assets/img/5.png">
+                                            <img src="./assets/img/usdt.png"><img src="./assets/img/link.png"><img src="./assets/img/usdc.png"><img src="./assets/img/ada.png"><img src="./assets/img/xrp.png">
                                         </div>
                                         <a href="ai-plan.html?id=2" class="y-ai-typetr">
                                             <img src="./assets/img/qianj.png">
@@ -163,7 +163,7 @@
                                     <div class="y-ai-bbtit">Arbitrage type</div>
                                     <div class="y-ai-typet">
                                         <div class="y-ai-typetl">
-                                            <img src="./assets/img/6.png"><img src="./assets/img/7.png"><img src="./assets/img/3.png"><img src="./assets/img/4.png"><img src="./assets/img/10.png">
+                                            <img src="./assets/img/ltc.png"><img src="./assets/img/pyusd.png"><img src="./assets/img/doge.png"><img src="./assets/img/usdc.png"><img src="./assets/img/link.png">
                                         </div>
                                         <a href="ai-plan.html?id=3" class="y-ai-typetr">
                                             <img src="./assets/img/qianj.png">
@@ -195,7 +195,7 @@
                                     <div class="y-ai-bbtit">Arbitrage type</div>
                                     <div class="y-ai-typet">
                                         <div class="y-ai-typetl">
-                                            <img src="./assets/img/12.png"><img src="./assets/img/1.png"><img src="./assets/img/11.png"><img src="./assets/img/5.png"><img src="./assets/img/8.png">
+                                            <img src="./assets/img/usdt.png"><img src="./assets/img/btc.png"><img src="./assets/img/dot.png"><img src="./assets/img/xrp.png"><img src="./assets/img/sol.png">
                                         </div>
                                         <a href="ai-plan.html?id=4" class="y-ai-typetr">
                                             <img src="./assets/img/qianj.png">
@@ -227,9 +227,9 @@
                                     <div class="y-ai-bbtit">Arbitrage type</div>
                                     <div class="y-ai-typet">
                                         <div class="y-ai-typetl">
-                                            <img src="./assets/img/11.png"><img src="./assets/img/3.png"><img src="./assets/img/6.png"><img src="./assets/img/12.png"><img src="./assets/img/7.png">
+                                            <img src="./assets/img/btc.png"><img src="./assets/img/eth.png"><img src="./assets/img/usdc.png"><img src="./assets/img/usdt.png"><img src="./assets/img/sol.png">
                                         </div>
-                                        <a href="hai-plan.html?id=5" class="y-ai-typetr">
+                                        <a href="ai-plan.html?id=5" class="y-ai-typetr">
                                             <img src="./assets/img/qianj.png">
                                         </a>
                                     </div>
@@ -237,21 +237,72 @@
                             </div>
         </div>
         <script>
-            // Mapping of crypto types to their icon numbers
-            const cryptoIcons = {
-                'BTC': '1',
-                'ETH': '2',
-                'USDT': '12',
-                'USDC': '4',
-                'PYUSD': '7',
-                'XRP': '5',
-                'LTC': '6',
-                'DOGE': '3',
-                'SOL': '8',
-                'ADA': '9',
-                'LINK': '10',
-                'DOT': '11'
+            // Coin icon mapping
+            const coinIconMap = { 
+                btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', 
+                pyusd: 'pyusd.png', sol: 'sol.png', xrp: 'xrp.png', ltc: 'ltc.png',
+                doge: 'doge.png', ada: 'ada.png', link: 'link.png', dot: 'dot.png'
             };
+            
+            function getCoinIconFile(coin) {
+                if (!coin) return 'usdt.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || 'usdt.png';
+            }
+
+            // Mapping of crypto types to their icon numbers or direct filenames
+            const cryptoIcons = {
+                'BTC': 'btc.png',
+                'ETH': 'eth.png',
+                'USDT': 'usdt.png',
+                'USDC': 'usdc.png',
+                'PYUSD': 'pyusd.png',
+                'XRP': 'xrp.png',
+                'LTC': 'ltc.png',
+                'DOGE': 'doge.png',
+                'SOL': 'sol.png',
+                'ADA': 'ada.png',
+                'LINK': 'link.png',
+                'DOT': 'dot.png'
+            };
+
+            // Parse arbitrage_types that may be provided as a concatenated string like "BTCETHUSDT"
+            function parseArbitrageTypes(val){
+                if(!val) return [];
+                if(Array.isArray(val)) return val.slice();
+                const s = String(val).trim();
+                // common separators
+                if(s.indexOf(',')>=0) return s.split(',').map(x=>x.trim()).filter(Boolean);
+                if(s.indexOf('|')>=0) return s.split('|').map(x=>x.trim()).filter(Boolean);
+                if(s.indexOf(' ')>=0) return s.split(/\s+/).map(x=>x.trim()).filter(Boolean);
+
+                // If it's like 'btc.png' or endsWith png, return as single item
+                if(s.toLowerCase().endsWith('.png')) return [s];
+
+                // Greedy match known tickers (longest-first)
+                const known = Object.keys(cryptoIcons).sort((a,b)=>b.length-a.length);
+                const upper = s.toUpperCase();
+                const result = [];
+                let remaining = upper;
+                while(remaining.length>0){
+                    let matched = false;
+                    for(let i=0;i<known.length;i++){
+                        const k = known[i];
+                        if(remaining.startsWith(k)){
+                            result.push(k);
+                            remaining = remaining.slice(k.length);
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if(!matched){
+                        // fallback: take first 3 letters then continue
+                        result.push(remaining.slice(0,3));
+                        remaining = remaining.slice(3);
+                    }
+                }
+                return result;
+            }
             
             window.addEventListener('scroll', function() {
                 let currentScrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -263,63 +314,109 @@
             });
 
             $(document).ready(function() {
-                // Fetch arbitrage products from new API
+                // Fetch arbitrage products from new API (safe: preserve static markup and provide fallbacks)
                 $.ajax({
-                    url: '/api/arbitrage/products',
+                    url: '/api/arbitrage/products?_=' + Date.now(),
                     type: 'GET',
                     dataType: 'json',
+                    cache: false,
                     success: function(res) {
-                        if(res.success && res.products){
-                            let data = res.products;
-                            let html = '';
-
-                            // Loop through products
-                            data.forEach(function(item) {
-                                // Create coin icons for arbitrage types
-                                let coinIcons = item.arbitrage_types.map(type => {
-                                    const iconNum = cryptoIcons[type] || '1';
-                                    return `<img src="./assets/img/${iconNum}.png" title="${type}" style="width:30px; height:30px; margin-right:5px;">`;
-                                }).join('');
-                                
-                                html += `
-                                    <div class="y-ai-bbox">
-                                        <div class="y-ai-btit">Arbitrage products</div>
-                                        <div class="y-ai-be">
-                                            <span class="y-ai-be-1">
-                                                <img src="./assets/img/${item.image}" />
-                                            </span>
-                                            <span class="y-ai-be-2">${item.duration}</span>
-                                            <span class="y-ai-be-3"><b>Smart Plan</b> ${item.name.split(' ')[2]}</span>
-                                        </div>
-                                        <div class="y-ai-cis">
-                                            <span>${item.times}</span>
-                                            <span>Times</span>
-                                        </div>
-                                        <div class="y-ai-bbtit">Quantity</div>
-                                        <div class="y-ai-bbje">
-                                            $${item.min_amount}-$${item.max_amount}
-                                        </div>
-                                        <div class="y-ai-bbtit">Daily income</div>
-                                        <div class="y-ai-bbje">
-                                            <span>${item.daily_return_min}-${item.daily_return_max}</span>%
-                                        </div>
-                                        <div class="y-ai-bbtit">Arbitrage type</div>
-                                        <div class="y-ai-typet">
-                                            <div class="y-ai-typetl">
-                                                ${coinIcons}
-                                            </div>
-                                            <a href="ai-plan.html?id=${item.id}" class="y-ai-typetr">
-                                                <img src="./assets/img/qianj.png" />
-                                            </a>
-                                        </div>
-                                    </div>
-                                `;
-                            });
-                            $('.y-ai-buy').html(html);
+                        if(!(res && res.success && Array.isArray(res.products) && res.products.length>0)){
+                            // Nothing useful returned — keep the static HTML already on the page
+                            return;
                         }
+
+                        let data = res.products;
+                        let html = '';
+
+                        // Default fallback coin lists per product id (used when API doesn't include arbitrage_types)
+                        const defaultArbitrageById = {
+                            1: ['SOL','ADA','USDT','USDC','PYUSD'],
+                            2: ['USDT','LINK','USDC','ADA','XRP'],
+                            3: ['LTC','PYUSD','DOGE','USDC','LINK'],
+                            4: ['USDT','BTC','DOT','XRP','SOL'],
+                            5: ['BTC','ETH','USDC','USDT','SOL']
+                        };
+
+                        // Loop through products
+                        data.forEach(function(item) {
+                            // determine types array (API may return symbols or filenames)
+                            let types = [];
+                            if(Array.isArray(item.arbitrage_types) && item.arbitrage_types.length>0){
+                                types = item.arbitrage_types.slice();
+                            } else {
+                                const parsed = parseArbitrageTypes(item.arbitrage_types);
+                                if(parsed && parsed.length>0){
+                                    types = parsed;
+                                } else if(defaultArbitrageById[item.id]){
+                                    types = defaultArbitrageById[item.id].slice();
+                                }
+                            }
+
+                            // Ensure we display a reasonable number of icons (fill from defaults/global list)
+                            function normalizeName(x){ return String(x||'').toLowerCase().replace(/\.png$/,''); }
+                            let filledTypes = types.slice();
+                            if(filledTypes.length < 5){
+                                const candidates = (defaultArbitrageById[item.id] || []).concat(Object.keys(cryptoIcons));
+                                for(let c of candidates){
+                                    if(filledTypes.length >= 5) break;
+                                    const exists = filledTypes.some(f => normalizeName(f) === normalizeName(c));
+                                    if(!exists) filledTypes.push(c);
+                                }
+                            }
+
+                            // Create coin icons for arbitrage types (robust to values like 'BTC', 'btc', or 'btc.png')
+                            let coinIcons = filledTypes.map(type => {
+                                if(!type) return '';
+                                const asStr = String(type);
+                                if(asStr.toLowerCase().endsWith('.png')){
+                                    return `<img src="./assets/img/${asStr}" title="${asStr}" style="width:30px; height:30px; margin-right:5px;">`;
+                                }
+                                const iconFile = cryptoIcons[asStr.toUpperCase()] || getCoinIconFile(asStr);
+                                return `<img src="./assets/img/${iconFile}" title="${asStr}" style="width:30px; height:30px; margin-right:5px;">`;
+                            }).join('');
+
+                            html += `
+                                <div class="y-ai-bbox">
+                                    <div class="y-ai-btit">Arbitrage products</div>
+                                    <div class="y-ai-be">
+                                        <span class="y-ai-be-1">
+                                            <img src="./assets/img/${item.image || 'tl1.jpg'}" />
+                                        </span>
+                                        <span class="y-ai-be-2">${item.duration || ''}</span>
+                                        <span class="y-ai-be-3"><b>Smart Plan</b> ${ (item.name || '').split(' ').pop() }</span>
+                                    </div>
+                                    <div class="y-ai-cis">
+                                        <span>${item.times || 1}</span>
+                                        <span>Times</span>
+                                    </div>
+                                    <div class="y-ai-bbtit">Quantity</div>
+                                    <div class="y-ai-bbje">
+                                        $${item.min_amount || ''}-$${item.max_amount || ''}
+                                    </div>
+                                    <div class="y-ai-bbtit">Daily income</div>
+                                    <div class="y-ai-bbje">
+                                        <span>${item.daily_return_min || ''}-${item.daily_return_max || ''}</span>%
+                                    </div>
+                                    <div class="y-ai-bbtit">Arbitrage type</div>
+                                    <div class="y-ai-typet">
+                                        <div class="y-ai-typetl">
+                                            ${coinIcons}
+                                        </div>
+                                        <a href="ai-plan.html?id=${item.id}" class="y-ai-typetr">
+                                            <img src="./assets/img/qianj.png" />
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        // Replace only after successful build
+                        $('.y-ai-buy').html(html);
                     },
                     error: function() {
                         console.log('Error fetching arbitrage products');
+                        // keep static markup on error
                     }
                 });
 

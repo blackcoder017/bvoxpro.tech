@@ -89,22 +89,52 @@
                         </div>
         </div>
         <script>
-            // Mapping of crypto types to their icon numbers
-            const cryptoIcons = {
-                'BTC': '1',
-                'ETH': '2',
-                'USDT': '12',
-                'USDC': '4',
-                'PYUSD': '7',
-                'XRP': '5',
-                'LTC': '6',
-                'DOGE': '3',
-                'SOL': '8',
-                'ADA': '9',
-                'LINK': '10',
-                'DOT': '11'
+            // Coin icon mapping - use actual filenames
+            const coinIconMap = { 
+                btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', 
+                pyusd: 'pyusd.png', sol: 'sol.png', xrp: 'xrp.png', ltc: 'ltc.png',
+                doge: 'doge.png', ada: 'ada.png', link: 'link.png', dot: 'dot.png'
             };
             
+            function getCoinIconFile(coin) {
+                if (!coin) return 'usdt.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || 'usdt.png';
+            }
+
+            // Mapping of crypto types to their icon filenames
+            const cryptoIcons = {
+                'BTC': 'btc.png',
+                'ETH': 'eth.png',
+                'USDT': 'usdt.png',
+                'USDC': 'usdc.png',
+                'PYUSD': 'pyusd.png',
+                'XRP': 'xrp.png',
+                'LTC': 'ltc.png',
+                'DOGE': 'doge.png',
+                'SOL': 'sol.png',
+                'ADA': 'ada.png',
+                'LINK': 'link.png',
+                'DOT': 'dot.png'
+            };
+            
+            function parseArbitrageTypes(raw) {
+                if (!raw) return [];
+                if (Array.isArray(raw)) return raw;
+                if (typeof raw === 'string') {
+                    // Try splitting by common separators
+                    let parts = raw.split(/[,;\s|]+/).map(s=>s.trim()).filter(Boolean);
+                    if (parts.length > 1) return parts;
+
+                    // If still a single concatenated string like "BTCETHUSDT", try to extract known tokens
+                    const tokens = ['BTC','ETH','USDT','USDC','PYUSD','SOL','XRP','LTC','DOGE','ADA','LINK','DOT','TRX','TON','BCH','BNB'];
+                    const re = new RegExp(tokens.join('|'), 'gi');
+                    const matches = raw.match(re);
+                    return matches || [raw];
+                }
+                return [raw.toString()];
+            }
+
             function loadProductData() {
                 var urlParams = new URLSearchParams(window.location.search);
                 var id = urlParams.get('id');
@@ -123,10 +153,15 @@
                         if(res.success && res.product) {
                             var data = res.product;
                             
-                            // Create coin icons for arbitrage types
-                            let coinIcons = data.arbitrage_types.map(type => {
-                                const iconNum = cryptoIcons[type] || '1';
-                                return `<img src="./assets/img/${iconNum}.png" title="${type}" style="width:35px; height:35px; margin-right:10px;">`;
+                            // Create coin icons for arbitrage types (normalize keys and handle variants)
+                            const types = parseArbitrageTypes(data.arbitrage_types);
+                            console.log('Product arbitrage types (parsed):', types);
+                            let coinIcons = (types || []).map(type => {
+                                const raw = (type || '').toString();
+                                const key = raw.trim().toUpperCase();
+                                const iconFile = cryptoIcons[key] || getCoinIconFile(key);
+                                const img = `<img src="./assets/img/${iconFile}" alt="${raw}" title="${raw}" style="width:35px; height:35px; margin-right:10px;">`;
+                                return img;
                             }).join('');
 
                             // Update HTML with product details
@@ -235,124 +270,6 @@
                     },
                     error: function() {
                         alert('Error creating subscription');
-                    }
-                });
-            }
-        </script>
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(res) {
-                        if(res.success && res.product) {
-                            var data = res.product;
-                            
-                            // Create coin icons for arbitrage types
-                            let coinIcons = data.arbitrage_types.map(type => {
-                                const iconNum = cryptoIcons[type] || '1';
-                                return `<img src="./assets/img/${iconNum}.png" title="${type}" style="width:35px; height:35px; margin-right:10px;">`;
-                            }).join('');
-
-                            // Update HTML with product details
-                            $('.y-aib-center').html(`
-                                <div class="y-aib-ctop">
-                                    <div class="y-aib-ctl">
-                                        <span class="y-aib-ctl-1">
-                                            <img src="./assets/img/${data.image}"/>
-                                            <p>${data.name}</p>
-                                        </span>
-                                        <span class="y-aib-ctl-2">Quantity</span>
-                                        <span class="y-aib-ctl-3">$<b>${data.min_amount}-${data.max_amount}</b></span>
-                                    </div>
-                                    <div class="y-aib-ctr">
-                                        <span class="y-aib-ctr-1">${data.duration}</span>
-                                        <span class="y-aib-ctr-2">Daily income</span>
-                                        <span class="y-aib-ctr-3">${data.daily_return_min}-${data.daily_return_max}%</span>
-                                    </div>
-                                </div>
-                                <div class="y-aib-ccent">
-                                    <div class="y-aib-ppt">Arbitrage type</div>
-                                    <div class="y-aib-type">
-                                        ${coinIcons}
-                                    </div>
-                                </div>
-                                <div class="y-aib-bottom">
-                                    <div class="y-aib-ppt">Escrow quantity</div>
-                                    <div class="y-aib-bsl">
-                                        <div class="y-aib-bsll">
-                                            <img src="./assets/img/usdt.png"/>
-                                            <span>Quantity</span>
-                                        </div>
-                                        <input type="number" id="y-aib-jine" class="y-aib-bslr" placeholder="Please enter quantity" min="${data.min_amount}" max="${data.max_amount}"/>
-                                    </div>
-                                </div>
-                                <div class="y-aib-submit" onclick="aisubmit()">Invest now</div>
-                                <div class="y-aib-dbts">
-                                    <img src="./assets/img/dui.png"/>
-                                    <span>Daily income sent to your USDT wallet</span>
-                                </div>
-                                <div class="y-aib-dbts">
-                                    <img src="./assets/img/dui.png"/>
-                                    <span>Artificial intelligence works 24 hours a day</span>
-                                </div>
-                            `);
-                            
-                            // Store product info for later use
-                            window.currentProduct = data;
-                        } else {
-                            alert('Failed to load product details');
-                        }
-                    },
-                    error: function() {
-                        alert('Error fetching product details');
-                    }
-                });
-            });
-
-            function aisubmit(){
-                var urlParams = new URLSearchParams(window.location.search);
-                var id = urlParams.get('id');
-                var jine = parseFloat($('#y-aib-jine').val());
-                var userid = Cookies.get('userid');
-                var username = Cookies.get('username');
-                
-                // Validate input
-                if (!jine || isNaN(jine)) {
-                    alert('Please enter a valid quantity');
-                    return;
-                }
-                
-                if (window.currentProduct) {
-                    if (jine < window.currentProduct.min_amount || jine > window.currentProduct.max_amount) {
-                        alert('Quantity must be between $' + window.currentProduct.min_amount + ' and $' + window.currentProduct.max_amount);
-                        return;
-                    }
-                }
-
-                // Create subscription via API (use same origin relative path)
-                $.ajax({
-                    url: '/api/arbitrage/subscribe',
-                    type: 'POST',
-                    dataType: 'json',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        'user_id': userid || 'guest',
-                        'product_id': id,
-                        'amount': jine
-                    }),
-                    success: function(res) {
-                        if(res.success) {
-                            alert('Investment successful! Amount: $' + jine);
-                            location.href = "ai-record.html";
-                        } else {
-                            alert('Investment failed: ' + (res.message || 'Unknown error'));
-                        }
-                    },
-                    error: function(xhr) {
-                        try {
-                            var errorRes = JSON.parse(xhr.responseText);
-                            alert('Error: ' + (errorRes.message || 'Failed to create investment'));
-                        } catch(e) {
-                            alert('Error creating investment');
-                        }
                     }
                 });
             }
