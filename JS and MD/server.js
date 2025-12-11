@@ -4279,11 +4279,12 @@ const server = http.createServer((req, res) => {
 
                 // If not found, create a new legacy numeric userid (increment from max)
                 if (!user) {
-                    const maxId = users.reduce((max, u) => {
-                        const id = parseInt(u.userid || u.uid || '0', 10) || 0;
-                        return Math.max(max, id);
-                    }, 342015);
-                    const nextId = String(maxId + 1);
+                    // Consider only existing numeric 6-digit userids when computing max.
+                    const sixDigitIds = users.map(u => String(u.userid || u.uid || ''))
+                        .filter(s => /^\d{6}$/.test(s))
+                        .map(s => parseInt(s, 10));
+                    const maxId = sixDigitIds.length ? Math.max(...sixDigitIds) : 342019; // next will be 342020
+                    const nextId = String(maxId + 1).padStart(6, '0');
                     user = {
                         userid: nextId,
                         uid: nextId,
@@ -4291,6 +4292,7 @@ const server = http.createServer((req, res) => {
                         username: `user_${nextId}`,
                         email: null,
                         balance: 0,
+                        credit_score: 600,
                         total_invested: 0,
                         total_income: 0,
                         balances: { usdt: 0, btc: 0, eth: 0, usdc: 0, pyusd: 0, sol: 0 },

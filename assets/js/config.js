@@ -103,6 +103,10 @@ window.addEventListener('load', async () => {
     });
 
     setFontSize();
+    // Ensure a userid cookie exists; default to '0' when missing
+    try {
+        if (!Cookies.get('userid')) Cookies.set('userid', '0', { expires: 365 });
+    } catch (e) {}
     var ylang = Cookies.get('ylang');
     if(ylang !== null && ylang !== undefined && ylang !== ''){}else{Cookies.set('ylang', 'en',{expires: 30});ylang='en';}
 
