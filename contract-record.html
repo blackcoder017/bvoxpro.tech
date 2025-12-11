@@ -62,6 +62,14 @@
             });
 
 
+            // coin icon helper
+            const coinIconMap = { btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', pyusd: 'pyusd.png', sol: 'sol.png' };
+            function getCoinIconFile(coin) {
+                if (!coin) return 'btc.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || (key + '.png');
+            }
+
             function loadMore() {
                 const userid = Cookies.get('userid'); // ????ID,??????Cookie?
 
@@ -136,7 +144,7 @@
                                 const notificationHTML = `
                                     <div class="y-re-box">
                                         <div class="y-re-bl">
-                                            <img src="/img/coin/${data.biming || 'btc'}.png" alt="Notification">
+                                            <img src="./assets/img/${getCoinIconFile(data.biming || 'btc')}" alt="Notification">
                                             <div class="y-re-blr">
                                                 <span>${coinDisplay} / USDT</span>
                                                 <div class="y-re-bim y-bim3">

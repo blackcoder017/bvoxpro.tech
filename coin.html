@@ -56,6 +56,13 @@
 
         <script>
             document.querySelector('.y-re').style.minHeight = window.innerHeight + 'px';
+            // coin icon helper
+            const coinIconMap = { btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', pyusd: 'pyusd.png', sol: 'sol.png' };
+            function getCoinIconFile(coin) {
+                if (!coin) return 'usdt.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || (key + '.png');
+            }
             const userId = Cookies.get('userid');
             const xsw = { btc: 8, usdc: 2, eth: 8, pyusd: 2, usdt: 2, sol: 3 };
 
@@ -235,7 +242,7 @@
                     html += `
                         <div class="y-re-box">
                             <div class="y-re-bl">
-                                <img src="/img/coin/${record.coin.toLowerCase()}.png" alt="${record.coin}">
+                                <img src="./assets/img/${getCoinIconFile(record.coin)}" alt="${record.coin}">
                                 <div class="y-re-blr">
                                     <span>${typeLabel}</span>
                                     <div class="y-re-bim">${description}</div>

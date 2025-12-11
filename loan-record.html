@@ -288,6 +288,14 @@
             const userId = Cookies.get('userid'); // ????ID
 
 
+            // coin icon helper
+            const coinIconMap = { btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', pyusd: 'pyusd.png', sol: 'sol.png' };
+            function getCoinIconFile(coin) {
+                if (!coin) return 'usdt.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || (key + '.png');
+            }
+
             // Render helper: accepts an array of loan objects and appends to .y-re-in
             function renderLoans(loans) {
                 loans.forEach(data => {
@@ -305,7 +313,7 @@
                                 ${statusText}
                             </span>
                             <div class="y-re-bl">
-                                <img src="/img/coin/usdt.png" alt="Loan">
+                                <img src="./assets/img/${getCoinIconFile('usdt')}" alt="Loan">
                             </div>
                             <div class="y-re-blr">
                                 <div class="amount-row">

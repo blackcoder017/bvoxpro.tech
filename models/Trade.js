@@ -32,7 +32,11 @@ const tradeSchema = new mongoose.Schema({
   settlement_applied: { type: Boolean, default: false },
   
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
-}, { timestamps: true });
+  updated_at: { type: Date, default: Date.now },
 
+  // New fields for settlement tracking
+  final_price: { type: Number },  // The price at which trade settled
+  profit_amount: { type: Number, default: 0 }  // The profit/loss amount calculated at settlement
+
+}, { timestamps: true });
 module.exports = mongoose.models.Trade || mongoose.model('Trade', tradeSchema);

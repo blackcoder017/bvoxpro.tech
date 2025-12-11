@@ -169,6 +169,58 @@
         <script>
             document.querySelector('.y-re').style.minHeight = window.innerHeight + 'px';
 
+            // formatter for send-record amounts:
+            // - If concatenated digits (int+frac) exceed 8 digits, take first 8 digits
+            //   and round up if any subsequent digit >=5 (scan remainder).
+            // - Otherwise show trimmed decimal up to 8 places (no trailing zeros).
+            // - Hide exact zero values.
+            function formatAmountSend(v) {
+                const n = Number(v) || 0;
+                if (Math.abs(n) < Number.EPSILON) return '';
+                const sign = n < 0 ? '-' : '';
+                const absVal = Math.abs(n);
+
+                // split integer and fraction parts reliably
+                const intPart = Math.floor(absVal);
+                // build fraction string up to 12 digits to capture precision
+                let frac = '';
+                if (absVal - intPart > 0) {
+                    // use toFixed to capture decimals without exponential
+                    frac = absVal.toFixed(12).split('.')[1] || '';
+                    // trim trailing zeros from the extended frac now (we'll use up to 8 later)
+                    frac = frac.replace(/0+$/,'');
+                }
+
+                const intStr = String(intPart);
+                const combined = intStr + frac;
+
+                if (combined.length > 8) {
+                    const first8 = combined.slice(0, 8);
+                    const rest = combined.slice(8);
+                    // round up if any subsequent digit >= 5
+                    const shouldRound = /[5-9]/.test(rest);
+                    let rounded = BigInt(first8);
+                    if (shouldRound) rounded = rounded + 1n;
+                    return sign + String(rounded);
+                }
+
+                // otherwise show trimmed decimals up to 8 places
+                if (frac && Number(frac) !== 0) {
+                    let s = absVal.toFixed(8).replace(/\.?(?:0+)$/,'');
+                    return sign + s;
+                }
+
+                return sign + intStr;
+            }
+
+            // coin icon helper
+            const coinIconMap = { btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', pyusd: 'pyusd.png', sol: 'sol.png' };
+            function getCoinIconFile(coin) {
+                if (!coin) return 'usdt.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || (key + '.png');
+            }
+
             $(document).ready(function() {
                 loadWithdrawalRecords();
 
@@ -222,13 +274,15 @@
                         minute: '2-digit'
                     });
 
-                    const status = record.status || 'pending';
                     const qtyVal = Number(record.quantity || record.amount || 0) || 0;
+                    const formatted = formatAmountSend(qtyVal);
+                    const color = qtyVal >= 0 ? '#4caf50' : '#f44336';
+
                     html += `
                         <div class="y-re-box">
                             <div class="y-re-box-left">
                                 <div class="y-re-box-icon">
-                                    <img src="/img/coin/${record.coin.toLowerCase()}.png" alt="${record.coin}">
+                                    <img src="./assets/img/${getCoinIconFile(record.coin)}" alt="${record.coin}">
                                 </div>
                                 <div class="y-re-box-content">
                                     <div class="y-re-box-title">Withdrawal</div>
@@ -237,8 +291,7 @@
                                 </div>
                             </div>
                             <div class="y-re-box-amount">
-                                <div class="y-re-box-status-badge ${status}">${status}</div>
-                                <div class="y-re-box-amount-value">-${qtyVal.toFixed(2)}</div>
+                                <div class="y-re-box-amount-value" style="font-weight:700;color:${color};font-size:1rem">${formatted}</div>
                             </div>
                         </div>
                     `;

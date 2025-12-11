@@ -97,12 +97,20 @@
             });
 
 
+            // coin icon helper
+            const coinIconMap = { btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', pyusd: 'pyusd.png', sol: 'sol.png' };
+            function getCoinIconFile(coin) {
+                if (!coin) return 'eth.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || (key + '.png');
+            }
+
             function renderRecords(records) {
                 records.forEach(data => {
-                    const notificationHTML = `
+                        const notificationHTML = `
                         <div class="y-re-box" data-orderid="${data.orderId}">
                             <div class="y-re-bl">
-                                <img src="/img/coin/eth.png" alt="Notification">
+                                <img src="./assets/img/${getCoinIconFile(data.coin || 'eth')}" alt="Notification">
                                 <div class="y-re-blr">
                                     <span>Staked amount ${data.amount}</span>
                                     <div class="y-re-bim y-bim2">

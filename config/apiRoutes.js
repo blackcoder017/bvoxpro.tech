@@ -2008,6 +2008,7 @@ router.post('/api/arbitrage/subscribe', async (req, res) => {
         });
         
         const savedSubscription = await subscription.save();
+        console.log(`[arbitrage-subscribe] ✓ Created subscription ${savedSubscription.id} for user ${user_id}, amount: ${investAmount}`);
         
         // Deduct USDT from user balance - find user by any of the ID fields
         const userDoc = await User.findOne({ $or: [
@@ -2021,6 +2022,9 @@ router.post('/api/arbitrage/subscribe', async (req, res) => {
             userDoc.balances = userDoc.balances || {};
             userDoc.balances.usdt = newUsdt;
             await userDoc.save();
+            console.log(`[arbitrage-subscribe] ✓ Deducted ${investAmount} USDT from user ${user_id}. New balance: ${newUsdt}`);
+        } else {
+            console.error(`[arbitrage-subscribe] ⚠ Could not find user ${user_id} to deduct balance`);
         }
         
         // Log as topup record (negative amount for audit trail)
@@ -2317,6 +2321,273 @@ router.post(['/api/Wallet/upload_image', '/api/wallet/upload_image'], (req, res)
     } catch (e) {
         console.error('[api][Wallet/upload_image] outer error:', e && e.message);
         return res.status(500).json({ code: 0, data: 'Server error' });
+    }
+});
+
+// ============= TRADING ENDPOINTS =============
+
+// POST /api/trade/buy - Create a new trade order
+router.post('/api/trade/buy', async (req, res) => {
+    try {
+        const { userid, username, fangxiang, miaoshu, biming, num, buyprice, syl, zengjia, jianshao } = req.body;
+
+        if (!userid || !username || !biming || !num || !buyprice) {
+            return res.status(400).json({ code: 0, data: 'Missing required fields' });
+        }
+
+        // Check if user has sufficient balance
+        const User = require('../models/User');
+        const user = await User.findOne({
+            $or: [
+                { userid: String(userid) },
+                { uid: String(userid) },
+                { wallet_address: String(userid).toLowerCase() }
+            ]
+        });
+
+        if (!user) {
+            return res.status(400).json({ code: 0, data: 'User not found' });
+        }
+
+        const stake = parseFloat(num) || 0;
+        let currentBalance = 0;
+
+        // Determine USDT balance
+        if (user.balances && typeof user.balances.usdt !== 'undefined') {
+            currentBalance = parseFloat(user.balances.usdt) || 0;
+        } else if (user.balance !== undefined) {
+            currentBalance = parseFloat(user.balance) || 0;
+        }
+
+        if (currentBalance < stake) {
+            return res.status(400).json({ code: 0, data: 'Insufficient balance' });
+        }
+
+        // Create trade record
+        const Trade = require('../models/Trade');
+        const tradeRecord = new Trade({
+            id: Date.now().toString(),
+            userid: String(userid),
+            username,
+            biming: String(biming).toLowerCase(),
+            fangxiang: String(fangxiang),
+            miaoshu: Number(miaoshu),
+            num: stake,
+            buyprice: parseFloat(buyprice),
+            syl: parseFloat(syl) || 40,
+            zengjia: parseFloat(zengjia),
+            jianshao: parseFloat(jianshao),
+            status: 'pending',
+            forcedOutcome: null,
+            settlement_applied: false
+        });
+
+        await tradeRecord.save();
+
+        // Update user's total_invested
+        user.total_invested = Number((parseFloat(user.total_invested || 0) + stake).toFixed(2));
+        await user.save();
+
+        console.log('[trade/buy] ✓ Trade created:', tradeRecord.id, 'for user', userid);
+        return res.json({ code: 1, data: tradeRecord.id });
+    } catch (e) {
+        console.error('[trade/buy] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
+    }
+});
+
+// POST /api/trade/getorder - Get trade order status (for client win/loss determination)
+router.post('/api/trade/getorder', async (req, res) => {
+    try {
+        const orderId = req.body.id;
+        if (!orderId) return res.status(400).json({ code: 0, data: 'Missing order id' });
+
+        const Trade = require('../models/Trade');
+        const trade = await Trade.findOne({
+            $or: [{ id: orderId }, { _id: orderId }]
+        });
+
+        let orderStatus = 0; // Default: unspecified
+
+        if (trade) {
+            // PRIORITY 1: If forced outcome exists, use it
+            if (trade.forcedOutcome) {
+                orderStatus = String(trade.forcedOutcome) === 'win' ? 1 : 2;
+                console.log('[trade/getorder] Forced outcome:', orderStatus, 'for trade', orderId);
+            }
+            // PRIORITY 2: If already settled, return settlement status
+            else if (trade.status === 'win') {
+                orderStatus = 1;
+            } else if (trade.status === 'loss') {
+                orderStatus = 2;
+            }
+            // PRIORITY 3: If pending and time expired, return 0 to indicate server will settle
+            else if (trade.status === 'pending') {
+                const createdTs = new Date(trade.created_at).getTime();
+                const elapsedSec = Math.floor((Date.now() - createdTs) / 1000);
+                const duration = Number(trade.miaoshu) || 0;
+                if (duration > 0 && elapsedSec >= duration) {
+                    orderStatus = 0; // Server will settle via getorderjs
+                } else {
+                    orderStatus = 0; // Still pending
+                }
+            }
+        }
+
+        console.log('[trade/getorder] Returning status=' + orderStatus + ' for orderId=' + orderId);
+        return res.json({ code: 1, data: orderStatus });
+    } catch (e) {
+        console.error('[trade/getorder] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
+    }
+});
+
+// POST /api/trade/setordersy - Apply trade settlement (win/loss to balance)
+router.post('/api/trade/setordersy', async (req, res) => {
+    try {
+        const orderId = req.body.id;
+        const shuying = req.body.shuying; // 1 = win, 2 = loss
+
+        if (!orderId) return res.status(400).json({ code: 0, data: 'Missing order id' });
+
+        const Trade = require('../models/Trade');
+        const trade = await Trade.findOne({
+            $or: [{ id: orderId }, { _id: orderId }]
+        });
+
+        if (!trade) {
+            return res.status(404).json({ code: 0, data: 'Trade not found' });
+        }
+
+        // If trade has forcedOutcome, use that instead
+        let finalStatus = shuying === 1 ? 'win' : 'loss';
+        if (trade.forcedOutcome) {
+            finalStatus = String(trade.forcedOutcome) === 'win' ? 'win' : 'loss';
+            console.log('[trade/setordersy] Overriding with forcedOutcome:', finalStatus, 'for trade', orderId);
+        }
+
+        // Prevent double-application
+        if (!trade.settlement_applied) {
+            trade.status = finalStatus;
+            trade.settlement_applied = true;
+
+            // Apply balance changes
+            const User = require('../models/User');
+            const user = await User.findOne({
+                $or: [
+                    { userid: String(trade.userid) },
+                    { uid: String(trade.userid) },
+                    { wallet_address: String(trade.userid).toLowerCase() }
+                ]
+            });
+
+            if (user) {
+                const invested = parseFloat(trade.num) || 0;
+                const profitRatio = parseFloat(trade.syl) || 40;
+
+                if (finalStatus === 'win') {
+                    // On WIN: Add only the profit amount
+                    const profit = Number((invested * (profitRatio / 100)).toFixed(2));
+                    if (user.balances && typeof user.balances.usdt !== 'undefined') {
+                        user.balances.usdt = Number((parseFloat(user.balances.usdt) + profit).toFixed(2));
+                    } else {
+                        user.balance = Number((parseFloat(user.balance || 0) + profit).toFixed(2));
+                    }
+                    user.total_income = Number(((parseFloat(user.total_income) || 0) + profit).toFixed(2));
+                    trade.profit_loss = profit;
+                    console.log('[trade/setordersy] WIN settlement: +' + profit + ' profit for user', trade.userid);
+                } else {
+                    // On LOSS: Deduct the full stake
+                    if (user.balances && typeof user.balances.usdt !== 'undefined') {
+                        user.balances.usdt = Number((parseFloat(user.balances.usdt) - invested).toFixed(2));
+                    } else {
+                        user.balance = Number((parseFloat(user.balance || 0) - invested).toFixed(2));
+                    }
+                    trade.profit_loss = -invested;
+                    console.log('[trade/setordersy] LOSS settlement: -' + invested + ' stake deducted for user', trade.userid);
+                }
+
+                await user.save();
+            }
+
+            trade.updated_at = new Date();
+            await trade.save();
+        } else {
+            trade.status = finalStatus;
+            trade.updated_at = new Date();
+            await trade.save();
+        }
+
+        return res.json({ code: 1, data: 'Order updated' });
+    } catch (e) {
+        console.error('[trade/setordersy] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
+    }
+});
+
+// POST /api/trade/getorderjs - Get trade profit/loss after settlement
+router.post('/api/trade/getorderjs', async (req, res) => {
+    try {
+        const orderId = req.body.id;
+        if (!orderId) return res.status(400).json({ code: 0, data: 'Missing order id' });
+
+        const Trade = require('../models/Trade');
+        const trade = await Trade.findOne({
+            $or: [{ id: orderId }, { _id: orderId }]
+        });
+
+        let jine = 0; // Return amount
+
+        if (trade && trade.settlement_applied) {
+            if (trade.status === 'win') {
+                const invested = parseFloat(trade.num) || 0;
+                const profitRatio = parseFloat(trade.syl) || 40;
+                jine = Number((invested * (profitRatio / 100)).toFixed(2));
+            } else if (trade.status === 'loss') {
+                jine = 0; // Loss means no payout
+            }
+        }
+
+        return res.json({ code: 1, data: jine });
+    } catch (e) {
+        console.error('[trade/getorderjs] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
+    }
+});
+
+// GET /api/trade/records/:userid - Get user's trade records
+router.get('/api/trade/records/:userid', async (req, res) => {
+    try {
+        const userid = req.params.userid;
+        const Trade = require('../models/Trade');
+        
+        const trades = await Trade.find({
+            userid: String(userid)
+        }).sort({ created_at: -1 });
+
+        const formatted = trades.map(t => ({
+            id: t.id || t._id,
+            userid: t.userid,
+            username: t.username,
+            biming: t.biming,
+            fangxiang: t.fangxiang,
+            miaoshu: t.miaoshu,
+            num: t.num,
+            buyprice: t.buyprice,
+            syl: t.syl,
+            zengjia: t.zengjia,
+            jianshao: t.jianshao,
+            status: t.status,
+            settlement_applied: t.settlement_applied,
+            settled_price: t.settled_price,
+            created_at: t.created_at,
+            updated_at: t.updated_at
+        }));
+
+        return res.json({ code: 1, data: formatted });
+    } catch (e) {
+        console.error('[trade/records] error:', e.message);
+        return res.status(500).json({ code: 0, data: e.message });
     }
 });
 

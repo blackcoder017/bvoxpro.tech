@@ -161,6 +161,14 @@
                 });
             }
 
+            // coin icon helper: maps various coin keys to filenames
+            const coinIconMap = { btc: 'btc.png', eth: 'eth.png', usdt: 'usdt.png', usdc: 'usdc.png', pyusd: 'pyusd.png', sol: 'sol.png' };
+            function getCoinIconFile(coin) {
+                if (!coin) return 'usdt.png';
+                const key = coin.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                return coinIconMap[key] || (key + '.png');
+            }
+
             function displayRecords(records) {
                 let html = '';
                 records.forEach(function(record) {
@@ -172,11 +180,35 @@
                         minute: '2-digit'
                     });
 
+                    // format to 8 significant digits (rounding), trim trailing zeros, hide exact zero
+                    function formatSig8(v) {
+                        const n = Number(v) || 0;
+                        if (Math.abs(n) < Number.EPSILON) return '';
+                        const sign = n < 0 ? '-' : '';
+                        const absVal = Math.abs(n);
+                        const intPart = Math.floor(absVal);
+                        const intStr = String(intPart);
+
+                        if (intStr.length >= 8) {
+                            // keep first 8 integer digits and round based on remainder
+                            const len = intStr.length;
+                            const divisor = Math.pow(10, len - 8);
+                            const rounded = Math.round(intPart / divisor);
+                            return sign + String(rounded);
+                        }
+
+                        const decimals = 8 - intStr.length;
+                        let s = absVal.toFixed(decimals);
+                        // trim trailing zeros and optional dot
+                        s = s.replace(/\.?(?:0+)$/,'');
+                        return sign + s;
+                    }
+
                     html += `
                         <div class="y-re-box">
                             <div class="y-re-box-left">
                                 <div class="y-re-box-icon">
-                                    <img src="./assets/img/${record.from_coin.toLowerCase()}.png" alt="${record.from_coin}">
+                                    <img src="./assets/img/${getCoinIconFile(record.from_coin)}" alt="${record.from_coin}">
                                 </div>
                                 <div class="y-re-box-content">
                                     <div class="y-re-box-title">Exchange</div>
@@ -185,7 +217,7 @@
                                 </div>
                             </div>
                             <div class="y-re-box-amount">
-                                <div class="y-re-box-amount-value">${record.from_amount.toFixed(xsw[record.from_coin.toLowerCase()])} ? ${record.to_amount.toFixed(xsw[record.to_coin.toLowerCase()])}</div>
+                                <div class="y-re-box-amount-value">${formatSig8(record.from_amount)} ? ${formatSig8(record.to_amount)}</div>
                             </div>
                         </div>
                     `;
