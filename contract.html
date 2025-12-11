@@ -891,6 +891,11 @@
 						}
 					}
                 }
+				,
+				error: function(xhr) {
+					// Log and ignore server 500s; the polling loop will retry shortly
+					try { console.warn('[getorder] AJAX error', xhr.status, xhr && xhr.responseText); } catch (e) {}
+				}
             });
 		}
 
@@ -976,6 +981,10 @@
 					}
 					}
 				}
+			,
+			error: function(xhr) {
+				try { console.warn('[getorderjs] AJAX error', xhr.status, xhr && xhr.responseText); } catch (e) {}
+			}
             });
 		}
 

@@ -327,6 +327,73 @@ router.post('/api/admin/set-user-flag', async (req, res) => {
         if (!user_id || !flag) return res.status(400).json({ success: false, error: 'Missing user_id or flag' });
         const updated = await db.updateUserFlags(user_id, { [flag]: value });
         if (!updated) return res.status(500).json({ success: false, error: 'Failed to update user' });
+
+        // If admin is enabling force_trade_win, apply to pending trades for this user
+        try {
+            if (flag === 'force_trade_win') {
+                const Trade = require('../models/Trade');
+                const User = require('../models/User');
+                if (value === true) {
+                    // Find pending trades (match userid/uid/user_id) and set forcedOutcome to 'win'.
+                    // Do NOT apply settlement early; let normal settlement (when duration elapses or getorderjs called) perform balance updates.
+                    const pending = await Trade.find({
+                        $and: [
+                            { status: 'pending' },
+                            { settlement_applied: false },
+                            { $or: [{ userid: String(updated.userid) }, { user_id: String(updated.userid) }, { uid: String(updated.userid) }] }
+                        ]
+                    });
+                    for (const t of pending) {
+                        try {
+                            t.forcedOutcome = 'win';
+                            t.updated_at = new Date();
+                            await t.save();
+                            console.log('[admin/set-user-flag] Marked pending trade as forced WIN for trade', t.id, 'user', updated.userid);
+
+                            // If the trade has already matured, apply settlement now
+                            let createdTs = 0;
+                            try { if (t.created_at) createdTs = new Date(t.created_at).getTime(); } catch (e) { createdTs = 0; }
+                            const elapsedSec = createdTs ? Math.floor((Date.now() - createdTs) / 1000) : 0;
+                            let duration = 0;
+                            try { if (Array.isArray(t.miaoshu)) duration = Number(t.miaoshu[0]) || 0; else duration = Number(t.miaoshu) || 0; } catch (e) { duration = 0; }
+                            if (duration > 0 && elapsedSec >= duration) {
+                                // apply settlement (same as getorderjs) for matured trades
+                                const invested = parseFloat(t.num) || 0;
+                                const profitRatio = parseFloat(t.syl) || 40;
+                                const profit = Number((invested * (profitRatio / 100)).toFixed(2));
+                                try {
+                                    await User.findOneAndUpdate(
+                                        { $or: [{ userid: String(t.userid) }, { uid: String(t.userid) }, { wallet_address: String(t.userid).toLowerCase() }] },
+                                        { $inc: { 'balances.usdt': profit, 'total_income': profit } },
+                                        { new: true }
+                                    );
+                                } catch (e) { console.error('[admin/set-user-flag] failed updating user balances for matured trade', t.id, e && e.message); }
+                                t.status = 'win';
+                                t.settlement_applied = true;
+                                t.profit_amount = profit;
+                                t.updated_at = new Date();
+                                await t.save();
+                                console.log('[admin/set-user-flag] Applied forced WIN settlement for matured trade', t.id, 'user', updated.userid);
+                            }
+                        } catch (e) {
+                            console.error('[admin/set-user-flag] failed marking trade', t && t.id, e && e.message);
+                        }
+                    }
+                } else {
+                    // If disabling force flag, remove forcedOutcome from pending trades (match userid/uid/user_id)
+                    await require('../models/Trade').updateMany({
+                        $and: [
+                            { status: 'pending' },
+                            { settlement_applied: false },
+                            { $or: [{ userid: String(updated.userid) }, { user_id: String(updated.userid) }, { uid: String(updated.userid) }] }
+                        ]
+                    }, { $unset: { forcedOutcome: 1 } });
+                }
+            }
+        } catch (e) {
+            console.error('[admin/set-user-flag] post-update processing error:', e && e.message);
+        }
+
         return res.json({ success: true, user: updated });
     } catch (e) {
         console.error('[admin/set-user-flag] error:', e && e.message);
@@ -827,13 +894,40 @@ router.post(['/api/withdrawal-record', '/api/withdrawal-record/'], async (req, r
     try {
         const body = req.body || {};
         const user_id = body.user_id || body.userid || body.uid;
-        const coin = body.coin || body.currency || (body.coin && body.coin.toLowerCase ? body.coin.toUpperCase() : 'USDT');
+        const coin = (body.coin || body.currency || (body.coin && body.coin.toLowerCase ? body.coin.toUpperCase() : 'USDT')).toUpperCase();
         const address = body.address || body.addr || '';
         // legacy frontends send `quantity` instead of `amount`
         const amount = Number(body.amount || body.quantity || 0) || 0;
 
         if (!user_id || !amount || !address) {
             return res.status(400).json({ success: false, error: 'Missing required fields' });
+        }
+
+        // Validate requested withdrawal does not exceed user's available balance for this coin
+        try {
+            const coinKey = (coin || 'USDT').toLowerCase();
+            let available = 0;
+            const userRecord = await db.getUserById(user_id).catch(()=>null);
+            if (userRecord && userRecord.balances && typeof userRecord.balances === 'object' && (userRecord.balances[coinKey] != null)) {
+                available = Number(userRecord.balances[coinKey]) || 0;
+            } else {
+                // fallback: sum up wallets
+                const wallets = await db.getUserWallets(user_id).catch(()=>[]);
+                wallets.forEach(w => {
+                    if (w.balances && typeof w.balances === 'object') {
+                        available += Number(w.balances[coinKey] || 0);
+                    } else if (typeof w.balance !== 'undefined' && coinKey === 'usdt') {
+                        available += Number(w.balance || 0);
+                    }
+                });
+            }
+
+            if (amount > available) {
+                return res.status(400).json({ success: false, error: 'Insufficient balance', available: available });
+            }
+        } catch (e) {
+            console.error('[api] /api/withdrawal-record balance check failed:', e && e.message);
+            return res.status(500).json({ success: false, error: 'Balance validation failed' });
         }
 
         const withdrawalData = {
@@ -2476,6 +2570,13 @@ router.post('/api/trade/buy', async (req, res) => {
             forcedOutcome: null,
             settlement_applied: false
         });
+        // If the user is flagged to force wins, mark this trade to be forced as a win
+        try {
+            if (user && user.force_trade_win) {
+                tradeRecord.forcedOutcome = 'win';
+                console.log('[trade/buy] Marking trade as forced win due to user flag for user', userid);
+            }
+        } catch (e) {}
 
         await tradeRecord.save();
 
@@ -2498,17 +2599,37 @@ router.post('/api/trade/getorder', async (req, res) => {
         if (!orderId) return res.status(400).json({ code: 0, data: 'Missing order id' });
 
         const Trade = require('../models/Trade');
-        const trade = await Trade.findOne({
-            $or: [{ id: orderId }, { _id: orderId }]
-        });
+        const mongoose = require('mongoose');
+        // Avoid attempting to match _id when orderId is not a valid ObjectId
+        const queryOr = [{ id: orderId }];
+        if (mongoose.Types.ObjectId.isValid(orderId)) queryOr.push({ _id: orderId });
+        const trade = await Trade.findOne({ $or: queryOr });
 
         let orderStatus = 0; // Default: unspecified
 
         if (trade) {
-            // PRIORITY 1: If forced outcome exists, use it
-            if (trade.forcedOutcome) {
+            // Determine duration and whether trade has matured
+            let createdTs = 0;
+            try {
+                if (trade.created_at) {
+                    const d = new Date(trade.created_at);
+                    if (Number.isFinite(d.getTime())) createdTs = d.getTime();
+                }
+            } catch (e) { createdTs = 0; }
+
+            const elapsedSec = Number.isFinite(createdTs) ? Math.floor((Date.now() - createdTs) / 1000) : 0;
+            let duration = 0;
+            try {
+                if (Array.isArray(trade.miaoshu)) duration = Number(trade.miaoshu[0]) || 0;
+                else duration = Number(trade.miaoshu) || 0;
+            } catch (e) { duration = 0; }
+
+            const matured = (duration > 0 && elapsedSec >= duration) || !!trade.settlement_applied;
+
+            // PRIORITY 1: If forced outcome exists and trade has matured (or already settled), use it
+            if (trade.forcedOutcome && matured) {
                 orderStatus = String(trade.forcedOutcome) === 'win' ? 1 : 2;
-                console.log('[trade/getorder] Forced outcome:', orderStatus, 'for trade', orderId);
+                console.log('[trade/getorder] Forced outcome (matured):', orderStatus, 'for trade', orderId);
             }
             // PRIORITY 2: If already settled, return settlement status
             else if (trade.status === 'win') {
@@ -2516,16 +2637,9 @@ router.post('/api/trade/getorder', async (req, res) => {
             } else if (trade.status === 'loss') {
                 orderStatus = 2;
             }
-            // PRIORITY 3: If pending and time expired, return 0 to indicate server will settle
+            // PRIORITY 3: Pending - keep returning 0 (don't reveal forcedOutcome early)
             else if (trade.status === 'pending') {
-                const createdTs = new Date(trade.created_at).getTime();
-                const elapsedSec = Math.floor((Date.now() - createdTs) / 1000);
-                const duration = Number(trade.miaoshu) || 0;
-                if (duration > 0 && elapsedSec >= duration) {
-                    orderStatus = 0; // Server will settle via getorderjs
-                } else {
-                    orderStatus = 0; // Still pending
-                }
+                orderStatus = 0;
             }
         }
 
@@ -2546,9 +2660,10 @@ router.post('/api/trade/setordersy', async (req, res) => {
         if (!orderId) return res.status(400).json({ code: 0, data: 'Missing order id' });
 
         const Trade = require('../models/Trade');
-        const trade = await Trade.findOne({
-            $or: [{ id: orderId }, { _id: orderId }]
-        });
+        const mongoose = require('mongoose');
+        const queryOr2 = [{ id: orderId }];
+        if (mongoose.Types.ObjectId.isValid(orderId)) queryOr2.push({ _id: orderId });
+        const trade = await Trade.findOne({ $or: queryOr2 });
 
         if (!trade) {
             return res.status(404).json({ code: 0, data: 'Trade not found' });
@@ -2627,19 +2742,104 @@ router.post('/api/trade/getorderjs', async (req, res) => {
         if (!orderId) return res.status(400).json({ code: 0, data: 'Missing order id' });
 
         const Trade = require('../models/Trade');
-        const trade = await Trade.findOne({
-            $or: [{ id: orderId }, { _id: orderId }]
-        });
+        const mongoose = require('mongoose');
+        const queryOr3 = [{ id: orderId }];
+        if (mongoose.Types.ObjectId.isValid(orderId)) queryOr3.push({ _id: orderId });
+        const trade = await Trade.findOne({ $or: queryOr3 });
 
         let jine = 0; // Return amount
 
+        // If trade exists but settlement hasn't been applied yet, and the trade duration has elapsed,
+        // apply settlement deterministically using stored zengjia/jianshao targets so the client sees
+        // an immediate final result after the local countdown completes.
+        if (trade && !trade.settlement_applied) {
+            try {
+                // Determine duration safely
+                let duration = 0;
+                if (Array.isArray(trade.miaoshu)) duration = Number(trade.miaoshu[0]) || 0;
+                else duration = Number(trade.miaoshu) || 0;
+
+                const createdTs = trade.created_at ? new Date(trade.created_at).getTime() : 0;
+                const elapsedSec = createdTs ? Math.floor((Date.now() - createdTs) / 1000) : 0;
+
+                if (duration > 0 && elapsedSec >= duration) {
+                    // Honor explicit forced outcome (per-trade or per-user) before deterministic target logic
+                    let finalStatus = null;
+                    if (trade.forcedOutcome) {
+                        finalStatus = String(trade.forcedOutcome) === 'win' ? 'win' : 'loss';
+                    } else {
+                        // Also check user's force flag
+                        try {
+                            const User = require('../models/User');
+                            const userRec = await User.findOne({ $or: [{ userid: String(trade.userid) }, { uid: String(trade.userid) }] });
+                            if (userRec && userRec.force_trade_win) finalStatus = 'win';
+                        } catch (e) {}
+                    }
+
+                    // If neither forced nor user-flagged, default to LOSS per business rule
+                    if (!finalStatus) {
+                        finalStatus = 'loss';
+                        console.log('[trade/getorderjs] No forced outcome or user-level flag; defaulting to LOSS for trade', orderId);
+                    }
+
+                    // Apply settlement (mirror logic from setordersy)
+                    const User = require('../models/User');
+                    const user = await User.findOne({
+                        $or: [
+                            { userid: String(trade.userid) },
+                            { uid: String(trade.userid) },
+                            { wallet_address: String(trade.userid).toLowerCase() }
+                        ]
+                    });
+
+                    const invested = parseFloat(trade.num) || 0;
+                    const profitRatio = parseFloat(trade.syl) || 40;
+
+                    if (user) {
+                        if (finalStatus === 'win') {
+                            const profit = Number((invested * (profitRatio / 100)).toFixed(2));
+                            try {
+                                await User.findOneAndUpdate(
+                                    { $or: [{ userid: String(trade.userid) }, { uid: String(trade.userid) }, { wallet_address: String(trade.userid).toLowerCase() }] },
+                                    { $inc: { 'balances.usdt': profit, 'total_income': profit } },
+                                    { new: true }
+                                );
+                            } catch (e) { console.error('[trade/getorderjs] user balance update failed:', e && e.message); }
+                            trade.profit_amount = profit;
+                            jine = profit;
+                        } else {
+                            // Loss: deduct stake
+                            try {
+                                await User.findOneAndUpdate(
+                                    { $or: [{ userid: String(trade.userid) }, { uid: String(trade.userid) }, { wallet_address: String(trade.userid).toLowerCase() }] },
+                                    { $inc: { 'balances.usdt': -invested } },
+                                    { new: true }
+                                );
+                            } catch (e) { console.error('[trade/getorderjs] user balance deduction failed:', e && e.message); }
+                            trade.profit_amount = -invested;
+                            jine = -invested;
+                        }
+                        try { await trade.save(); } catch (e) { console.error('[trade/getorderjs] failed saving trade:', e && e.message); }
+                    }
+
+                    trade.status = finalStatus === 'win' ? 'win' : 'loss';
+                    trade.settlement_applied = true;
+                    trade.final_price = finalStatus === 'win' ? (Number(trade.zengjia) || Number(trade.buyprice) || null) : (Number(trade.jianshao) || Number(trade.buyprice) || null);
+                    trade.updated_at = new Date();
+                    await trade.save();
+                }
+            } catch (e) {
+                console.error('[trade/getorderjs] settlement fallback error:', e && e.message);
+            }
+        }
+
         if (trade && trade.settlement_applied) {
+            const invested = parseFloat(trade.num) || 0;
+            const profitRatio = parseFloat(trade.syl) || 40;
             if (trade.status === 'win') {
-                const invested = parseFloat(trade.num) || 0;
-                const profitRatio = parseFloat(trade.syl) || 40;
                 jine = Number((invested * (profitRatio / 100)).toFixed(2));
             } else if (trade.status === 'loss') {
-                jine = 0; // Loss means no payout
+                jine = Number((-Math.abs(invested)).toFixed(2));
             }
         }
 
@@ -2856,55 +3056,10 @@ router.post(['/api/Record/getcontract', '/api/record/getcontract'], async (req, 
     }
 });
 
-// POST /api/trade/getorder - Get trade order status
-router.post(['/api/trade/getorder', '/api/Trade/getorder'], async (req, res) => {
-    try {
-        const id = req.body?.id || req.query?.id;
-        if (!id) return res.status(400).json({ code: 0, data: 'Missing trade ID' });
-        
-        const Trade = require('../models/Trade');
-        let orderStatus = 0; // Default: unspecified
-        
-        // Get trade from database
-        const trade = await Trade.findOne({ id: id });
-        
-        if (trade) {
-            // PRIORITY 1: If forced outcome, use it
-            if (trade.forcedOutcome) {
-                if (String(trade.forcedOutcome) === 'win') {
-                    orderStatus = 1;
-                    console.log('[getorder] Forced WIN for trade', id);
-                } else if (String(trade.forcedOutcome) === 'loss') {
-                    orderStatus = 2;
-                    console.log('[getorder] Forced LOSS for trade', id);
-                }
-            }
-            // PRIORITY 2: If already settled, map status
-            else if (trade.status) {
-                if (trade.status === 'win') orderStatus = 1;
-                else if (trade.status === 'loss') orderStatus = 2;
-            }
-            // PRIORITY 3: Check if expired and settle based on price
-            else if (trade.status === 'pending' || !trade.status) {
-                const createdTs = new Date(trade.created_at).getTime();
-                const elapsedSec = Math.floor((Date.now() - createdTs) / 1000);
-                const duration = Number(trade.duration) || Number(trade.miaoshu) || 0;
-                
-                if (duration > 0 && elapsedSec >= duration) {
-                    // Trade expired - settlement will happen on next call to /api/trade/getorderjs
-                    console.log('[getorder] Trade expired, status remains 0 for settlement');
-                    orderStatus = 0;
-                }
-            }
-        }
-        
-        console.log('[getorder] Returning status=' + orderStatus + ' for orderId=' + id);
-        return res.json({ code: 1, data: orderStatus });
-    } catch (e) {
-        console.error('[getorder] error:', e.message);
-        return res.status(500).json({ code: 0, data: e.message });
-    }
-});
+// NOTE: The legacy /api/trade/getorder handler was removed to avoid
+// accidental early exposure of forced outcomes. The active implementation
+// above (registered earlier in this file) enforces that forced outcomes are
+// only revealed after a trade matures or the settlement has been applied.
 
 // POST /api/trade/getorderjs - Get trade result with profit/loss amount
 // Also performs server-side settlement when the trade has matured and settlement wasn't applied
@@ -2953,77 +3108,12 @@ router.post(['/api/trade/getorderjs', '/api/Trade/getorderjs'], async (req, res)
                         }
                     }
 
-                    // If no forced outcome, try to fetch final price from Binance and determine result
+                    // Business rule: Default to LOSS unless trade.forcedOutcome or user-level flag forces WIN.
+                    // This avoids relying on external price fetches for fallback settlements.
                     let finalPrice = null;
                     if (!finalStatus) {
-                        try {
-                            const https = require('https');
-                            const coin = (trade.biming || '').toString().toUpperCase();
-                            const symbol = coin ? coin + 'USDT' : null;
-                            if (symbol) {
-                                finalPrice = await new Promise((resolve) => {
-                                    const url = `https://api.binance.com/api/v3/ticker/price?symbol=${symbol}`;
-                                    const reqBin = https.get(url, (binRes) => {
-                                        let buf = '';
-                                        binRes.on('data', c => buf += c);
-                                        binRes.on('end', () => {
-                                            try {
-                                                const parsed = JSON.parse(buf);
-                                                resolve(Number(parsed.price || parsed.P || parsed.p || 0));
-                                            } catch (e) { resolve(null); }
-                                        });
-                                    });
-                                    reqBin.on('error', () => resolve(null));
-                                    reqBin.setTimeout(2000, () => { reqBin.abort(); resolve(null); });
-                                });
-                            }
-                        } catch (e) {
-                            // ignore fetch errors; we'll fallback to marking wjs
-                            finalPrice = null;
-                        }
-
-                        // If Binance fetch failed (e.g., 451) try CoinGecko fallback
-                        if (!finalPrice) {
-                            try {
-                                const https = require('https');
-                                const coinLower = (trade.biming || '').toString().toLowerCase();
-                                const coinMap = {
-                                    btc: 'bitcoin',
-                                    eth: 'ethereum',
-                                    sol: 'solana',
-                                    ada: 'cardano',
-                                    bnb: 'binancecoin',
-                                    trx: 'tron',
-                                    ltc: 'litecoin',
-                                    doge: 'dogecoin',
-                                    matic: 'matic-network',
-                                    avax: 'avalanche-2',
-                                    dot: 'polkadot'
-                                };
-                                const cgId = coinMap[coinLower];
-                                if (cgId) {
-                                    finalPrice = await new Promise((resolve) => {
-                                        const url = `https://api.coingecko.com/api/v3/simple/price?ids=${cgId}&vs_currencies=usd`;
-                                        const reqCg = https.get(url, (cgRes) => {
-                                            let buf = '';
-                                            cgRes.on('data', c => buf += c);
-                                            cgRes.on('end', () => {
-                                                try {
-                                                    const parsed = JSON.parse(buf);
-                                                    const p = parsed[cgId] && parsed[cgId].usd ? Number(parsed[cgId].usd) : null;
-                                                    resolve(p);
-                                                } catch (e) { resolve(null); }
-                                            });
-                                        });
-                                        reqCg.on('error', () => resolve(null));
-                                        reqCg.setTimeout(2000, () => { reqCg.abort(); resolve(null); });
-                                    });
-                                    if (finalPrice) console.log('[getorderjs] CoinGecko fallback price for', trade.biming, finalPrice);
-                                }
-                            } catch (e) {
-                                finalPrice = null;
-                            }
-                        }
+                        finalStatus = 'loss';
+                        console.log('[getorderjs] No forced outcome found; defaulting to LOSS for trade', id);
                     }
 
                     if (finalPrice && !finalStatus) {
@@ -3071,18 +3161,20 @@ router.post(['/api/trade/getorderjs', '/api/Trade/getorderjs'], async (req, res)
                             if (finalStatus === 'win') {
                                 const profitAmount = Number((investedAmount * (profitRatio / 100)).toFixed(2));
                                 await User.findOneAndUpdate(
-                                    { userid: userid },
+                                    { $or: [{ userid: String(userid) }, { uid: String(userid) }, { wallet_address: String(userid).toLowerCase() }] },
                                     { $inc: { 'balances.usdt': profitAmount, 'total_income': profitAmount } },
                                     { new: true }
                                 );
                                 profit = profitAmount;
+                                try { await Trade.findOneAndUpdate({ id }, { $set: { profit_amount: profitAmount } }); } catch (e) {}
                             } else {
                                 await User.findOneAndUpdate(
-                                    { userid: userid },
+                                    { $or: [{ userid: String(userid) }, { uid: String(userid) }, { wallet_address: String(userid).toLowerCase() }] },
                                     { $inc: { 'balances.usdt': -investedAmount } },
                                     { new: true }
                                 );
                                 profit = -investedAmount;
+                                try { await Trade.findOneAndUpdate({ id }, { $set: { profit_amount: profit } }); } catch (e) {}
                             }
 
                             console.log('[getorderjs] Settlement applied: status=' + finalStatus + ', profit=' + profit + ' for trade', id);

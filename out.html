@@ -127,15 +127,15 @@
             });
 
             $('#y-out-shuliang').on('input', function() {
-                var outshu = $('#y-out-shuliang').val();
-                var yues = $('#y-out-ye').text();
-                // if(outshu > yues){
-                //     $('#y-out-shuliang').val(yues);
-                //     outshu = yues;
-                // }
-                //???1???
-                var sxf = (outshu*0.01).toFixed(xsw[biming]);
-                $('#y-out-wlsx').text(Number(sxf).toFixed(xsw[biming]))
+                var outshu = parseFloat($('#y-out-shuliang').val()) || 0;
+                var yues = parseFloat($('#y-out-ye').text()) || 0;
+                // Cap the input to available balance for better UX
+                if (outshu > yues) {
+                    outshu = yues;
+                    $('#y-out-shuliang').val(outshu.toFixed(xsw[biming]));
+                }
+                var sxf = (outshu * 0.01);
+                $('#y-out-wlsx').text(Number(sxf).toFixed(xsw[biming]));
                 $('#y-out-sj').text((Number(outshu) - Number(sxf)).toFixed(xsw[biming]));
             });
 
@@ -163,6 +163,13 @@
                     address: dizhi,
                     quantity: parseFloat(shuliang)
                 };
+
+                // Extra client-side validation: ensure amount does not exceed balance
+                var balance = parseFloat($('#y-out-ye').text()) || 0;
+                if (withdrawalData.quantity > balance) {
+                    alert(gy('Insufficient balance'));
+                    return;
+                }
 
                 $.ajax({
                     url: '/api/withdrawal-record',
