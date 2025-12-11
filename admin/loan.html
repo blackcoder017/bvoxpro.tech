@@ -9,6 +9,8 @@
     body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:#1a1f2e;color:#e6edf3}
     .container{max-width:1400px;margin:0 auto;padding:40px 20px}
     .header{background:linear-gradient(135deg,#667eea,#764ba2);padding:20px 30px;border-radius:12px 12px 0 0;display:flex;align-items:center;gap:12px}
+    .back-btn{display:inline-block;text-decoration:none;color:rgba(255,255,255,0.95);background:rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;font-weight:700;margin-right:8px}
+    .back-btn:hover{background:rgba(255,255,255,0.12)}
     .header h1{font-size:24px;font-weight:700;color:#fff}
     .filters{background:#252d3d;padding:20px 30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:15px;border:1px solid #404a5e;border-top:none;margin-bottom:20px}
     .filter-group{display:flex;flex-direction:column;gap:6px}
@@ -48,7 +50,7 @@
     })();
   </script>
   <div class="container">
-    <div class="header"><span class="icon">💵</span><h1>Loan Applications</h1></div>
+    <div class="header"><a href="/admin/dashboard.html" class="back-btn">← Dashboard</a><span class="icon">💵</span><h1>Loan Applications</h1></div>
 
     <div class="filters">
       <div class="filter-group"><label>Search Order ID</label><input id="filterOrder" placeholder="Order ID..." /></div>

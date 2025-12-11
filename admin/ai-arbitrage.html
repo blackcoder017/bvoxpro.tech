@@ -34,6 +34,18 @@
             margin-bottom: 0;
         }
 
+        .back-btn {
+            display: inline-block;
+            text-decoration: none;
+            color: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.06);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.12); }
+
         .header h1 {
             font-size: 24px;
             font-weight: 700;
@@ -545,6 +557,7 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
+            <a href="/admin/dashboard.html" class="back-btn">← Dashboard</a>
             <span class="icon">🤖</span>
             <h1>AI Arbitrage Records</h1>
         </div>

@@ -9,6 +9,8 @@
     body{font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif;background:#0f1724;color:#e6edf3}
     .container{max-width:1400px;margin:0 auto;padding:36px 20px}
     .header{background:linear-gradient(135deg,#667eea,#764ba2);padding:18px 24px;border-radius:10px 10px 0 0;display:flex;align-items:center;gap:12px}
+    .back-btn{display:inline-block;text-decoration:none;color:rgba(255,255,255,0.95);background:rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;font-weight:700;margin-right:8px}
+    .back-btn:hover{background:rgba(255,255,255,0.12)}
     .header h1{font-size:22px;font-weight:700;color:#fff}
     .filters{background:#0b1220;padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;border:1px solid #1f2937;border-top:none;margin-bottom:18px;border-radius:0 0 10px 10px}
     .filter-group{display:flex;flex-direction:column;gap:6px}
@@ -59,7 +61,7 @@
     })();
   </script>
   <div class="container">
-    <div class="header"><span class="icon">⛏️</span><h1>Mining Records</h1></div>
+    <div class="header"><a href="/admin/dashboard.html" class="back-btn">← Dashboard</a><span class="icon">⛏️</span><h1>Mining Records</h1></div>
 
     <div class="filters">
       <div class="filter-group"><label>Order ID / Keyword</label><input id="filterOrder" placeholder="Order ID or part..." /></div>

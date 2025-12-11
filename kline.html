@@ -40,6 +40,17 @@
 			box-sizing: border-box;
 			overflow: hidden;
 		}
+
+		/* Mobile: increase chart height inside iframe for small devices */
+		@media only screen and (max-width: 768px) {
+			#chart_container { min-height: 60vh; }
+			#vy-chart { height: calc(100% - 24px); }
+		}
+
+		@media only screen and (max-width: 420px) {
+			#chart_container { min-height: 70vh; }
+			#vy-chart { height: calc(100% - 20px); }
+		}
         .interval-item{
             font-size:14px;
             padding: 2px;

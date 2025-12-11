@@ -205,15 +205,37 @@ class Deedfeeds {
   
  
   constructor() {
-
-    this.ws = new WebSocket(wssUrl)
-
     this.currentInterval = null
     this.subscribeDataParam = {
       interval: null,
       setHistoryData: null,
       subscribeData: null
     } // 再次订阅时需要的数据
+
+    // Try to connect; we will fallback to AJAX polling if the connection fails or times out
+    this._connected = false;
+    this._connectTimeout = null;
+    this._connectAttempts = 0;
+    this._connect();
+  }
+
+  _connect() {
+    this._connectAttempts++;
+    try{
+      this.ws = new WebSocket(wssUrl)
+    }catch(e){
+      console.warn('[deedfeeds] WebSocket construction failed, will use fallback');
+      this._activateFallback();
+      return;
+    }
+    // if ws does not open within 4s, fallback to AJAX polling
+    this._connectTimeout = setTimeout(()=>{
+      if(!this._connected){
+        console.warn('[deedfeeds] WebSocket connection timeout, using fallback polling');
+        try{ this.ws.close(); }catch(e){}
+        this._activateFallback();
+      }
+    }, 4000)
   }
 
 //______________________________
@@ -340,6 +362,8 @@ class Deedfeeds {
     
     this.currentInterval = interval
     this.ws.onopen = () => {
+      this._connected = true;
+      if(this._connectTimeout) clearTimeout(this._connectTimeout);
         
       if(SYMBOL == 'usdzusdt'){
         
@@ -376,6 +400,16 @@ class Deedfeeds {
       };
       fileReader.readAsArrayBuffer(blob, "utf-8")
     }
+    this.ws.onerror = (e) => {
+      console.warn('[deedfeeds] websocket error', e);
+      // attempt to fallback after a short delay
+      setTimeout(()=>{ this._activateFallback(); }, 1000);
+    }
+    this.ws.onclose = () => {
+      console.warn('[deedfeeds] websocket closed');
+      // fallback
+      setTimeout(()=>{ this._activateFallback(); }, 1000);
+    }
   }
 
   intervalChanged({ interval, setHistoryData, subscribeData }) {
@@ -398,9 +432,34 @@ class Deedfeeds {
 
       this.ajaxaitc(interval)
     }else{
-      this.ws.send(JSON.stringify(unsubK(this.currentInterval)))
+      if(this.ws && this.ws.readyState === WebSocket.OPEN){
+        this.ws.send(JSON.stringify(unsubK(this.currentInterval)))
+      } else {
+        // websocket not available - rely on fallback mechanism
+        console.warn('[deedfeeds] intervalChanged requested while ws closed - using fallback');
+        this.ajaxaitc(interval);
+      }
     }
     this.currentInterval = interval
+  }
+
+  _activateFallback(){
+    // Switch to polling mode using local AJAX history API
+    if(this._fallbackActive) return;
+    this._fallbackActive = true;
+    console.info('[deedfeeds] Activating fallback: polling server for history data');
+    const _this = this;
+    // If the page has not called setHistoryData yet, wait until it does
+    if(!this.subscribeDataParam || !this.subscribeDataParam.setHistoryData){
+      setTimeout(()=>{ _this._activateFallback(); }, 800);
+      return;
+    }
+    const interval = this.subscribeDataParam.interval || 'm1';
+    // Call the same internal method used for usdzusdt to seed the chart and then poll
+    this.getMarketSpecialtyJsonAitclast(interval);
+    this._fallbackPoller = setInterval(()=>{
+      _this.getMarketSpecialtyJsonAitclast(interval);
+    }, 2000);
   }
 }
 

@@ -198,6 +198,25 @@
 			color: #f6465d;
 			border-left-color: #f6465d;
 		}
+
+		/* Mobile adjustments: give charts more vertical space on small screens */
+		@media only screen and (max-width: 768px) {
+			.chart-container {
+				min-height: 60vh;
+			}
+			#chart {
+				min-height: 420px;
+			}
+		}
+
+		@media only screen and (max-width: 420px) {
+			.chart-container {
+				min-height: 68vh;
+			}
+			#chart {
+				min-height: 520px;
+			}
+		}
 	</style>
 </head>
 <body>
