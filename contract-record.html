@@ -39,14 +39,18 @@
 
         <div class="y-re" style="min-height: 832px;">
             <div class="y-re-in"></div>
-            <div class="y-re-load" onclick="loadMore()" data-translate="Load More">Load More</div>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:center;">
+                <div class="y-re-load" onclick="loadMore()" data-translate="Load More">Load More</div>
+                <div class="y-re-load" onclick="loadAll()" data-translate="Load All">Load All</div>
+            </div>
         </div>
         
 
         <script>
             document.querySelector('.y-re').style.minHeight = window.innerHeight + 'px';
             let page = 1; // ????
-            const userId = Cookies.get('userid'); // ????ID
+            function getPageUserId() { return Cookies.get('userid') || Cookies.get('uid') || (window.getCurrentUserId ? window.getCurrentUserId() : null); }
+            const userId = getPageUserId(); // ????ID
 
 
             $(document).ready(function() {
@@ -71,10 +75,122 @@
                 return coinIconMap[key] || (key + '.png');
             }
 
+            function getPageUserId() {
+                // Try multiple cookie keys and any app helper
+                if (typeof Cookies !== 'undefined') {
+                    const id = Cookies.get('userid') || Cookies.get('uid') || Cookies.get('user_id');
+                    if (id) return id;
+                }
+                if (typeof window.getCurrentUserId === 'function') return getCurrentUserId();
+                return null;
+            }
+
+            // Render an array of legacy-shaped records into the DOM
+            function renderNotifyData(notifyData) {
+                if (!Array.isArray(notifyData) || notifyData.length === 0) return 0;
+                notifyData.forEach((data, idx) => {
+                    // reuse existing mapping/HTML generation logic
+                    const investedAmount = Number(data.num) || 0;
+                    const isPending = data.zhuangtai === 1;
+                    let durationSec = 60;
+                    if (Array.isArray(data.miaoshu) && data.miaoshu.length > 0) durationSec = Number(data.miaoshu[0]) || 60;
+                    else if (typeof data.miaoshu === 'string') durationSec = Number(data.miaoshu.replace(/[^\d]/g, '')) || 60;
+                    else durationSec = Number(data.miaoshu) || 60;
+                    let profitPercent = 40;
+                    if (durationSec === 120) profitPercent = 50;
+                    else if (durationSec === 180) profitPercent = 70;
+                    else if (durationSec === 300) profitPercent = 100;
+                    else if (durationSec === 60) profitPercent = 40;
+                    const durationMin = Math.floor(durationSec / 60);
+                    let profitHTML = '';
+                    if (isPending) {
+                        profitHTML = `\n                                            <div class="y-re-br">\n                                                ${gy('Pending')}\n                                            </div>`;
+                    } else {
+                        const yingVal = Number(data.ying) || 0;
+                        if (yingVal < 0) {
+                            profitHTML = `\n                                            <div class="y-re-br" style="color: #e74c3c; font-weight: bold;">\n                                                ${yingVal.toFixed(2)}\n                                            </div>`;
+                        } else if (yingVal > 0) {
+                            const profit = yingVal - investedAmount;
+                            const sign = profit >= 0 ? '+' : '';
+                            profitHTML = `\n                                            <div class="y-re-br" style="color: #27ae60; font-weight: bold;">\n                                                ${sign}${profit.toFixed(2)}\n                                            </div>`;
+                        }
+                    }
+                    const coinDisplay = data.biming ? data.biming.toUpperCase() : 'BTC';
+                    const createdDate = new Date(parseInt(data.buytime) * 1000).toLocaleString('en-US', { timeZone: 'America/New_York' });
+                    const notificationHTML = `
+                        <div class="y-re-box">
+                            <div class="y-re-bl">
+                                <img src="./assets/img/${getCoinIconFile(data.biming || 'btc')}" alt="Notification">
+                                <div class="y-re-blr">
+                                    <span>${coinDisplay} / USDT</span>
+                                    <div class="y-re-bim y-bim3">
+                                        <p>
+                                            ${gy('Invested')}: ${investedAmount}
+                                        </p>
+                                        <p>
+                                            ${gy('Direction')}: ${data.fangxiang == 1 ? gy('Upward') : gy('Down')}
+                                        </p>
+                                        <p>
+                                            ${gy('Contract duration')}:${durationMin} min
+                                        </p>
+                                    </div>
+
+                                    <div class="y-sfyidu">
+                                        ${createdDate}
+                                    </div>
+                                </div>
+                            </div>
+                            ${profitHTML}
+                        </div>
+                    `;
+                    $('.y-re-in').append(notificationHTML);
+                });
+                return notifyData.length;
+            }
+
+            async function loadAll() {
+                const userid = getPageUserId();
+                if (!userid) {
+                    $('.y-re-in').html('<div class="y-re-box"><div class="y-re-blr">Please log in to view contract records.</div></div>');
+                    $('.y-re-load').hide();
+                    return;
+                }
+                $('.y-re-load').text('Loading all...').prop('disabled', true);
+                let p = 1;
+                try {
+                    while (true) {
+                        console.log('[contract-record] loadAll requesting page', p);
+                        // eslint-disable-next-line no-await-in-loop
+                        const res = await $.ajax({ url: apiurl + '/Record/getcontract', type: 'POST', data: { userid: userid, page: p }, dataType: 'json' });
+                        if (res && res.code === 1 && res.data && res.data.length > 0) {
+                            renderNotifyData(res.data);
+                            if (res.data.length < 10) break; // last page
+                            p += 1;
+                        } else break;
+                    }
+                    $('.y-re-load').text('No more records').prop('disabled', true).hide();
+                } catch (err) {
+                    console.error('[contract-record] loadAll error', err);
+                    $('.y-re-in').append('<div class="y-re-box"><div class="y-re-blr">Failed to load contract records. Please try again later.</div></div>');
+                }
+            }
+
             function loadMore() {
-                const userid = Cookies.get('userid'); // ????ID,??????Cookie?
+                const userid = getPageUserId(); // try multiple cookie keys
+
+                // If user is not logged in, show a friendly message instead of calling the API
+                if (!userid) {
+                    $('.y-re-in').html('<div class="y-re-box"><div class="y-re-blr">Please log in to view contract records.</div></div>');
+                    $('.y-re-load').hide();
+                    return;
+                }
 
                 // Call legacy API endpoint which maps DB trades to legacy format
+                console.log('[contract-record] loadMore called with userid=', userid, 'page=', page);
+                // Visible debug hint for quick visual inspection when someone opens the page
+                if (!$('.contract-debug').length) {
+                    $('.y-re-in').before('<div class="contract-debug" style="padding:8px;background:#fff;color:#000;font-weight:600;">Debug: userid=' + userid + '</div>');
+                }
                 $.ajax({
                     url: apiurl + '/Record/getcontract',
                     type: 'POST',
@@ -84,17 +200,21 @@
                     },
                     dataType: 'json',
                     success: function(res) {
-                        if (res.code === 1 && res.data && res.data.length > 0) { // Check legacy response format
+                        console.log('[contract-record] getcontract success', res);
+                        if (res && res.code === 1 && res.data && res.data.length > 0) { // Check legacy response format
                             const notifyData = res.data;
+
+                            console.log('[contract-record] notifyData length=', notifyData.length);
 
                             // ????????
                             if (notifyData.length === 0) {
-                                $('.y-re-load').text('????').prop('disabled', true);
+                                $('.y-re-load').text('No more records').prop('disabled', true);
                                 return;
                             }
 
                             // ???????????? Map legacy format fields and compute rate from duration
-                            notifyData.forEach(data => {
+                            notifyData.forEach((data, idx) => {
+                                console.log('[contract-record] processing', idx, data && data.id);
                                 // Legacy fields: num (invested), ying (payout), zhuangtai (0=settled, 1=pending), miaoshu (duration in seconds or array)
                                 const investedAmount = Number(data.num) || 0;
                                 const isPending = data.zhuangtai === 1;
@@ -174,7 +294,17 @@
 
                             // ????
                             page += 1;
+                        } else {
+                            // No data returned
+                            console.warn('[contract-record] no data returned or res.code != 1', res);
+                            $('.y-re-in').append('<div class="y-re-box"><div class="y-re-blr">No contract records found. If you recently placed a trade, make sure you are logged in with the same account/wallet that placed it.</div></div>');
+                            $('.y-re-load').hide();
                         }
+                    },
+                    error: function(xhr, status, err) {
+                        $('.y-re-in').html('<div class="y-re-box"><div class="y-re-blr">Failed to load contract records. Please try again later.</div></div>');
+                        $('.y-re-load').hide();
+                        console.error('[contract-record] API error:', status, err);
                     }
                 });
             }

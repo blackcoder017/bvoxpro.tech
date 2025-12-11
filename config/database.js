@@ -204,9 +204,25 @@ async function createTrade(tradeData) {
 
 async function getUserTrades(userId, limit = 50, status = null) {
     try {
-        const query = { user_id: userId };
-        if (status) query.status = status;
-        return await Trade.find(query).limit(limit).sort({ created_at: -1 });
+        // Be flexible with user ID field names: some records use user_id, others use userid, uid, or username
+        const idStr = String(userId);
+        const idNum = parseInt(userId, 10);
+        const orQueries = [
+            { user_id: idStr },
+            { userid: idStr },
+            { uid: idStr },
+            { username: idStr }
+        ];
+        if (!isNaN(idNum)) {
+            orQueries.push({ user_id: idNum });
+            orQueries.push({ userid: idNum });
+            orQueries.push({ uid: idNum });
+        }
+        const finalQuery = { $or: orQueries };
+        if (status) finalQuery.status = status;
+        const results = await Trade.find(finalQuery).limit(limit).sort({ created_at: -1 });
+        console.log(`[DB] getUserTrades for userId=${userId} -> found ${results.length} records`);
+        return results;
     } catch (e) {
         console.error('Error getting trades:', e);
         return [];
