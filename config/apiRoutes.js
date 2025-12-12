@@ -33,51 +33,9 @@ async function verifyAdminToken(req) {
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 try { if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true }); } catch (e) { console.warn('Could not create uploads dir:', e.message); }
 
-// ============= PROXY ROUTES =============
-
-// Proxy for /api/Trade/gettradlist to remote API (note: remote URL has 'e' in gettradelist)
-const REMOTE_TRADE_LIST_URL = 'https://api.bvoxf.com/api/Trade/gettradelist';
-router.post(['/api/Trade/gettradlist', '/api/trade/gettradlist'], (req, res) => {
-    try {
-        // Convert body to URL-encoded form (matching what old server.js does)
-        let bodyStr = '';
-        const body = req.body || {};
-        if (typeof body === 'string') {
-            bodyStr = body;
-        } else if (typeof body === 'object') {
-            // Convert JSON body to URL-encoded format: key1=value1&key2=value2
-            bodyStr = Object.keys(body)
-                .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(body[key])}`)
-                .join('&');
-        }
-        
-        const urlObj = new URL(REMOTE_TRADE_LIST_URL);
-        const options = {
-            hostname: urlObj.hostname,
-            path: urlObj.pathname,
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Content-Length': Buffer.byteLength(bodyStr)
-            }
-        };
-        const proxyReq = https.request(options, proxyRes => {
-            let data = '';
-            proxyRes.on('data', chunk => { data += chunk; });
-            proxyRes.on('end', () => {
-                res.status(proxyRes.statusCode).set(proxyRes.headers).send(data);
-            });
-        });
-        proxyReq.on('error', err => {
-            console.error('[proxy] /api/Trade/gettradlist error:', err.message);
-            res.status(502).json({ error: 'Proxy error', detail: err.message });
-        });
-        proxyReq.write(bodyStr);
-        proxyReq.end();
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
-});
+// ============= PROXY / DB-FALLBACK ROUTES =============
+// Note: handlers for `/api/Trade/getcoin_data` and `/api/Trade/gettradlist` are defined
+// later in this file and implement a DB-first strategy with external proxy fallback.
 
 // ============= USER ENDPOINTS =============
 
