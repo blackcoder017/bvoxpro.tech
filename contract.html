@@ -1216,7 +1216,7 @@
             
 			if (klineIframe) {
 				const marketSymbol = coinname + 'usdt';
-				const iframeUrl = `https://www.bvoxf.com/views/contract/kline.html?market=${marketSymbol}`;
+				const iframeUrl = `/kline.html?market=${marketSymbol}`;
 				klineIframe.src = iframeUrl;
 			}
 		}
@@ -1275,7 +1275,7 @@
 			const klineIframe = document.getElementById('kline-iframe');
 			if(klineIframe){
 				const marketSymbol = coinname + 'usdt';
-				const iframeUrl = `https://www.bvoxf.com/views/contract/kline.html?market=${marketSymbol}`;
+				const iframeUrl = `/kline.html?market=${marketSymbol}`;
 				klineIframe.src = iframeUrl;
 			}
 
