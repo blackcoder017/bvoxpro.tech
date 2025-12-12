@@ -1,0 +1,137 @@
+Good — two problems to fix: MongoDB authentication (app failing) and Cloudflare 522 (origin timeout). I’ll give the diagnosis and exact commands to fix both. Follow each step and paste any error output if it fails.
+
+Summary of root cause
+- Mongo auth failed because `bvoxapp` was created in DB `bvoxpro` but your connection string used `?authSource=admin`. Authenticate where the user was created (or recreate user in admin).
+- 522 means Cloudflare can’t finish a request to your origin — likely Nginx not listening on public ports or UFW blocking ports, or service overload.
+
+1) Quick test: confirm DB user location and test direct auth
+- Test authenticating with authSource = bvoxpro (since you created user while `use bvoxpro`):
+```bash
+# test connection using full connection string (authSource=bvoxpro)
+mongosh "mongodb://bvoxapp:Mka%402016@127.0.0.1:27017/bvoxpro?authSource=bvoxpro"
+```
+- Or explicit flag:
+```bash
+mongosh -u bvoxapp -p 'Mka%402016' --authenticationDatabase bvoxpro
+```
+If that succeeds, you know the user is in `bvoxpro` DB and the client must use authSource=bvoxpro.
+
+2) Fix application environment (preferred: update PM2 ecosystem)
+- Edit your `ecosystem.config.js` (or create) and set correct MONGODB_URI. Example (replace with safe password or use env file):
+```js
+module.exports = {
+  apps: [{
+    name: 'bvoxpro',
+    script: 'app-server.js',
+    cwd: '/var/www/bvoxpro.tech',
+    instances: 1,
+    exec_mode: 'fork',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000,
+      MONGODB_URI: 'mongodb://bvoxapp:Mka%402016@127.0.0.1:27017/bvoxpro?authSource=bvoxpro'
+    }
+  }]
+}
+```
+- Restart PM2 using that file:
+```bash
+cd /var/www/bvoxpro.tech
+pm2 stop bvoxpro || true
+pm2 start ecosystem.config.js
+pm2 save
+pm2 logs bvoxpro --lines 200
+```
+- Quick alternative (temporary): export env and restart:
+```bash
+export MONGODB_URI='mongodb://bvoxapp:Mka%402016@127.0.0.1:27017/bvoxpro?authSource=bvoxpro'
+pm2 restart bvoxpro --update-env
+```
+
+3) If you prefer authenticating against admin instead
+- Recreate the app user in admin (while connected as admin):
+```js
+# in mongosh (authenticated as admin user)
+use admin
+db.createUser({
+  user: "bvoxapp",
+  pwd: "Mka%402016",
+  roles: [{ role: "readWrite", db: "bvoxpro" }]
+})
+```
+Then URI with `authSource=admin` will work.
+
+4) Confirm DB connectivity from node script
+```bash
+# after updating env or ecosystem file:
+node diagnose-db.js
+# or
+node test-db-direct.js
+```
+If connection shows success, DB side is fixed.
+
+5) Troubleshoot Cloudflare 522 (origin timeout)
+Run these diagnostic commands on the server and share results if uncertain:
+
+- Check Nginx and listening sockets:
+```bash
+sudo systemctl status nginx
+sudo nginx -t
+sudo ss -tulpn | grep -E ":80|:443|:3000"
+```
+- Check UFW rules:
+```bash
+sudo ufw status verbose
+```
+If `Nginx Full` is NOT allowed, allow it:
+```bash
+sudo ufw allow 'Nginx Full'
+sudo ufw reload
+sudo ufw status
+```
+- Ensure Nginx running, then reload:
+```bash
+sudo systemctl reload nginx
+sudo systemctl restart nginx
+```
+- View Nginx logs for errors:
+```bash
+sudo tail -n 200 /var/log/nginx/error.log
+sudo tail -n 200 /var/log/nginx/access.log
+```
+- Confirm your Node app is listening on localhost:3000:
+```bash
+ss -ltnp | grep 3000
+curl -sS http://127.0.0.1:3000/api/health
+```
+If curl to localhost times out, the Node process may be stuck — check `pm2 logs bvoxpro`/`pm2 status`.
+
+6) Common fixes for 522
+- Allow inbound HTTP/HTTPS: `sudo ufw allow 'Nginx Full'`
+- If Nginx config has wrong `proxy_pass` or upstream host, fix and `sudo nginx -t && sudo systemctl reload nginx`.
+- If server CPU/memory is saturated: check `top`/`htop`, kill heavy processes or increase droplet size.
+- If you have fail2ban or iptables blocking Cloudflare IPs, either whitelist Cloudflare IP ranges or disable offending rule. Quick check:
+```bash
+sudo iptables -L -n | sed -n '1,200p'
+```
+7) After fixes: test from outside
+- Test direct reachability (bypass Cloudflare by temporarily disabling proxy or use your browser to access `http://<DROPLET_IP>`):
+```bash
+# on your laptop
+curl -I http://DROPLET_IP
+curl -I https://bvoxpro.tech  # after certs/https enabled
+```
+If direct IP responds but domain behind Cloudflare still 522, ensure Cloudflare's DNS is pointing to correct IP and Cloudflare proxy (orange cloud) is correct. You can also set DNS to “DNS only” (grey cloud) to isolate Cloudflare as the issue.
+
+8) Security notes & best practice
+- Don’t reuse admin password and app password; rotate them.
+- Avoid exposing MongoDB publicly (keep bindIp 127.0.0.1).
+- Store secrets in a secure vault or server-only .env and exclude from repo.
+- Set up backups (mongodump / snapshot) and monitoring.
+
+If you want, I can:
+- generate/edit `ecosystem.config.js` in your repo with the correct MONGODB_URI (I will not put real passwords in the repo; I can put a placeholder and show exactly what to paste),
+- provide a one-line UFW + Nginx fix command,
+- or inspect specific outputs you paste (e.g., `sudo ufw status`, `ss -tulpn`, and `sudo tail /var/log/nginx/error.log`) and give the exact corrective command.
+
+What do you want next — (A) I generate `ecosystem.config.js` template here, (B) show exact commands to open Nginx in UFW and test, or (C) you paste outputs from `ss -tulpn` and `sudo ufw status` and I diagnose further?

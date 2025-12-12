@@ -1,0 +1,70 @@
+I'll search the codebase for the `/api/user/getuserid` handler and then inspect related server logs.
+
+Searched for text `getuserid`, 20 results
+
+Read [](file:///c%3A/Users/black/Desktop/Project/config/apiRoutes.js#3428-3428), lines 3428 to 3518
+
+Good findings — the most likely cause is password / URI encoding mismatch. Next steps (pick A or B):
+
+A) Quick fix — percent-encode your current password in the connection URI
+- Your created password was the literal string: Mka%402016  
+  In a Mongo URI the sequence `%40` is decoded to `@`. To preserve the literal `%40` you must encode `%` as `%25`. So the password portion in the URI must be:
+  Mka%25402016
+
+Run these commands on the server:
+```bash
+# set env and restart (temporary)
+export MONGODB_URI='mongodb://bvoxapp:Mka%25402016@127.0.0.1:27017/bvoxpro?authSource=bvoxpro'
+pm2 restart bvoxpro --update-env
+```
+Then test locally:
+```bash
+# test DB with node script
+node diagnose-db.js
+
+# or call the endpoint locally to see exact server error
+curl -v -H "Content-Type: application/json" -d '{"address":"0x0000000000000000000000000000000000000000"}' http://127.0.0.1:3000/api/user/getuserid
+```
+If success, restart pm2 saved config:
+```bash
+pm2 save
+```
+
+B) Safer (recommended) — change the Mongo user password to a simple safe string and update PM2 ecosystem
+1. Authenticate as the admin user in mongosh:
+```bash
+mongosh -u blackcoder -p 'Mka%402016' --authenticationDatabase admin
+```
+2. Switch to the `bvoxpro` DB and change the app user's password to a simple one (no `%` or `@`):
+```js
+use bvoxpro
+db.changeUserPassword('bvoxapp', 'NewS3curePass!')   // run inside mongosh
+exit
+```
+3. Update `ecosystem.config.js` (or .env) to use new password (no encoding needed if it has safe characters) and restart PM2:
+```bash
+# example export (or update ecosystem.config.js env.MONGODB_URI)
+export MONGODB_URI='mongodb://bvoxapp:NewS3curePass!@127.0.0.1:27017/bvoxpro?authSource=bvoxpro'
+pm2 restart bvoxpro --update-env
+```
+4. Test:
+```bash
+node diagnose-db.js
+curl -v -H "Content-Type: application/json" -d '{"address":"0x0000000000000000000000000000000000000000"}' http://127.0.0.1:3000/api/user/getuserid
+```
+
+If the endpoint still 500, capture logs (run these and paste output):
+```bash
+# reproduce request (in separate terminal)
+curl -v -H "Content-Type: application/json" -d '{"address":"0x0000000000000000000000000000000000000000"}' http://127.0.0.1:3000/api/user/getuserid
+
+# then inspect recent PM2 logs
+pm2 logs bvoxpro --lines 200
+```
+
+Extra checks I recommend now (you already ran many; include if needed):
+- Confirm Node process is listening: `ss -ltnp | grep 3000`
+- Check Nginx error log for 502/499 errors: `sudo tail -n 200 /var/log/nginx/error.log`
+- If you see Nginx error "upstream sent Content-Length and Transfer-Encoding headers" on some POSTs, that usually comes from the upstream (Node) sending both headers; let me know if that persists and I’ll show an Nginx workaround.
+
+Which do you want me to do now — (1) apply quick percent-encoding fix, (2) guide you to change the Mongo user password and update `ecosystem.config.js` (I can write the file template here), or (3) inspect the exact pm2 logs/error trace after you run the curl test?

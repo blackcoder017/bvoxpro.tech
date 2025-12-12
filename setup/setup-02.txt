@@ -1,0 +1,188 @@
+I'll update the todo list for MongoDB work, then inspect the repo for Mongo connection clues.
+
+Completed: *Create DigitalOcean droplet (Ubuntu) and add SSH key* (1/10)
+
+Searched for text `mongoose|mongodb|MONGO|mongo`, 20 results
+
+Searched for text `process.env.MONGO`, 17 results
+
+ကန့်သတ်ချက်မရှိလို့ လုပ်ဆောင်နိုင်ပါတယ် — အောက်မှာ MongoDB ကို Ubuntu (server) ပေါ်တွင် install, secure, DB + users ဖန်တီး၊ app နဲ့ချိတ်ဆက်ပြီး PM2 ဖြင့်ပြန်စတတ်သတ်စစ်သည့် အဆင့်ဆင့် လမ်းညွှန်ကို မြန်မာလို ပေးထားပါတယ်။ လိုက်နာပြီး တစ်ဆင့်ချင်းစီ run ပြီး ရလာသော output ကို ပြန်ပြပါ — ပြီးရင် ecosystem file သို့မဟုတ် backup cron ရေးပေးပို့နိုင်ပါတယ်။
+
+အချက်အလက်အတိုချုံး
+- Server: Ubuntu (DigitalOcean droplet)
+- App root: /var/www/bvoxpro.tech (သင်၏ pm2 စတတ်နေတဲ့ folder)
+- မင်း app များသုံးမယ့် DB name: bvoxpro (repo တွင် အများသုံးထားသည်)
+- Admin username, app username/password ကို မိမိသတ်မှတ်ပါ (၎င်းကို အောက်မှာ EXAMPLE ဖြင့် ထည့်ထားတယ် — အလုပ်မလုပ်ခင် အစားထိုးပါ)
+
+1) MongoDB repo ထည့်ပြီး install (Ubuntu 22.04 အတွက် example — root သို့ deploy user နဲ့ run)
+```bash
+# Import MongoDB GPG key & add repo (MongoDB 6.0 example)
+wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+sudo apt update
+sudo apt install -y mongodb-org
+```
+
+2) Start/enable service, verify running
+```bash
+sudo systemctl start mongod
+sudo systemctl enable mongod
+sudo systemctl status mongod
+# check mongo shell
+mongosh --version
+```
+
+3) (Recommended) Create MongoDB admin user BEFORE enabling authorization (first install has auth disabled by default). Connect and create admin:
+```bash
+mongosh
+
+# inside mongosh:
+use admin
+db.createUser({
+  user: "mdbadmin",
+  pwd: "StrongAdminPasswordHere!",
+  roles: [
+    { role: "userAdminAnyDatabase", db: "admin" },
+    { role: "readWriteAnyDatabase", db: "admin" }
+  ]
+})
+
+# exit
+exit
+```
+- အရေးကြီး — "mdbadmin" နှင့် password ကို မင်းပြောင်းရေးပါ။
+
+4) Enable authorization (turn on access control) in `/etc/mongod.conf`
+- ဖိုင်ကို open:
+```bash
+sudo nano /etc/mongod.conf
+```
+- ဖိုင်အောက်ခြေနဲ့ထိန်းရန် (အချို့ထဲမှာ `security:` block မရှိနိုင်) ထည့်ပါ:
+```yaml
+security:
+  authorization: "enabled"
+```
+- ပြီးလျှင် restart:
+```bash
+sudo systemctl restart mongod
+sudo systemctl status mongod
+```
+
+5) Connect with admin credentials and create application DB + user
+```bash
+# from shell (use mongosh with admin auth)
+mongosh -u mdbadmin -p 'StrongAdminPasswordHere!' --authenticationDatabase admin
+
+# in shell:
+use bvoxpro
+db.createUser({
+  user: "bvoxapp",
+  pwd: "StrongAppPasswordHere!",
+  roles: [{ role: "readWrite", db: "bvoxpro" }]
+})
+exit
+```
+- "bvoxapp" / "StrongAppPasswordHere!" ကို သင်အသုံးပြုချင်သလိုပြောင်းပါ။
+
+6) Ensure Mongo port is NOT open to public (block remote access) — bind to localhost and UFW
+- စစ်ပါ `/etc/mongod.conf` ထဲ `net.bindIp: 127.0.0.1` ဖြစ်ထားမယ်ဆိုရင် localhost only ဖြစ်ပြီး remote access မဖြစ်ပါ။
+- UFW rule:
+```bash
+sudo ufw allow OpenSSH
+# (NGINX already allowed earlier) ensure 27017 closed
+sudo ufw deny 27017
+sudo ufw enable
+sudo ufw status
+```
+
+7) Configure your app to use the DB URI (set env var MONGODB_URI)
+- Recommended URI (with auth and authSource=admin):
+mongodb://bvoxapp:StrongAppPasswordHere!@127.0.0.1:27017/bvoxpro?authSource=admin
+
+- Two quick ways to make PM2 use it:
+
+A. Export and restart PM2 process (quick)
+```bash
+# as root or deploy user
+export MONGODB_URI='mongodb://bvoxapp:StrongAppPasswordHere!@127.0.0.1:27017/bvoxpro?authSource=admin'
+# restart pm2 process and instruct it to pick new env:
+pm2 restart bvoxpro --update-env
+```
+
+B. Use an `ecosystem.config.js` for PM2 (recommended for reproducible deploys)
+- Create `/var/www/bvoxpro.tech/ecosystem.config.js` with:
+```js
+module.exports = {
+  apps: [{
+    name: 'bvoxpro',
+    script: 'app-server.js',
+    cwd: '/var/www/bvoxpro.tech',
+    instances: 1,
+    exec_mode: 'fork',
+    env: {
+      NODE_ENV: 'production',
+      PORT: 3000,
+      MONGODB_URI: 'mongodb://bvoxapp:StrongAppPasswordHere!@127.0.0.1:27017/bvoxpro?authSource=admin'
+    }
+  }]
+};
+```
+- Then deploy with PM2:
+```bash
+cd /var/www/bvoxpro.tech
+pm2 stop bvoxpro || true
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+8) Verify app connects to DB
+- Tail logs:
+```bash
+pm2 logs bvoxpro --lines 200
+```
+- Or run a small Node test (repo has diagnose-db.js or test-db-direct.js) — example:
+```bash
+# set env then run test script
+export MONGODB_URI='mongodb://bvoxapp:StrongAppPasswordHere!@127.0.0.1:27017/bvoxpro?authSource=admin'
+node test-db-direct.js
+# or
+node diagnose-db.js
+```
+- In mongosh you can also confirm documents:
+```bash
+mongosh -u bvoxapp -p 'StrongAppPasswordHere!' --authenticationDatabase admin
+use bvoxpro
+db.getCollectionNames()
+db.collectionName.find().limit(2).pretty()
+```
+
+9) Backups (simple mongodump + cron)
+- Create backup directory and test dump:
+```bash
+sudo mkdir -p /var/backups/mongodb
+sudo chown deploy:deploy /var/backups/mongodb
+
+# run a dump
+mongodump --uri="mongodb://bvoxapp:StrongAppPasswordHere!@127.0.0.1:27017/bvoxpro?authSource=admin" --out /var/backups/mongodb/$(date +%F)
+```
+- Example cron (daily at 03:00, keep 7 days):
+```cron
+0 3 * * * /usr/bin/mongodump --uri="mongodb://bvoxapp:StrongAppPasswordHere!@127.0.0.1:27017/bvoxpro?authSource=admin" --archive=/var/backups/mongodb/bvoxpro-$(date +\%F).gz --gzip && find /var/backups/mongodb -type f -mtime +7 -delete
+```
+- Add via `sudo crontab -e` (or systemd timer).
+
+10) Monitoring & maintenance notes
+- Use `mongod --version` / `mongosh` for tools.
+- For production consider MongoDB managed (Atlas) for HA/backups/monitoring.
+- Regularly `pm2 logs`, `/var/log/mongodb/mongod.log` check for issues.
+- Consider setting up UFW, fail2ban, and automated snapshots/DO backups.
+
+Quick checklist (what you should run now)
+- Install mongodb (step 1)
+- Start service & create admin (step 2–3)
+- Enable auth, create app user (step 4–5)
+- Update PM2 env and restart (step 7—ecosystem recommended)
+- Test logs and DB queries (step 8)
+- Set backup cron (step 9)
+
+သင်လိုလားသလား — ဤအဆင့်များအနက် တိုက်ရိုက်ကို server ပေါ်မှာ run ဖို့အတွက် ကျွန်တော် shell script/ecosystem file ကို generateပေးရမလား? ဒါမှမဟုတ် သင် password တွေကို ဒီမှာထည့်ပေးပြီး ကျွန်တော် `ecosystem.config.js` ဖိုင်ကို workspace မှာ ထည့်ပေးရမလား? (သတိ - secrets ကို public repo မထည့်ပါနဲ့)
