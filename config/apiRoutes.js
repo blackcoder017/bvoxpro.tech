@@ -2877,7 +2877,13 @@ async function proxyPostExternal(externalUrl, req, res) {
             let responseData = '';
             extRes.on('data', chunk => responseData += chunk);
             extRes.on('end', () => {
-                res.status(extRes.statusCode).type('application/json').send(responseData);
+                // Remove headers that can conflict when forwarded through nginx
+                const forwardedHeaders = Object.assign({}, extRes.headers);
+                delete forwardedHeaders['content-length'];
+                delete forwardedHeaders['transfer-encoding'];
+                // Ensure content-type present
+                if (!forwardedHeaders['content-type']) forwardedHeaders['content-type'] = 'application/json';
+                res.status(extRes.statusCode).set(forwardedHeaders).send(responseData);
             });
         });
 
