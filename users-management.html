@@ -590,9 +590,28 @@
                 const sol = (balances.sol || 0).toFixed(4);
 
                 const status = user.status || user.kycStatus || 'active';
-                const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString()
-                                    : (user.registered_at ? new Date(user.registered_at).toLocaleDateString()
-                                    : (user.created ? new Date(user.created).toLocaleDateString() : '-'));
+                // Robust registered/created date detection: handle multiple field name variants
+                function formatRegisteredDate(u) {
+                    const candidates = [
+                        u.created_at,
+                        u.createdAt,
+                        u.registered_at,
+                        u.registeredAt,
+                        u.created,
+                        u.createdDate,
+                        u.registered,
+                    ];
+                    for (let v of candidates) {
+                        if (v) {
+                            try {
+                                const d = new Date(v);
+                                if (!isNaN(d.getTime())) return d.toLocaleDateString();
+                            } catch (e) {}
+                        }
+                    }
+                    return '-';
+                }
+                const createdDate = formatRegisteredDate(user);
 
                 const statusClass = status === 'active' ? 'active' : status === 'pending' ? 'pending' : 'inactive';
 
