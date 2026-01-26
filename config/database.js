@@ -26,13 +26,15 @@ async function getUserById(userId) {
         const numericId = parseInt(userId, 10);
         const queries = [
             { userid: userId },
-            { uid: userId }
+            { uid: userId },
+            { id: userId }
         ];
         
         // Add numeric queries if applicable
         if (!isNaN(numericId)) {
             queries.push({ userid: numericId });
             queries.push({ uid: numericId });
+            queries.push({ id: String(numericId) });
         }
         
         const user = await User.findOne({ $or: queries });
@@ -56,7 +58,7 @@ async function getAllUsers(limit = 100, skip = 0) {
 async function updateUserBalance(userId, newBalance) {
     try {
         return await User.findOneAndUpdate(
-            { $or: [{ userid: userId }, { uid: userId }] },
+            { $or: [{ userid: userId }, { uid: userId }, { id: userId }] },
             { balance: newBalance, updated_at: new Date() },
             { new: true }
         );
@@ -69,7 +71,7 @@ async function updateUserBalance(userId, newBalance) {
 async function updateUserBalances(userId, balances) {
     try {
         return await User.findOneAndUpdate(
-            { $or: [{ userid: userId }, { uid: userId }] },
+            { $or: [{ userid: userId }, { uid: userId }, { id: userId }] },
             { balances, updated_at: new Date() },
             { new: true }
         );

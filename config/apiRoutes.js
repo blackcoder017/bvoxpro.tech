@@ -2296,7 +2296,26 @@ async function handleGetBalance(req, res) {
         const userRecord = await db.getUserById(user_id);
         if (userRecord && userRecord.balances && Object.keys(userRecord.balances).length > 0) {
             // User has balances stored on their record - use these (they're updated by admin topup approvals)
-            const userBalances = userRecord.balances;
+            // If USDT is zero/missing here but topup ledger has credits, fall back to summing topup entries.
+            let userBalances = userRecord.balances;
+            try {
+                const usdtVal = Number(userBalances.usdt || 0);
+                if (!usdtVal) {
+                    // Sum recent topup records for this user to see if there are USDT credits that haven't been materialized
+                    const topups = await db.getUserTopupRecords(user_id, 5000).catch(() => []);
+                    const usdtSum = topups.reduce((acc, t) => {
+                        const coin = (t.coin || t.currency || 'USDT').toString().toLowerCase();
+                        if (coin === 'usdt') return acc + (Number(t.amount) || 0);
+                        return acc;
+                    }, 0);
+                    if (usdtSum !== 0) {
+                        userBalances = Object.assign({}, userBalances, { usdt: (Number(userBalances.usdt) || 0) + usdtSum });
+                    }
+                }
+            } catch (e) {
+                console.warn('[api] /api/wallet/getbalance - ledger fallback failed:', e && e.message);
+            }
+
             const totalFromUser = Object.keys(userBalances).reduce((acc, k) => acc + (Number(userBalances[k]) || 0), 0);
             console.log('[api] /api/wallet/getbalance - returning User record balances:', userBalances);
             return res.json({ code: 1, data: Object.assign({}, userBalances, { total_balance: totalFromUser, wallets: [] }) });
@@ -3658,7 +3677,13 @@ router.post('/api/arbitrage/settle-due', async (req, res) => {
                 const currentUsdt = Number(userDoc.balances.usdt || 0);
                 const credit = Number((amount + totalIncome).toFixed(4));
                 userDoc.balances.usdt = Math.round((currentUsdt + credit) * 100) / 100;
-                await userDoc.save();
+                // Use centralized DB helper to update balances (matches by userid/uid/id)
+                try {
+                    await db.updateUserBalances(sub.user_id, userDoc.balances);
+                } catch (e) {
+                    // fallback to direct save if helper fails
+                    await userDoc.save();
+                }
 
                 // Update subscription
                 sub.status = 'completed';
@@ -3684,6 +3709,77 @@ router.post('/api/arbitrage/settle-due', async (req, res) => {
         return res.json({ success: true, processed: processed });
     } catch (e) {
         console.error('[arbitrage/settle-due] error:', e && e.message);
+        return res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// POST /api/arbitrage/settle-now - force-settle arbitrage subscriptions (optional force=true to ignore end_date)
+router.post('/api/arbitrage/settle-now', async (req, res) => {
+    try {
+        // Require admin token to run force-settle
+        const admin = await verifyAdminToken(req).catch(()=>null);
+        if (!admin) return res.status(401).json({ success: false, message: 'Unauthorized. Admin token required.' });
+
+        const force = req.query.force === 'true' || req.body.force === true || req.body.force === 'true';
+        const now = new Date();
+        const ArbitrageSubscription = require('../models/ArbitrageSubscription');
+        const User = require('../models/User');
+        const Topup = require('../models/Topup');
+
+        const query = { status: 'active' };
+        if (!force) query.end_date = { $lte: now };
+
+        const dueSubs = await ArbitrageSubscription.find(query);
+        if (!dueSubs || dueSubs.length === 0) return res.json({ success: true, processed: 0, message: force ? 'No active subscriptions' : 'No due subscriptions' });
+
+        const results = [];
+        for (const sub of dueSubs) {
+            try {
+                const amount = Number(sub.amount || 0);
+                const durationDays = sub.end_date && sub.start_date ? Math.max(1, Math.round((new Date(sub.end_date) - new Date(sub.start_date)) / (24*60*60*1000))) : (sub.duration_days || 1);
+                const dailyReturn = typeof sub.daily_return === 'number' && sub.daily_return > 0 ? sub.daily_return : ((Number(sub.daily_return_min||0) + Number(sub.daily_return_max||0))/2);
+                const totalReturnPercent = Number((dailyReturn * durationDays).toFixed(4));
+                const totalIncome = Number(((amount * totalReturnPercent) / 100).toFixed(4));
+
+                const user = await User.findOne({ $or: [{ userid: sub.user_id }, { id: sub.user_id }, { uid: sub.user_id }] });
+                if (!user) {
+                    console.warn('[settle-now] user not found for subscription', sub._id);
+                    results.push({ id: sub._id, status: 'user_not_found' });
+                    continue;
+                }
+
+                // Log comparison for auditing
+                console.log(`[settle-now] admin=${admin && (admin.id||admin.adminId||admin.username)} sub=${sub._id} user=${sub.user_id} end_date=${new Date(sub.end_date).toISOString()} now=${now.toISOString()} force=${!!force}`);
+
+                user.balances = user.balances || {};
+                const credit = Number((amount + totalIncome).toFixed(4));
+                user.balances.usdt = Math.round(((Number(user.balances.usdt||0) + credit)) * 100) / 100;
+                try {
+                    await db.updateUserBalances(sub.user_id, user.balances);
+                } catch (e) {
+                    await user.save();
+                }
+
+                sub.status = 'completed';
+                sub.earned = totalIncome;
+                sub.days_completed = durationDays;
+                sub.total_income = totalIncome;
+                sub.total_return_percent = totalReturnPercent;
+                sub.updated_at = new Date();
+                await sub.save();
+
+                try { await Topup.create({ id: `topup_${Date.now()}_${Math.random().toString(36).slice(2,8)}`, user_id: sub.user_id, coin: 'USDT', amount: credit, status: 'complete', timestamp: Date.now(), created_at: new Date() }); } catch(e){console.warn('[settle-now] topup error', e && e.message)}
+
+                results.push({ id: sub._id, status: 'settled', credit, totalIncome });
+            } catch (innerE) {
+                console.error('[settle-now] error processing sub', sub._id, innerE && innerE.message);
+                results.push({ id: sub._id, status: 'error', error: innerE && innerE.message });
+            }
+        }
+
+        return res.json({ success: true, processed: results.filter(r => r.status === 'settled').length, results });
+    } catch (e) {
+        console.error('[settle-now] error:', e && e.message);
         return res.status(500).json({ success: false, message: e.message });
     }
 });
