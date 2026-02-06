@@ -2296,25 +2296,10 @@ async function handleGetBalance(req, res) {
         const userRecord = await db.getUserById(user_id);
         if (userRecord && userRecord.balances && Object.keys(userRecord.balances).length > 0) {
             // User has balances stored on their record - use these (they're updated by admin topup approvals)
-            // If USDT is zero/missing here but topup ledger has credits, fall back to summing topup entries.
+            // FIXED: Do NOT fall back when USDT is 0 - that's a valid balance after deduction!
             let userBalances = userRecord.balances;
-            try {
-                const usdtVal = Number(userBalances.usdt || 0);
-                if (!usdtVal) {
-                    // Sum recent topup records for this user to see if there are USDT credits that haven't been materialized
-                    const topups = await db.getUserTopupRecords(user_id, 5000).catch(() => []);
-                    const usdtSum = topups.reduce((acc, t) => {
-                        const coin = (t.coin || t.currency || 'USDT').toString().toLowerCase();
-                        if (coin === 'usdt') return acc + (Number(t.amount) || 0);
-                        return acc;
-                    }, 0);
-                    if (usdtSum !== 0) {
-                        userBalances = Object.assign({}, userBalances, { usdt: (Number(userBalances.usdt) || 0) + usdtSum });
-                    }
-                }
-            } catch (e) {
-                console.warn('[api] /api/wallet/getbalance - ledger fallback failed:', e && e.message);
-            }
+            
+            // Removed the fallback fallback logic that added negative topup ledger entries to a 0 balance
 
             const totalFromUser = Object.keys(userBalances).reduce((acc, k) => acc + (Number(userBalances[k]) || 0), 0);
             console.log('[api] /api/wallet/getbalance - returning User record balances:', userBalances);

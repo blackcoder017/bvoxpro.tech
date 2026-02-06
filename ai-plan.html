@@ -236,6 +236,8 @@
                 var userid = Cookies.get('userid');
                 var username = Cookies.get('username');
                 
+                console.log('[aisubmit] Starting subscription check for user:', userid, 'product:', id);
+                
                 // Validate input
                 if (!jine || isNaN(jine)) {
                     alert('Please enter a valid quantity');
@@ -249,54 +251,140 @@
                     }
                 }
 
-                // First check user's USDT balance via API
+                // Check if user has already used this plan (enforcing 1-time limit)
                 $.ajax({
-                    url: '/api/wallet/getbalance',
-                    type: 'POST',
+                    url: '/api/arbitrage/check-subscription?user_id=' + userid + '&product_id=' + id,
+                    type: 'GET',
                     dataType: 'json',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ userid: userid }),
-                    success: function(balRes) {
+                    success: function(checkRes) {
                         try {
-                            const usdt = (balRes && balRes.code===1 && balRes.data && Number(balRes.data.usdt)) ? Number(balRes.data.usdt) : 0;
-                            if (usdt < jine) {
-                                alert('Insufficient USDT balance. Your balance: ' + usdt.toFixed(2));
+                            console.log('[aisubmit] check-subscription response:', checkRes);
+                            
+                            if (checkRes && checkRes.success && checkRes.already_subscribed) {
+                                alert('You have already used this plan once. Each plan can only be used once.');
+                                console.warn('[aisubmit] User already subscribed to product', id);
                                 return;
                             }
 
-                            // Create subscription via API (use same origin relative path)
+                            console.log('[aisubmit] User not yet subscribed, proceeding with balance check');
+
+                            // Proceed with balance check if user hasn't already used this plan
                             $.ajax({
-                                url: '/api/arbitrage/subscribe',
+                                url: '/api/wallet/getbalance',
                                 type: 'POST',
                                 dataType: 'json',
                                 contentType: 'application/json',
-                                data: JSON.stringify({
-                                    'user_id': userid || 'guest',
-                                    'product_id': id,
-                                    'amount': jine
-                                }),
-                                success: function(res) {
-                                    if(res && res.success) {
-                                        alert('Investment successful! Amount: $' + jine);
-                                        location.href = "ai-record.html";
-                                    } else {
-                                        alert('Error: ' + (res && (res.message||res.error||res.data) || 'Unknown'));
+                                data: JSON.stringify({ userid: userid }),
+                                success: function(balRes) {
+                                    try {
+                                        const usdt = (balRes && balRes.code===1 && balRes.data && Number(balRes.data.usdt)) ? Number(balRes.data.usdt) : 0;
+                                        if (usdt < jine) {
+                                            alert('Insufficient USDT balance. Your balance: ' + usdt.toFixed(2));
+                                            return;
+                                        }
+
+                                        console.log('[aisubmit] Balance OK, creating subscription');
+                                        // Create subscription via API (use same origin relative path)
+                                        $.ajax({
+                                            url: '/api/arbitrage/subscribe',
+                                            type: 'POST',
+                                            dataType: 'json',
+                                            contentType: 'application/json',
+                                            data: JSON.stringify({
+                                                'user_id': userid || 'guest',
+                                                'product_id': id,
+                                                'amount': jine
+                                            }),
+                                            success: function(res) {
+                                                console.log('[aisubmit] subscribe response:', res);
+                                                if(res && res.success) {
+                                                    alert('Investment successful! Amount: $' + jine);
+                                                    location.href = "ai-record.html";
+                                                } else {
+                                                    alert('Error: ' + (res && (res.message||res.error||res.data) || 'Unknown'));
+                                                }
+                                            },
+                                            error: function(xhr) {
+                                                let msg = 'Error creating subscription';
+                                                try { const body = xhr && xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText || '{}'); if(body && (body.message||body.error||body.data)) msg = body.message||body.error||body.data; } catch(e){}
+                                                console.error('[aisubmit] subscription error:', msg);
+                                                alert(msg);
+                                            }
+                                        });
+                                    } catch(e) {
+                                        alert('Failed to check balance. Please try again.');
+                                        console.error('[aisubmit] balance check error:', e);
                                     }
                                 },
                                 error: function(xhr) {
-                                    let msg = 'Error creating subscription';
+                                    let msg = 'Failed to check balance';
                                     try { const body = xhr && xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText || '{}'); if(body && (body.message||body.error||body.data)) msg = body.message||body.error||body.data; } catch(e){}
+                                    console.error('[aisubmit] balance error:', msg);
                                     alert(msg);
                                 }
                             });
                         } catch(e) {
-                            alert('Failed to check balance. Please try again.');
+                            alert('Failed to validate plan. Please try again.');
+                            console.error('[aisubmit] validation error:', e);
                         }
                     },
                     error: function(xhr) {
-                        let msg = 'Failed to check balance';
-                        try { const body = xhr && xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText || '{}'); if(body && (body.message||body.error||body.data)) msg = body.message||body.error||body.data; } catch(e){}
-                        alert(msg);
+                        // If check endpoint doesn't exist, continue with subscription anyway (fallback)
+                        console.warn('[aisubmit] Plan check endpoint error, but proceeding with fallback...');
+                        console.log('[aisubmit] xhr status:', xhr.status);
+                        
+                        $.ajax({
+                            url: '/api/wallet/getbalance',
+                            type: 'POST',
+                            dataType: 'json',
+                            contentType: 'application/json',
+                            data: JSON.stringify({ userid: userid }),
+                            success: function(balRes) {
+                                try {
+                                    const usdt = (balRes && balRes.code===1 && balRes.data && Number(balRes.data.usdt)) ? Number(balRes.data.usdt) : 0;
+                                    if (usdt < jine) {
+                                        alert('Insufficient USDT balance. Your balance: ' + usdt.toFixed(2));
+                                        return;
+                                    }
+
+                                    $.ajax({
+                                        url: '/api/arbitrage/subscribe',
+                                        type: 'POST',
+                                        dataType: 'json',
+                                        contentType: 'application/json',
+                                        data: JSON.stringify({
+                                            'user_id': userid || 'guest',
+                                            'product_id': id,
+                                            'amount': jine
+                                        }),
+                                        success: function(res) {
+                                            console.log('[aisubmit-fallback] subscribe response:', res);
+                                            if(res && res.success) {
+                                                alert('Investment successful! Amount: $' + jine);
+                                                location.href = "ai-record.html";
+                                            } else {
+                                                alert('Error: ' + (res && (res.message||res.error||res.data) || 'Unknown'));
+                                            }
+                                        },
+                                        error: function(xhr) {
+                                            let msg = 'Error creating subscription';
+                                            try { const body = xhr && xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText || '{}'); if(body && (body.message||body.error||body.data)) msg = body.message||body.error||body.data; } catch(e){}
+                                            console.error('[aisubmit-fallback] subscription error:', msg);
+                                            alert(msg);
+                                        }
+                                    });
+                                } catch(e) {
+                                    alert('Failed to check balance. Please try again.');
+                                    console.error('[aisubmit-fallback] error:', e);
+                                }
+                            },
+                            error: function(xhr) {
+                                let msg = 'Failed to check balance';
+                                try { const body = xhr && xhr.responseJSON ? xhr.responseJSON : JSON.parse(xhr.responseText || '{}'); if(body && (body.message||body.error||body.data)) msg = body.message||body.error||body.data; } catch(e){}
+                                console.error('[aisubmit-fallback] balance error:', msg);
+                                alert(msg);
+                            }
+                        });
                     }
                 });
             }
