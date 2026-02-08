@@ -195,6 +195,7 @@ async function start() {
                             user.balances = user.balances || {};
                             const credit = Number((amount + totalIncome).toFixed(4));
                             user.balances.usdt = Math.round(((Number(user.balances.usdt||0) + credit)) * 100) / 100;
+                            user.markModified('balances');
                             await user.save();
 
                             sub.status = 'completed';

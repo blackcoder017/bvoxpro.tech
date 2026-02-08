@@ -44,6 +44,7 @@
                 if (!dryRun) {
                     user.balances = user.balances || {};
                     user.balances.usdt = Math.round(((Number(user.balances.usdt||0) + credit)) * 100) / 100;
+                    user.markModified('balances');
                     await user.save();
 
                     sub.status = 'completed';

@@ -16,7 +16,7 @@
                 background: linear-gradient(to bottom, #2b5279 5%, #6485a4 60%);
             }
             body{
-                overflow-y: hidden;
+                overflow-y: auto;
                 background: url(/assets/img/leaf-bg.png );
                 background-size: 180vw;
                 background-position-x: -80vw;
@@ -40,8 +40,9 @@
         <div class="y-re" style="min-height: 832px;">
             <div class="y-re-in"></div>
             <div class="y-re-load" onclick="loadMore()" data-translate="Load More">Load More</div>
-            <a href="https://t.me/BVOXTech_Support" target="_blank" class="y-customer-service" style="text-decoration: none;"><img src="./assets/img/telegram.jpg" alt="Telegram" style="width: 1.8rem; height: 1.8rem;"> Contact Customer Service</a>
         </div>
+
+        <a href="https://t.me/BVOXTech_Support" target="_blank" class="y-customer-service" style="text-decoration: none;"><img src="./assets/img/telegram.jpg" alt="Telegram" style="width: 1.8rem; height: 1.8rem;"> Contact Customer Service</a>
 
         <style>
             .y-re {
@@ -231,7 +232,7 @@
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 border-radius: 12px;
                 background: linear-gradient(135deg, #3a5a7f 0%, #2a4a6f 100%);
-                margin-bottom: 2rem;
+                margin-bottom: 4rem;
                 font-size: 0.95rem;
                 font-weight: 600;
                 transition: all 0.3s ease;
@@ -242,18 +243,22 @@
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             }
             .y-customer-service {
+                position: fixed;
+                bottom: 1.2rem;
+                left: 1rem;
+                right: 1rem;
+                z-index: 999;
                 text-align: center;
                 padding: 1rem 1.5rem;
                 color: #fff;
                 cursor: pointer;
-                margin-top: 1.5rem;
                 border: none;
-                border-radius: 12px;
+                border-radius: 50px;
                 background: linear-gradient(135deg, #0088cc 0%, #006ba3 100%);
-                margin-bottom: 5rem;
+                margin: 0;
                 font-size: 1.1rem;
                 font-weight: 700;
-                box-shadow: 0 8px 20px rgba(0, 136, 204, 0.5);
+                box-shadow: 0 4px 20px rgba(0, 136, 204, 0.5);
                 transition: all 0.3s ease;
                 letter-spacing: 0.5px;
                 text-decoration: none;
