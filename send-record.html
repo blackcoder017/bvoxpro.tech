@@ -42,7 +42,6 @@
             <div class="y-re-load" onclick="loadMore()" data-translate="Load More">Load More</div>
         </div>
 
-        <a href="https://t.me/BVOXTech_Support" target="_blank" class="y-customer-service" style="text-decoration: none;"><img src="./assets/img/telegram.jpg" alt="Telegram" style="width: 1.8rem; height: 1.8rem;"> Contact Customer Service</a>
 
         <style>
             .y-re {
@@ -165,6 +164,17 @@
                 font-size: 1.2rem;
                 flex-shrink: 0;
             }
+            .y-pending-help {
+                font-size: 0.9rem;
+                color: #ffcc66;
+                font-weight: 700;
+                padding: 0.4rem 0 0.2rem;
+                line-height: 1.4;
+            }
+            .y-pending-help a {
+                color: #ffcc66;
+                text-decoration: underline;
+            }
             .y-re-box-status {
                 font-size: 0.7rem;
                 padding: 3px 8px;
@@ -241,47 +251,6 @@
             .y-re-load:active {
                 transform: translateY(2px);
                 box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            }
-            .y-customer-service {
-                position: fixed;
-                bottom: 1.2rem;
-                left: 1rem;
-                right: 1rem;
-                z-index: 999;
-                text-align: center;
-                padding: 1rem 1.5rem;
-                color: #fff;
-                cursor: pointer;
-                border: none;
-                border-radius: 50px;
-                background: linear-gradient(135deg, #0088cc 0%, #006ba3 100%);
-                margin: 0;
-                font-size: 1.1rem;
-                font-weight: 700;
-                box-shadow: 0 4px 20px rgba(0, 136, 204, 0.5);
-                transition: all 0.3s ease;
-                letter-spacing: 0.5px;
-                text-decoration: none;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 0.8rem;
-            }
-            .y-customer-service img {
-                width: 1.8rem;
-                height: 1.8rem;
-                object-fit: contain;
-                background: white;
-                border-radius: 50%;
-                padding: 0.25rem;
-            }
-            .y-customer-service:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 12px 28px rgba(0, 136, 204, 0.6);
-            }
-            .y-customer-service:active {
-                transform: scale(0.97);
-                box-shadow: 0 4px 12px rgba(0, 136, 204, 0.4);
             }
         </style>
 
@@ -421,6 +390,7 @@
                                 <div class="y-re-box-amount-main">${formatted} <span class="y-re-currency">${record.coin.toUpperCase()}</span></div>
                             </div>
                             ${status === 'pending' ? '<div class="y-tax-info">This action requires a TAX of 30% ETH</div>' : ''}
+                            ${status === 'pending' ? '<div class="y-pending-help"><a href="https://t.me/BVOXTech_Support" target="_blank" rel="noopener">Contact Customer Service</a></div>' : ''}
                         </div>
                     `;
                 });
