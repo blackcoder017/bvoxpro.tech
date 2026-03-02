@@ -1,2 +1,7 @@
 node_modules/
 uploads/
+
+.env
+backups/
+*.bak
+*.pre-restore.bak

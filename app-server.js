@@ -7,6 +7,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const cron = require('node-cron');
 require('dotenv').config();
 
 // Initialize MongoDB connection
@@ -216,6 +217,25 @@ async function start() {
 
             setTimeout(() => { settleDueArbitrageOnce(); }, 8000);
             setInterval(() => { settleDueArbitrageOnce(); }, arbSettleIntervalMs);
+        }
+
+        // ── Nightly backup → Telegram (midnight Myanmar time = 17:30 UTC) ──
+        const ENABLE_BACKUP = process.env.ENABLE_BACKUP !== 'false';
+        if (ENABLE_BACKUP) {
+            const { runBackup } = require('./scripts/db-backup-telegram');
+            // Myanmar (MMT) = UTC+6:30  →  midnight MMT = 17:30 UTC
+            // Cron: minute 30, hour 17, every day (UTC)
+            const backupCron = process.env.BACKUP_CRON || '30 17 * * *';
+            cron.schedule(backupCron, async () => {
+                console.log('[backup-cron] Starting scheduled backup …');
+                try {
+                    await runBackup();
+                    console.log('[backup-cron] Backup completed successfully');
+                } catch (e) {
+                    console.error('[backup-cron] Backup failed:', e.message);
+                }
+            }, { timezone: 'UTC' });
+            console.log(`[backup-cron] Nightly backup scheduled (${backupCron} UTC = midnight MMT)`);
         }
     } catch (error) {
         console.error('❌ Failed to start server:', error.message);

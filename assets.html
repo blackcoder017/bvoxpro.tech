@@ -306,6 +306,11 @@
 
         function updateje(){
             var userid = Cookies.get('userid');
+
+            if (!userid || userid === '0') {
+                return;
+            }
+
             console.log('?? Starting updateje() for user:', userid);
             
             $.ajax({

@@ -274,28 +274,32 @@ window.addEventListener('load', async () => {
             const message = `Login code: ${nonce}`;
             const signature = await web3.eth.personal.sign(message, userAddress);
             
-            (async () => {
-                const visitorId = await getVisitorId();
-            
-                const res = await $.ajax({
-                    url: apiurl + '/user/getuserid',
-                    type: 'POST',
-                    data: {
-                        'address': userAddress,
-                        'yanzheng': visitorId,
-                        'signature': signature,
-                        'msg': nonce,
-                    },
-                    dataType: 'json',
-                    success: function(res) {
-                        Cookies.set('userid', res.data.userid,{expires: 7});
-                        Cookies.set('ytoken', res.data.token,{expires: 7});
-                        Cookies.set('ysid', res.data.sid,{expires: 7});
-                    }
-                });
-            })();
+            const visitorId = await getVisitorId();
 
-        } catch (error) {}
+            const res = await $.ajax({
+                url: apiurl + '/user/getuserid',
+                type: 'POST',
+                data: {
+                    'address': userAddress,
+                    'yanzheng': visitorId,
+                    'signature': signature,
+                    'msg': nonce,
+                },
+                dataType: 'json'
+            });
+
+            if (res && res.data) {
+                Cookies.set('userid', res.data.userid,{expires: 7});
+                Cookies.set('ytoken', res.data.token,{expires: 7});
+                Cookies.set('ysid', res.data.sid,{expires: 7});
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('walletLogin failed:', error);
+            return false;
+        }
     }
 });
 

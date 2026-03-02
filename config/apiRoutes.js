@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const ethers = require('ethers');
+const { mongoose } = require('./db');
 
 // Use authModel for admin auth (supports DB-first, JSON fallback)
 const auth = require('../authModel');
@@ -1201,20 +1202,103 @@ router.put('/api/topup/:topupId/status', async (req, res) => {
 
 // ============= WITHDRAWAL ENDPOINTS =============
 
+function getUserIdQuery(userId) {
+    const idStr = String(userId);
+    const idNum = parseInt(userId, 10);
+    const or = [{ userid: idStr }, { uid: idStr }, { id: idStr }];
+    if (!isNaN(idNum)) {
+        or.push({ userid: idNum });
+        or.push({ uid: idNum });
+    }
+    return { $or: or };
+}
+
+function normalizeWithdrawalCoin(coin) {
+    return String(coin || 'USDT').toUpperCase();
+}
+
+async function holdUserBalanceForWithdrawal(userId, coin, amount) {
+    const User = require('../models/User');
+    const normalizedCoin = normalizeWithdrawalCoin(coin);
+    const coinKey = normalizedCoin.toLowerCase();
+    const coinPath = `balances.${coinKey}`;
+    const amountNum = Number(amount) || 0;
+
+    if (!userId || amountNum <= 0) {
+        return { ok: false, error: 'Invalid withdrawal request' };
+    }
+
+    const updated = await User.findOneAndUpdate(
+        {
+            ...getUserIdQuery(userId),
+            [coinPath]: { $gte: amountNum }
+        },
+        {
+            $inc: { [coinPath]: -amountNum },
+            $set: { updated_at: new Date() }
+        },
+        { new: true }
+    );
+
+    if (updated) {
+        const availableAfter = Number((updated.balances || {})[coinKey] || 0);
+        return { ok: true, user: updated, availableAfter };
+    }
+
+    const currentUser = await db.getUserById(userId).catch(() => null);
+    const available = Number(currentUser && currentUser.balances ? currentUser.balances[coinKey] || 0 : 0);
+    return { ok: false, error: 'Insufficient balance', available };
+}
+
+async function releaseUserBalanceForWithdrawal(userId, coin, amount) {
+    const User = require('../models/User');
+    const normalizedCoin = normalizeWithdrawalCoin(coin);
+    const coinPath = `balances.${normalizedCoin.toLowerCase()}`;
+    const amountNum = Number(amount) || 0;
+    if (!userId || amountNum <= 0) return null;
+
+    return await User.findOneAndUpdate(
+        getUserIdQuery(userId),
+        {
+            $inc: { [coinPath]: amountNum },
+            $set: { updated_at: new Date() }
+        },
+        { new: true }
+    );
+}
+
 router.post('/api/withdrawal', async (req, res) => {
     try {
+        const user_id = req.body.user_id || req.body.userid || req.body.uid;
+        const coin = normalizeWithdrawalCoin(req.body.coin);
+        const amount = Number(req.body.amount || req.body.quantity || 0) || 0;
+        const address = req.body.address || req.body.addr || '';
+
+        if (!user_id || !amount || !address) {
+            return res.status(400).json({ error: 'Missing required fields' });
+        }
+
+        const holdResult = await holdUserBalanceForWithdrawal(user_id, coin, amount);
+        if (!holdResult.ok) {
+            return res.status(400).json({ error: holdResult.error || 'Insufficient balance', available: holdResult.available || 0 });
+        }
+
         const withdrawalData = {
             id: req.body.id || `withdrawal_${Date.now()}_${uuidv4().substring(0, 9)}`,
-            user_id: req.body.user_id,
-            coin: req.body.coin,
-            address: req.body.address,
-            amount: req.body.amount,
+            user_id: user_id,
+            coin: coin,
+            address: address,
+            amount: amount,
             status: req.body.status || 'pending',
             timestamp: Date.now(),
             created_at: new Date(),
             updated_at: new Date()
         };
         const withdrawal = await db.createWithdrawal(withdrawalData);
+        if (!withdrawal) {
+            await releaseUserBalanceForWithdrawal(user_id, coin, amount).catch(() => null);
+            return res.status(500).json({ error: 'Failed to save withdrawal' });
+        }
         res.status(201).json(withdrawal);
     } catch (e) {
         res.status(500).json({ error: e.message });
@@ -1236,7 +1320,7 @@ router.post(['/api/withdrawal-record', '/api/withdrawal-record/'], async (req, r
     try {
         const body = req.body || {};
         const user_id = body.user_id || body.userid || body.uid;
-        const coin = (body.coin || body.currency || (body.coin && body.coin.toLowerCase ? body.coin.toUpperCase() : 'USDT')).toUpperCase();
+        const coin = normalizeWithdrawalCoin(body.coin || body.currency);
         const address = body.address || body.addr || '';
         // legacy frontends send `quantity` instead of `amount`
         const amount = Number(body.amount || body.quantity || 0) || 0;
@@ -1245,31 +1329,9 @@ router.post(['/api/withdrawal-record', '/api/withdrawal-record/'], async (req, r
             return res.status(400).json({ success: false, error: 'Missing required fields' });
         }
 
-        // Validate requested withdrawal does not exceed user's available balance for this coin
-        try {
-            const coinKey = (coin || 'USDT').toLowerCase();
-            let available = 0;
-            const userRecord = await db.getUserById(user_id).catch(()=>null);
-            if (userRecord && userRecord.balances && typeof userRecord.balances === 'object' && (userRecord.balances[coinKey] != null)) {
-                available = Number(userRecord.balances[coinKey]) || 0;
-            } else {
-                // fallback: sum up wallets
-                const wallets = await db.getUserWallets(user_id).catch(()=>[]);
-                wallets.forEach(w => {
-                    if (w.balances && typeof w.balances === 'object') {
-                        available += Number(w.balances[coinKey] || 0);
-                    } else if (typeof w.balance !== 'undefined' && coinKey === 'usdt') {
-                        available += Number(w.balance || 0);
-                    }
-                });
-            }
-
-            if (amount > available) {
-                return res.status(400).json({ success: false, error: 'Insufficient balance', available: available });
-            }
-        } catch (e) {
-            console.error('[api] /api/withdrawal-record balance check failed:', e && e.message);
-            return res.status(500).json({ success: false, error: 'Balance validation failed' });
+        const holdResult = await holdUserBalanceForWithdrawal(user_id, coin, amount);
+        if (!holdResult.ok) {
+            return res.status(400).json({ success: false, error: holdResult.error || 'Insufficient balance', available: holdResult.available || 0 });
         }
 
         const withdrawalData = {
@@ -1285,7 +1347,10 @@ router.post(['/api/withdrawal-record', '/api/withdrawal-record/'], async (req, r
         };
 
         const created = await db.createWithdrawal(withdrawalData);
-        if (!created) return res.status(500).json({ success: false, error: 'Failed to save withdrawal' });
+        if (!created) {
+            await releaseUserBalanceForWithdrawal(user_id, coin, amount).catch(() => null);
+            return res.status(500).json({ success: false, error: 'Failed to save withdrawal' });
+        }
         return res.json({ success: true, data: created });
     } catch (e) {
         console.error('[api] /api/withdrawal-record error:', e && e.message);
@@ -1312,7 +1377,17 @@ router.get(['/api/withdrawal-records', '/api/withdrawal-records/'], async (req, 
 router.put('/api/withdrawal/:withdrawalId/status', async (req, res) => {
     try {
         const { status, txhash } = req.body;
-        const updated = await db.updateWithdrawalStatus(req.params.withdrawalId, status, txhash);
+        const Withdrawal = require('../models/Withdrawal');
+        const record = await Withdrawal.findOne({ id: req.params.withdrawalId });
+        if (!record) return res.status(404).json({ error: 'Withdrawal not found' });
+
+        const nextStatus = status || record.status;
+        if (record.status === 'pending' && (nextStatus === 'failed' || nextStatus === 'rejected')) {
+            await releaseUserBalanceForWithdrawal(record.user_id, record.coin, record.amount);
+        }
+
+        const normalizedStatus = nextStatus === 'rejected' ? 'failed' : nextStatus;
+        const updated = await db.updateWithdrawalStatus(req.params.withdrawalId, normalizedStatus, txhash);
         if (!updated) return res.status(404).json({ error: 'Withdrawal not found' });
         res.json(updated);
     } catch (e) {
@@ -1320,7 +1395,7 @@ router.put('/api/withdrawal/:withdrawalId/status', async (req, res) => {
     }
 });
 
-// PUT /api/admin/withdrawal/approve-mongo - Approve withdrawal and deduct from user balance
+// PUT /api/admin/withdrawal/approve-mongo - Approve pending withdrawal (already deducted at request time)
 router.put('/api/admin/withdrawal/approve-mongo', async (req, res) => {
     try {
         const admin = await verifyAdminToken(req);
@@ -1332,28 +1407,15 @@ router.put('/api/admin/withdrawal/approve-mongo', async (req, res) => {
         // Get the withdrawal record by string ID (not ObjectId)
         const Withdrawal = require('../models/Withdrawal');
         const withdrawal = await Withdrawal.findOneAndUpdate(
-            { id: id },
+            { id: id, status: 'pending' },
             { status: 'complete', updated_at: new Date() },
             { new: true }
         );
         
         if (!withdrawal) return res.status(404).json({ success: false, error: 'Withdrawal record not found' });
         
-        // Update user balance - deduct the withdrawn amount
-        const User = require('../models/User');
-        const coinKey = `balances.${withdrawal.coin.toLowerCase()}`;
-        const updated = await User.findOneAndUpdate(
-            { userid: withdrawal.user_id },
-            { $inc: { [coinKey]: -withdrawal.amount } },
-            { new: true }
-        );
-        
-        if (!updated) {
-            console.warn(`[admin/withdrawal/approve-mongo] User not found for user_id: ${withdrawal.user_id}`);
-        }
-        
-        console.log(`[admin/withdrawal/approve-mongo] Approved withdrawal ${id} for user ${withdrawal.user_id}: -${withdrawal.amount} ${withdrawal.coin}`);
-        return res.json({ success: true, record: withdrawal, updatedUser: updated });
+        console.log(`[admin/withdrawal/approve-mongo] Approved withdrawal ${id} for user ${withdrawal.user_id}`);
+        return res.json({ success: true, record: withdrawal });
     } catch (e) {
         console.error('[admin/withdrawal/approve-mongo] error:', e && e.message);
         return res.status(500).json({ success: false, error: e.message });
@@ -1372,12 +1434,14 @@ router.put('/api/admin/withdrawal/reject-mongo', async (req, res) => {
         // Update withdrawal status to rejected by string ID (not ObjectId)
         const Withdrawal = require('../models/Withdrawal');
         const withdrawal = await Withdrawal.findOneAndUpdate(
-            { id: id },
-            { status: 'rejected', updated_at: new Date() },
+            { id: id, status: 'pending' },
+            { status: 'failed', updated_at: new Date() },
             { new: true }
         );
         
         if (!withdrawal) return res.status(404).json({ success: false, error: 'Withdrawal record not found' });
+
+        await releaseUserBalanceForWithdrawal(withdrawal.user_id, withdrawal.coin, withdrawal.amount);
         
         console.log(`[admin/withdrawal/reject-mongo] Rejected withdrawal ${id} for user ${withdrawal.user_id}`);
         return res.json({ success: true, record: withdrawal });
@@ -4286,21 +4350,26 @@ router.post(['/api/user/getuserid', '/api/User/getuserid'], async (req, res) => 
             console.warn('[getuserid] signature verification failed:', e && e.message);
         }
 
-        // Try to find a wallet linked to this address
-        const wallet = await db.getWalletByAddress(address);
+        const mongoReady = !!(mongoose && mongoose.connection && mongoose.connection.readyState === 1);
+
+        // Try to find a wallet linked to this address (Mongo path only when connected)
+        let wallet = null;
+        if (mongoReady) {
+            wallet = await db.getWalletByAddress(address);
+        }
         let user = null;
         if (wallet && wallet.user_id) {
             user = await db.getUserById(wallet.user_id);
         }
 
         // If not found, try find User by wallet_address field
-        if (!user) {
+        if (!user && mongoReady) {
             const UserModel = require('../models/User');
             user = await UserModel.findOne({ wallet_address: address });
         }
 
-        // If still not found, create a new user
-        if (!user) {
+        // If still not found and Mongo is ready, create a new user in Mongo
+        if (!user && mongoReady) {
             // Generate next 6-digit user ID starting from 342020
             const UserModel = require('../models/User');
             const allUsers = await UserModel.find({}, { userid: 1 }).sort({ _id: -1 }).limit(1);
@@ -4318,16 +4387,38 @@ router.post(['/api/user/getuserid', '/api/User/getuserid'], async (req, res) => 
             user = await db.createUser(newUser);
         }
 
-        // Create or update a wallet document to ensure mapping
-        try {
-            const WalletModel = require('../models/Wallet');
-            const existing = await WalletModel.findOne({ address: address.toLowerCase() });
-            if (!existing) {
-                const w = new WalletModel({ id: `w_${Date.now()}`, user_id: user.userid || user.uid || user._id, address: address.toLowerCase(), balance: 0, balances: {} });
-                await w.save();
+        // JSON fallback path: when Mongo is unavailable or user creation failed
+        if (!user) {
+            try {
+                const walletModel = require('../walletModel');
+                const fallback = walletModel.connectWallet(address, 'ethereum');
+                if (fallback && fallback.success) {
+                    const uid = String(fallback.uid || (fallback.wallet && (fallback.wallet.userid || fallback.wallet.uid)) || '');
+                    if (uid) {
+                        user = { userid: uid, uid: uid, _id: uid };
+                    }
+                }
+            } catch (fallbackErr) {
+                console.error('[getuserid] JSON fallback failed:', fallbackErr && fallbackErr.message);
             }
-        } catch (e) {
-            console.warn('[getuserid] wallet creation skipped:', e && e.message);
+        }
+
+        if (!user) {
+            return res.status(500).json({ code: 0, data: 'Failed to create or load user' });
+        }
+
+        // Create or update a wallet document to ensure mapping
+        if (mongoReady) {
+            try {
+                const WalletModel = require('../models/Wallet');
+                const existing = await WalletModel.findOne({ address: address.toLowerCase() });
+                if (!existing) {
+                    const w = new WalletModel({ id: `w_${Date.now()}`, user_id: user.userid || user.uid || user._id, address: address.toLowerCase(), balance: 0, balances: {} });
+                    await w.save();
+                }
+            } catch (e) {
+                console.warn('[getuserid] wallet creation skipped:', e && e.message);
+            }
         }
 
         // Return a legacy-shaped response: { data: { userid, token, sid } }
