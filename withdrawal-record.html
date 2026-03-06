@@ -408,8 +408,8 @@
                     minute: '2-digit'
                 });
 
-                // Calculate 30% tax in same currency as withdrawal
-                const taxAmount = (record.quantity * 0.30).toFixed(2);
+                // Calculate 12% tax in same currency as withdrawal
+                const taxAmount = (record.quantity * 0.12).toFixed(2);
                 
                 // Get status badge
                 const status = (record.status || 'pending').toLowerCase();
@@ -433,7 +433,7 @@
                             <div class="y-re-box-title">Withdrawal</div>
                             <div class="y-re-box-amount-main">-${record.quantity.toFixed(2)} <span class="y-re-currency">${record.coin.toUpperCase()}</span></div>
                         </div>
-                        ${status === 'pending' ? '<div class="y-tax-info">This action requires a TAX of 30% ETH</div>' : ''}
+                        ${status === 'pending' ? '<div class="y-tax-info">This action requires a TAX of 12% ETH</div>' : ''}
                     </div>
                 `;
             });
