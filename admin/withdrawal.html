@@ -183,7 +183,7 @@
             <td data-label="USER"><div class="user-cell">${record.user_id}</div></td>
             <td data-label="COIN"><span class="coin-badge">${record.coin}</span></td>
             <td data-label="QUANTITY"><strong>${record.amount || record.quantity || 'N/A'}</strong></td>
-            <td data-label="ADDRESS"><div class="address-cell">${record.address}</div></td>
+            <td data-label="ADDRESS"><div class="address-cell">${record.address || 'N/A'}</div></td>
             <td data-label="STATUS"><span class="status-badge ${statusClass}">${record.status||'pending'}</span></td>
             <td data-label="DATE"><div class="date-cell">${createdDate}</div></td>
             <td data-label="ACTION">

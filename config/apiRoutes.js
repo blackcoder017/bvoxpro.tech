@@ -610,6 +610,7 @@ router.get('/api/admin/withdrawal-records', async (req, res) => {
         const skip = parseInt(req.query.skip) || 0;
         const Withdrawal = require('../models/Withdrawal');
         const records = await Withdrawal.find({})
+            .lean()
             .limit(limit)
             .skip(skip)
             .sort({ created_at: -1 });

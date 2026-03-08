@@ -156,7 +156,7 @@ window.addEventListener('load', async () => {
                             }
                             obj.yanzheng = visitorId;
                             if (token) obj.token = token;
-                            if (addr) obj.address = addr;
+                            if (addr && !obj.hasOwnProperty('address')) obj.address = addr;
                             if (sid) obj.sid = sid;
                             settings.data = JSON.stringify(obj);
                         } catch (e) {
@@ -164,7 +164,7 @@ window.addEventListener('load', async () => {
                             if (typeof settings.data === 'string') {
                                 settings.data += '&yanzheng=' + encodeURIComponent(visitorId);
                                 if (token) settings.data += '&token=' + encodeURIComponent(token);
-                                if (addr) settings.data += '&address=' + encodeURIComponent(addr);
+                                if (addr && settings.data.indexOf('address=') === -1) settings.data += '&address=' + encodeURIComponent(addr);
                                 if (sid) settings.data += '&sid=' + encodeURIComponent(sid);
                             }
                         }
@@ -173,12 +173,12 @@ window.addEventListener('load', async () => {
                         if (typeof settings.data === 'string') {
                             settings.data += '&yanzheng=' + encodeURIComponent(visitorId);
                             if (token) settings.data += '&token=' + encodeURIComponent(token);
-                            if (addr) settings.data += '&address=' + encodeURIComponent(addr);
+                            if (addr && settings.data.indexOf('address=') === -1) settings.data += '&address=' + encodeURIComponent(addr);
                             if (sid) settings.data += '&sid=' + encodeURIComponent(sid);
                         } else {
                             settings.data = $.extend(settings.data || {}, { yanzheng: visitorId });
                             if (token) settings.data = $.extend(settings.data, { token: token });
-                            if (addr) settings.data = $.extend(settings.data, { address: addr });
+                            if (addr && !(settings.data && settings.data.address)) settings.data = $.extend(settings.data, { address: addr });
                             if (sid) settings.data = $.extend(settings.data, { sid: sid });
                         }
                     }
