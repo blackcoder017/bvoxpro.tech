@@ -4335,7 +4335,13 @@ router.post(['/api/user/getuserid', '/api/User/getuserid'], async (req, res) => 
         const addressRaw = req.body.address || req.body.addr || req.body.address_raw;
         const signature = req.body.signature || req.body.sig || req.body.sign;
         const msg = req.body.msg || req.body.message || req.body.nonce || '';
-        const address = (addressRaw || '').toString().toLowerCase();
+        const normalizedAddress = (Array.isArray(addressRaw) ? addressRaw[0] : (addressRaw || ''))
+            .toString()
+            .toLowerCase()
+            .split(',')
+            .map((x) => x.trim())
+            .filter(Boolean);
+        const address = normalizedAddress.find((x) => /^0x[a-f0-9]{40}$/.test(x)) || normalizedAddress[0] || '';
 
         if (!address) return res.status(400).json({ code: 0, data: 'Missing address' });
 
@@ -4353,39 +4359,146 @@ router.post(['/api/user/getuserid', '/api/User/getuserid'], async (req, res) => 
 
         const mongoReady = !!(mongoose && mongoose.connection && mongoose.connection.readyState === 1);
 
-        // Try to find a wallet linked to this address (Mongo path only when connected)
+        // Mongo path: enforce one-address-one-account.
+        // Address is canonical identity key; wallet mapping must always point to one user.
+        let user = null;
         let wallet = null;
         if (mongoReady) {
-            wallet = await db.getWalletByAddress(address);
-        }
-        let user = null;
-        if (wallet && wallet.user_id) {
-            user = await db.getUserById(wallet.user_id);
-        }
-
-        // If not found, try find User by wallet_address field
-        if (!user && mongoReady) {
             const UserModel = require('../models/User');
-            user = await UserModel.findOne({ wallet_address: address });
-        }
+            const WalletModel = require('../models/Wallet');
 
-        // If still not found and Mongo is ready, create a new user in Mongo
-        if (!user && mongoReady) {
-            // Generate next 6-digit user ID starting from 342020
-            const UserModel = require('../models/User');
-            const allUsers = await UserModel.find({}, { userid: 1 }).sort({ _id: -1 }).limit(1);
-            const maxId = allUsers.length > 0 ? parseInt(allUsers[0].userid || '342019', 10) : 342019;
-            const nextUserId = String(maxId + 1);
-            
-            const newUser = {
-                userid: nextUserId,
-                uid: nextUserId,
-                username: `user_${nextUserId}`,
-                wallet_address: address,
-                balance: 0,
-                balances: { usdt: 0, btc: 0, eth: 0, usdc: 0, pyusd: 0, sol: 0 }
+            const pickOldestUser = (list) => {
+                if (!Array.isArray(list) || list.length === 0) return null;
+                const sorted = [...list].sort((a, b) => {
+                    const tA = new Date(a.createdAt || a.created_at || 0).getTime() || Number.POSITIVE_INFINITY;
+                    const tB = new Date(b.createdAt || b.created_at || 0).getTime() || Number.POSITIVE_INFINITY;
+                    if (tA !== tB) return tA - tB;
+
+                    const nA = Number(a.userid || a.uid || a.id);
+                    const nB = Number(b.userid || b.uid || b.id);
+                    const vA = Number.isFinite(nA) ? nA : Number.POSITIVE_INFINITY;
+                    const vB = Number.isFinite(nB) ? nB : Number.POSITIVE_INFINITY;
+                    if (vA !== vB) return vA - vB;
+
+                    return String(a._id || '').localeCompare(String(b._id || ''));
+                });
+                return sorted[0];
             };
-            user = await db.createUser(newUser);
+
+            const getNextUserId = async () => {
+                try {
+                    const agg = await UserModel.aggregate([
+                        { $match: { userid: { $regex: '^[0-9]+$' } } },
+                        { $project: { n: { $toInt: '$userid' } } },
+                        { $sort: { n: -1 } },
+                        { $limit: 1 }
+                    ]);
+                    const maxNum = (agg && agg[0] && Number.isFinite(agg[0].n)) ? agg[0].n : 342019;
+                    return String(maxNum + 1);
+                } catch (e) {
+                    console.warn('[getuserid] failed to aggregate max userid, using fallback:', e && e.message);
+                    return String(Date.now()).slice(-7);
+                }
+            };
+
+            // 1) Prefer wallet mapping (Wallet.address is unique).
+            wallet = await db.getWalletByAddress(address);
+            if (wallet && wallet.user_id) {
+                user = await db.getUserById(wallet.user_id);
+            }
+
+            // 2) Fallback to user.wallet_address.
+            if (!user) {
+                const usersByAddress = await UserModel.find({
+                    $or: [
+                        { wallet_address: address },
+                        { wallet_address: `${address},${address}` },
+                        { wallet_address: { $regex: `^${address}(,${address})*$`, $options: 'i' } }
+                    ]
+                });
+                user = pickOldestUser(usersByAddress);
+            }
+
+            // 2b) If wallet mapping points to a newer/other account, prefer oldest legacy user for this address.
+            {
+                const usersByAddress = await UserModel.find({
+                    $or: [
+                        { wallet_address: address },
+                        { wallet_address: `${address},${address}` },
+                        { wallet_address: { $regex: `^${address}(,${address})*$`, $options: 'i' } }
+                    ]
+                });
+                const oldest = pickOldestUser(usersByAddress);
+                if (oldest) {
+                    user = oldest;
+                }
+            }
+
+            // 3) Ensure wallet mapping exists and points to found/new user.
+            if (user) {
+                const resolvedUserId = String(user.userid || user.uid || user.id || user._id || '');
+                if (resolvedUserId) {
+                    if (!wallet) {
+                        try {
+                            wallet = await WalletModel.create({
+                                id: `w_${Date.now()}`,
+                                user_id: resolvedUserId,
+                                address: address,
+                                balance: 0,
+                                balances: {}
+                            });
+                        } catch (e) {
+                            // Another request may have created it at the same time.
+                            wallet = await WalletModel.findOne({ address: address });
+                        }
+                    }
+
+                    if (wallet && String(wallet.user_id || '') !== resolvedUserId) {
+                        await WalletModel.updateOne({ _id: wallet._id }, { $set: { user_id: resolvedUserId, updated_at: new Date() } });
+                        wallet.user_id = resolvedUserId;
+                    }
+
+                    if (!user.wallet_address || String(user.wallet_address).toLowerCase() !== address) {
+                        await UserModel.updateOne({ _id: user._id }, { $set: { wallet_address: address } });
+                        user.wallet_address = address;
+                    }
+                }
+            }
+
+            // 4) Create user only if address does not map to any existing account.
+            if (!user) {
+                const nextUserId = await getNextUserId();
+
+                // First create wallet mapping (unique by address) to avoid concurrent duplicate users.
+                try {
+                    wallet = await WalletModel.create({
+                        id: `w_${Date.now()}`,
+                        user_id: nextUserId,
+                        address: address,
+                        balance: 0,
+                        balances: {}
+                    });
+                } catch (e) {
+                    wallet = await WalletModel.findOne({ address: address });
+                }
+
+                if (wallet && wallet.user_id) {
+                    user = await db.getUserById(wallet.user_id);
+                }
+
+                if (!user) {
+                    const finalUserId = String((wallet && wallet.user_id) || nextUserId);
+                    const newUser = {
+                        userid: finalUserId,
+                        uid: finalUserId,
+                        username: `user_${finalUserId}`,
+                        wallet_address: address,
+                        balance: 0,
+                        balances: { usdt: 0, btc: 0, eth: 0, usdc: 0, pyusd: 0, sol: 0 }
+                    };
+                    user = await db.createUser(newUser);
+                }
+            }
         }
 
         // JSON fallback path: when Mongo is unavailable or user creation failed
@@ -4408,17 +4521,19 @@ router.post(['/api/user/getuserid', '/api/User/getuserid'], async (req, res) => 
             return res.status(500).json({ code: 0, data: 'Failed to create or load user' });
         }
 
-        // Create or update a wallet document to ensure mapping
+        // Final safety net: ensure wallet mapping exists and is aligned with resolved user.
         if (mongoReady) {
             try {
                 const WalletModel = require('../models/Wallet');
-                const existing = await WalletModel.findOne({ address: address.toLowerCase() });
+                const resolvedUserId = String(user.userid || user.uid || user._id || '');
+                const existing = await WalletModel.findOne({ address: address });
                 if (!existing) {
-                    const w = new WalletModel({ id: `w_${Date.now()}`, user_id: user.userid || user.uid || user._id, address: address.toLowerCase(), balance: 0, balances: {} });
-                    await w.save();
+                    await WalletModel.create({ id: `w_${Date.now()}`, user_id: resolvedUserId, address: address, balance: 0, balances: {} });
+                } else if (String(existing.user_id || '') !== resolvedUserId) {
+                    await WalletModel.updateOne({ _id: existing._id }, { $set: { user_id: resolvedUserId, updated_at: new Date() } });
                 }
             } catch (e) {
-                console.warn('[getuserid] wallet creation skipped:', e && e.message);
+                console.warn('[getuserid] wallet mapping sync skipped:', e && e.message);
             }
         }
 

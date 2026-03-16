@@ -6,7 +6,10 @@
     "start": "node app-server.js",
     "dev": "nodemon app-server.js",
     "backup": "node scripts/db-backup-telegram.js",
-    "restore": "node scripts/db-restore.js"
+    "restore": "node scripts/db-restore.js",
+    "inspect:wallet": "node scripts/inspect-wallet-address.js",
+    "cleanup:wallet-duplicates:dry": "node scripts/cleanup-duplicate-wallet-users.js",
+    "cleanup:wallet-duplicates": "node scripts/cleanup-duplicate-wallet-users.js --apply"
   },
   "dependencies": {
     "archiver": "^7.0.1",
